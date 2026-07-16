@@ -1,0 +1,12 @@
+eligibility_id,sku_id,sku_name,platform,account_scope,surface,source_asset_id,status,evidence_ids,platform_ticket,verified_at,expires_at,material_limits,qualification_requirements,notes,source_asset_sha256,qualification_claim_id
+SKU-XHS-TBD-ORGANIC,SKU-TBD-001,具体成人用品SKU待用户提供,小红书,unassigned,organic_content,,insufficient_sku_input,OFF-002;OFF-005,,,,具体外观、使用场景、功效和画面未审；不得因打码/谐音默认放行,品牌、型号、材质、形态、功能、包装、说明书和拟用素材,内容可谈关系教育不等于可展示该商品
+SKU-XHS-TBD-PRO,SKU-TBD-001,具体成人用品SKU待用户提供,小红书,unassigned,professional_account,,needs_platform_confirmation,OFF-004,,,,规则同页出现性玩具禁入与情趣用品/计生用品普通准入，术语含混,主体资质、实际类目、SKU资料和平台工单,未获人工确认前不得视为专业号可经营
+SKU-XHS-TBD-SHOP,SKU-TBD-001,具体成人用品SKU待用户提供,小红书,unassigned,shop,,insufficient_official_evidence,OFF-004;OFF-017,,,,未取得具体商品类目、禁售清单和素材规则的当前精确页面,店铺主体、类目资质、SKU、物流、卫生退换和售后规则,专业号或内容通过不能替代店铺商品审核
+SKU-XHS-TBD-PGY,SKU-TBD-001,具体成人用品SKU待用户提供,小红书,unassigned,pgy_commercial_content,,needs_platform_confirmation,OFF-005,,,,两性生活、拟态物、虚构故事、导流和功效均需商业审核,蒲公英主体、合作类型、素材、披露和SKU工单,自然内容通过不能替代蒲公英审核
+SKU-XHS-TBD-ADS,SKU-TBD-001,具体成人用品SKU待用户提供,小红书,unassigned,ads,,insufficient_official_evidence,OFF-004;OFF-017,,,,未取得该SKU广告行业、素材、落地页和定向的精确当前规则,广告主体、行业资质、SKU、素材、落地页和审核回执,存在搜索广告产品不等于该品类可投
+SKU-XHS-TBD-LEADGEN,SKU-TBD-001,具体成人用品SKU待用户提供,小红书,unassigned,leadgen,,insufficient_official_evidence,OFF-021,,,,帮助页只确认产品入口；未核账户、行业、表单字段和SKU资格,主体、行业、表单、隐私告知、同意机制和工单,没有资格前不生成咨询或留资CTA
+SKU-XHS-TBD-DM,SKU-TBD-001,具体成人用品SKU待用户提供,小红书,unassigned,dm_commercial,,insufficient_official_evidence,OFF-005;OFF-015;OFF-021,,,,不得主动陌生私信、竞品撬客或发送站外联系方式,私信功能资格、自动回复/客服规则、隐私与同意机制,普通私信功能存在不等于商业触达获准
+SKU-XHS-TBD-APPROVED-EXTERNAL,SKU-TBD-001,具体成人用品SKU待用户提供,小红书,unassigned,approved_external_destination,,unknown,OFF-021,,,,未取得精确当前官方能力页、账户/行业/SKU和目的地资格,能力URL、产品名、账户截图、行业、SKU、落地页和工单,默认blocked；不得用手写网址、二维码或暗号替代
+SKU-DY-TBD-ORGANIC,SKU-TBD-001,具体成人用品SKU待用户提供,抖音,unassigned,organic_content,,needs_platform_confirmation,OFF-030;OFF-031;OFF-032,,,,通用低俗边界与情趣类素材规则需结合具体画面,SKU、素材、账号主体和当前创作者规则,类目存在不等于内容画面获准
+SKU-DY-TBD-SHOP,SKU-TBD-001,具体成人用品SKU待用户提供,抖音,unassigned,shop,,needs_platform_confirmation,OFF-031;OFF-032;OFF-033,,,,部分成人/仿真/功效商品为禁止或高风险；动态规则需后台复核,店铺主体、类目资质、SKU、包装、物流和审核回执,未确认前不生成抖店购买CTA
+SKU-DY-TBD-XINGTU,SKU-TBD-001,具体成人用品SKU待用户提供,抖音,unassigned,xingtu_creator_collab,,needs_platform_confirmation,OFF-030;OFF-034,,,,官方合作产品存在但成人行业任务和素材资格未知,品牌主体、任务行业、SKU、达人素材与审核回执,不得让达人伪装普通用户

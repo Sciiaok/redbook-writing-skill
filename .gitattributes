@@ -1,0 +1,3 @@
+# Empty ordered-list placeholders in the draft template intentionally end
+# after the Markdown marker's separating space.
+redbook-writing/assets/draft-template.md whitespace=-blank-at-eol

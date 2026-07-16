@@ -1,0 +1,12 @@
+sample_id,source_id,account_name,account_uid,account_followers,title,published_at,date_confidence,format,likes,comments,collections,shares,original_note_url,data_source_url,query_cluster,evidence_grade,limitations
+XHS-NOTE-001,XHS-001,PPAN,5823d6307fc5b8151b352f03,47000,"4双单鞋，满足一年三季的极简穿搭",2026-04-21,medium,视频,1399,36,,,"",https://gist.github.com/jiaolulin/ac3d7c70b3eb5cc88a9c39da5e20ca5b,"小红书图文数据复盘",C,"年份由近90天报告推定；原帖URL、曝光、收藏、分享和后台数据缺失"
+XHS-NOTE-002,XHS-001,PPAN,5823d6307fc5b8151b352f03,47000,"share“为春天准备的一些”",2026-02-20,medium,视频,614,21,,,"",https://gist.github.com/jiaolulin/ac3d7c70b3eb5cc88a9c39da5e20ca5b,"小红书图文数据复盘",C,"年份由近90天报告推定；只能观察同账号相关性"
+XHS-NOTE-003,XHS-001,PPAN,5823d6307fc5b8151b352f03,47000,"简单舒适·13looks",2026-04-02,medium,视频,232,9,,,"",https://gist.github.com/jiaolulin/ac3d7c70b3eb5cc88a9c39da5e20ca5b,"小红书图文数据复盘",C,"年份由近90天报告推定；原帖URL和后台指标缺失"
+XHS-NOTE-004,XHS-001,PPAN,5823d6307fc5b8151b352f03,47000,"12looks“流动的春夏”",2026-02-26,medium,视频,204,23,,,"",https://gist.github.com/jiaolulin/ac3d7c70b3eb5cc88a9c39da5e20ca5b,"小红书图文数据复盘",C,"年份由近90天报告推定；原帖URL和后台指标缺失"
+XHS-NOTE-005,XHS-001,PPAN,5823d6307fc5b8151b352f03,47000,"Spring空气感叠穿",2026-03-05,medium,视频,200,14,,,"",https://gist.github.com/jiaolulin/ac3d7c70b3eb5cc88a9c39da5e20ca5b,"小红书图文数据复盘",C,"年份由近90天报告推定；原帖URL和后台指标缺失"
+XHS-NOTE-006,XHS-001,PPAN,5823d6307fc5b8151b352f03,47000,"这个夏天，我会反复穿搭的6件T恤",2026-04-24,medium,视频,137,1,,,"",https://gist.github.com/jiaolulin/ac3d7c70b3eb5cc88a9c39da5e20ca5b,"小红书标题封面",C,"数字标题的反例；品类、素材、时点等混杂变量未控制"
+XHS-NOTE-007,XHS-001,PPAN,5823d6307fc5b8151b352f03,47000,"Very Vera",2026-04-08,medium,视频,128,5,,,"",https://gist.github.com/jiaolulin/ac3d7c70b3eb5cc88a9c39da5e20ca5b,"小红书标题封面",C,"标题信息量与表现仅相关，不能推断因果"
+XHS-NOTE-008,XHS-001,PPAN,5823d6307fc5b8151b352f03,47000,"近期爱穿",2026-03-19,medium,图文,127,24,,,"",https://gist.github.com/jiaolulin/ac3d7c70b3eb5cc88a9c39da5e20ca5b,"小红书图文数据复盘",C,"该账号图文仅2篇；不能外推全平台格式结论"
+XHS-NOTE-009,XHS-001,PPAN,5823d6307fc5b8151b352f03,47000,"share“当空气感融入通勤”",2026-03-13,medium,视频,124,14,,,"",https://gist.github.com/jiaolulin/ac3d7c70b3eb5cc88a9c39da5e20ca5b,"小红书图文数据复盘",C,"年份由近90天报告推定；只能观察同账号相关性"
+XHS-NOTE-010,XHS-001,PPAN,5823d6307fc5b8151b352f03,47000,"10件单品，构建CBK’s长期衣橱",2026-04-09,medium,图文,103,14,,,"",https://gist.github.com/jiaolulin/ac3d7c70b3eb5cc88a9c39da5e20ca5b,"小红书图文数据复盘",C,"原帖URL、收藏和曝光缺失；图文样本小"
+XHS-NOTE-011,XHS-001,PPAN,5823d6307fc5b8151b352f03,47000,"share春夏上衣合集×15",2026-05-14,medium,视频,97,12,,,"",https://gist.github.com/jiaolulin/ac3d7c70b3eb5cc88a9c39da5e20ca5b,"小红书图文数据复盘",C,"信息过载/同质疲劳只是解释假设；无控制实验"
