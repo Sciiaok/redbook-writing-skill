@@ -124,5 +124,5 @@ Binding review 使用 `bind` 返回的 `pending_binding_sha256`。`draft_binding
 - 当前数据库 revision 是 `2.2-qualified-promotion`；旧 v2 不会静默迁移，必须显式重建/迁移后再用。
 - 这条 CLI 从已经结构化的 SQLite observation 开始；浏览器发现结果仍需经过正式 capture/入库，脱敏 ledger 永远只是 candidate。
 - `qualified_style_rules` 是“公开代理对照 + 多模态证据 + 独立复核”的风格规则数，不是第一方流量实验数。
-- `first_party_traffic_validated` 仍不支持：当前没有 rule → first-party outcome publication 的可审计边。
+- `first_party_traffic_validated` 仍不支持：当前 draft validator 尚未导入原始后台导出并程序重算结论，因此整个 scope 被 release gate 阻断；不可变 checkpoint 只能保存待审计观测，不能授予 win/loss 或“已验证流量”。
 - 系统能防止伪证据、错范围、缺素材和复核后偷换，但不能保证爆款。它让下一轮生产与实验建立在可复用经验上，而不是把一次偶然高赞固化为玄学。

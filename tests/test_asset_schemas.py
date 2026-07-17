@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import base64
 import csv
+import hashlib
 import importlib.util
 import json
 import re
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -72,9 +75,28 @@ DRAFT_ASSETS_HEADER = [
     "style_rule_refs",
     "starter_prompt_sha256",
     "review_status",
+    "review_receipt_id",
     "revision_of",
     "notes",
 ]
+
+VISUAL_REVIEW_FIELDS = {
+    "review_receipt_id",
+    "draft_id",
+    "draft_asset_id",
+    "asset_sha256",
+    "binding_sha256",
+    "slide_index",
+    "content_owner_id",
+    "reviewer_id",
+    "reviewer_independence_status",
+    "reviewed_at",
+    "feed_review_status",
+    "full_review_status",
+    "review_status",
+    "issues",
+    "receipt_sha256",
+}
 
 
 def load_validator_module():
@@ -99,6 +121,54 @@ class AssetSchemaTests(unittest.TestCase):
             with asset.open("r", encoding="utf-8-sig", newline="") as handle:
                 actual = next(csv.reader(handle))
             self.assertEqual(actual, expected, f"header drift in {asset.name}")
+
+    def test_visual_decoder_rejects_header_only_png_and_accepts_real_png(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            truncated = tmp_path / "header-only.png"
+            truncated.write_bytes(
+                b"\x89PNG\r\n\x1a\n"
+                + b"\x00\x00\x00\x0dIHDR"
+                + (1080).to_bytes(4, "big")
+                + (1440).to_bytes(4, "big")
+            )
+            self.assertIsNone(
+                self.validator.RunValidator._decoded_image_dimensions(truncated)
+            )
+
+            valid = tmp_path / "valid.png"
+            valid.write_bytes(
+                base64.b64decode(
+                    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0l"
+                    "EQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+                )
+            )
+            self.assertEqual(
+                self.validator.RunValidator._decoded_image_dimensions(valid), (1, 1)
+            )
+
+    def test_visual_review_template_is_exact_and_fail_closed(self) -> None:
+        template = SKILL / "assets" / "visual-review-receipts-template.jsonl"
+        rows = [
+            json.loads(line)
+            for line in template.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        self.assertEqual(len(rows), 1)
+        row = rows[0]
+        self.assertEqual(set(row), VISUAL_REVIEW_FIELDS)
+        supplied = row.pop("receipt_sha256")
+        calculated = hashlib.sha256(
+            json.dumps(
+                row,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+        ).hexdigest()
+        self.assertEqual(supplied, calculated)
+        self.assertEqual(row["review_status"], "NEEDS_REVIEW")
+        self.assertNotEqual(row["reviewer_independence_status"], "independent")
 
     def test_skill_relative_links_resolve(self) -> None:
         skill_text = (SKILL / "SKILL.md").read_text(encoding="utf-8")

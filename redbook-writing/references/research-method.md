@@ -303,6 +303,8 @@
 3. 先从页面声明的真实页集合写 `visible_slide_indexes`，再写实际读取成功的 `captured_slide_indexes`；不能只比较 count，也不能用重复页补齐数量。
 4. 只有两个 index set 完全一致、每页都有所需 observation ID 且引用可解析时，`capture_status=complete`。缺页、遮挡、登录墙或素材不可访问一律为 `partial | blocked` 并写 limitations。
 5. 原图、缩略图、OCR 与派生资产只放本地 `research/xiaohongshu/_style_library/`，默认 Git 忽略；仓库与公开交付只保存允许公开的哈希、来源和结构化观察。
+6. 同步回写 `posts.csv` 的 `performance_tier / style_capture_status / style_library_post_id / style_observation_ids`。标 `complete` 前，必须已在 v2 SQLite 建立 `run_post_refs` 与锁定当前 `posts.csv` SHA 的 complete `style_post_observation`；只写 journal 文本或伪造 ID 不算落库。
+7. 风格资产路径必须指向真实本地文件；晋级前重新计算 SHA、MIME 与图片尺寸，并确认当前 access/copyright 状态。数据库中的 path/hash 字符串不能替代文件本身。
 
 V2 `primary_job_scope` 只使用 `feed_stop | search_answer | explain | trust_build | decision_support | relationship_build | conversion | authority_statement`。载体或任务不同的样本可作 boundary，不能伪装成 matched control。
 

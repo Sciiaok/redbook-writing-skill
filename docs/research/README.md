@@ -30,6 +30,7 @@
 | [跨类目载体 gap audit](2026-07-18-cross-category-live-carriers.md) | 当前公开载体审计，合格 matched control 为 0 | 哪些证据还缺、为什么不能把高赞样本做 starter | 高表现视觉规则晋级 | [JSONL](2026-07-18-cross-category-live-carriers.jsonl) |
 | [原生实用载体审计](2026-07-18-native-traffic-utility.md) | 比较板、法律清单、截图教程、改造、正式解释 5 组既有观察 | 任务型载体的补采合同与 candidate mechanism | 红黑榜/红框/深蓝/前后图是爆款风格 | [JSONL](2026-07-18-native-traffic-utility.jsonl) |
 | [原生 feed 证据审计](2026-07-18-native-traffic-feed.md) | 站内公开 feed 线索与缺口 | 哪些公开观察可保留为 research lead | 公开互动代理直接升级为流量 | [JSONL](2026-07-18-native-traffic-feed.jsonl) |
+| [一次性审美提示词源审计](2026-07-18-aesthetic-prompt-source-audit.md) | 7 个公开经验/工具/案例来源、6 组冲突、8 个 candidate prompt 模块 | 在没有 qualified binding 时做有来源的 `prototype_only` 审美探索，并识别 AI/PPT 反模式 | 把模板商建议、历史榜单或单篇案例写成当前爆款样式 | [JSON](2026-07-18-aesthetic-prompt-source-audit.json) |
 
 ## 2026-07-17 基础批次
 

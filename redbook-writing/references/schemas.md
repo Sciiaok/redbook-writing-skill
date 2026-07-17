@@ -39,7 +39,7 @@
 
 长期私有库位于 `research/xiaohongshu/_style_library/`，保存 SQLite、第三方原图和安全派生物。整个目录必须被 Git 忽略；运行文件只引用 library ID、相对 locator 和 SHA-256，不复制图片 BLOB、第三方完整正文、账号凭据或隐私原件。
 
-Skill 内的静态 assets 只提供 schema、空模板和候选方向，不保存第三方原图或版权受限正文。`assets/traffic-mechanisms-v1.json` 是带来源和边界的统一机制库；`assets/traffic-mechanism-candidates-template.jsonl` 用于新运行追加候选；`assets/visual-direction-cards-v1.json` 是 `candidate_only/not_performance_evidence` 的任务型视觉 brief 骨架，不能写入 published style rule 或 starter 字段。
+Skill 内的静态 assets 只提供 schema、空模板和候选方向，不保存第三方原图或版权受限正文。`assets/traffic-mechanisms-v1.json` 是带来源和边界的统一机制库；`assets/traffic-mechanism-candidates-template.jsonl` 用于新运行追加候选；`assets/visual-direction-cards-v1.json` 是 `candidate_only/not_performance_evidence` 的任务型视觉 brief 骨架，不能写入 published style rule 或 starter 字段。`assets/aesthetic-exploration-prompts-v1.json` 只在无 published binding 的显式探索中提供一次性审美 overlay，输出上限为 `prototype_only`；它不能进入最终 binding、starter 或 performance scope。
 
 ## ID 与多值规则
 
@@ -146,7 +146,7 @@ account_id,account_name,profile_url,head_type,follower_count,window_start,window
 ## posts.csv
 
 ```text
-post_id,note_id,title,url,account_id,published_at,date_confidence,collected_at,queries_matched,search_surface,sort_or_filter,rank_observed,format,visible_engagement,engagement_breakdown_available,account_baseline_multiple,hook,page_or_scene_structure,need_signal,cover_mechanism,evidence_level,confidence,duplicate_of,cluster_id,status
+post_id,note_id,title,url,account_id,published_at,date_confidence,collected_at,queries_matched,search_surface,sort_or_filter,rank_observed,format,visible_engagement,engagement_breakdown_available,account_baseline_multiple,hook,page_or_scene_structure,need_signal,cover_mechanism,evidence_level,confidence,duplicate_of,cluster_id,status,performance_tier,style_capture_status,style_library_post_id,style_observation_ids,style_skip_reason
 ```
 
 - `date_confidence`：high、medium、low、unknown。含混相对日期不得纳入严格 7/30 天结论。
@@ -158,6 +158,9 @@ post_id,note_id,title,url,account_id,published_at,date_confidence,collected_at,q
 - `need_signal` 区分求方法、分享经历、反对质疑、询问商品、泛泛夸赞。
 - `evidence_level`：observed、calculated、inferred、hypothesis。
 - `status`：active、excluded、stale；排除不等于删除。
+- `performance_tier`：`high | ordinary | low | unknown`，必须来自本轮同账号可比 baseline，不凭印象填写。
+- `style_capture_status`：`complete | partial | skipped | not_required`。`complete` 必须填写真实 `style_library_post_id` 与同帖 copy/visual observation IDs；其他状态必须写 `style_skip_reason`。
+- 完成态 discovery/refresh 中，每个 active high/low 或被 topic 引用的 post 都必须 `complete`。验证器会打开 `run.yaml.style_library_path` 指向的 v2 SQLite，核对 note/url/category、`run_post_refs`、精确 `posts.csv` SHA、performance tier，以及同一 post 中符合 `style_requirement=copy | visual | both` 的 observation；仅在 CSV 手填 ID 不能通过。
 
 ## style-samples.csv 与 style-records.jsonl
 
@@ -179,10 +182,26 @@ style_sample_id,post_id,query_ids,performance_tier,carrier,primary_job_scope,sli
 
 - `series_constant` 与 `task_fit` 必须为 `not_performance_evidence`。
 - 公开互动经过闭合 matched-control feature contrast 后，最多是 `public_proxy_association`；`public_proxy ≠ traffic`。
-- `first_party_traffic_validated` 必须来自使用该 rule 的 published binding、自有账号 first-party impressions/reach、24h/72h outcome publications 和 proposition 对齐的预注册 analysis effect。点赞、收藏、评论、搜索位置、CTR 或停留不能替代 exposure primary。
+- `first_party_traffic_validated` 必须来自使用该 rule 的 published binding、自有账号 first-party impressions/reach、预注册 checkpoint、逐指标 canonical hash、metric-set hash 和不可变 outcome receipt。观察窗口由预注册实验决定，不把 24h/72h 写成跨类目默认。点赞、收藏、评论、搜索位置、CTR 或停留不能替代 exposure primary。当前验证器尚不能导入原始后台导出并程序重算结论，因此整个作用域保持禁用；checkpoint 只能作为待审计观测，不能让任何 draft 获得“已验证流量”、`win` 或 `loss`。
 - Query、archetype、binding、draft frontmatter 和报告必须原样外显 scope，不能在输出层升级措辞。
 
-当前真实 qualified-cell 门禁若记录 `qualified_cells=0`，starter pack 必须不存在或保持禁用，任何 `starter_applied` 都是无效绑定。无合格 library/starter 时唯一合法绑定状态是 `needs_style_research`，不得生成或宣称 ready 稿。只有同时绑定至少 2 条 task-fit 流量机制、1 条反例/anti-pattern，并通过事实、授权、真实性和商业门，才可生成显著标注的 `candidate_only / needs_review` 文案、结构 brief；有合法素材时图像最多为 `rendered_needs_review`。否则只输出补采计划。
+当前真实 qualified-cell 门禁若记录 `qualified_cells=0`，starter pack 必须不存在或保持禁用，任何 `starter_applied` 都是无效绑定。无合格 library/starter 时唯一合法绑定状态是 `needs_style_research`，不得生成或宣称 ready 稿。只有严格绑定三槽 task-fit 机制、独立反例/anti-pattern，并通过事实、授权、真实性和商业门，才可生成显著标注的 `candidate_only / needs_review` 文案、结构 brief；有合法素材时图像最多为 `prototype_only`。否则只输出补采计划。
+
+### 一方发布与 outcome 顺序
+
+一方学习链固定为：
+
+```text
+draft_experiments + assignments（actual_publish_at 必须为空）
+→ draft_experiment_publications（冻结预注册与 assignment set）
+→ draft_publish_events（真实发布后新增一次，不回写预注册行）
+→ draft_outcome_checkpoints + metrics
+→ draft_outcome_publications（冻结 metric set）
+```
+
+`draft_publish_events` 锁定 exact experiment/binding/account/surface/post ID/URL/actual time 和 canonical hash，且只能在 experiment publication 之后追加；更新或删除被阻断。Checkpoint 的 `observed_at` 必须接近 `actual_publish_at + checkpoint_hours`，容差为 `min(2h, checkpoint_hours × 10%)`；`checkpoint_hours` 是预注册正整数，不是固定平台规律。这样短窗口不能在发布同一秒伪装成已观察，长窗口也不能无限回填。
+
+Publication insert 还会重算 assignment row hash、ordered assignment-set hash/count、held constants、planned order 与完整 preregistration preimage；publication/event/checkpoint 的记录时间只能接近数据库当前时间。当前没有 pair-contrast publication 表，所以 `blocked_2x2` 在 schema 中 fail closed，只允许保存设计，不允许发布成已预注册实验。
 
 ## topics.csv
 
@@ -262,7 +281,7 @@ authorization_id,subject_scope,source_asset_id,material_id,material_sha256,mater
 
 ## production-gate-receipts.jsonl
 
-成人亲密关系、性健康或成人用品内容同时涉及商品、品牌关系、佣金、获赠、付费分发、商业 CTA 或站外 destination 时，每稿必须追加一条 `adult_sensitive_commercial_gate` receipt。至少锁定 `receipt_id`、exact SKU/offer、library account、delivery surface、draft/asset version、authorization/rights/consent、商业披露、受众年龄边界、series/product/UGC lineage、distribution/destination/attribution、reviewer、reviewed_at、gate status、limitations 与 canonical receipt SHA-256。
+成人亲密关系、性健康或成人用品内容同时涉及商品、品牌关系、佣金、获赠、付费分发、商业 CTA 或站外 destination 时，每稿必须追加一条 `adult_sensitive_commercial_gate` receipt。至少锁定 `receipt_id`、`draft_id + draft_sha256`、exact SKU/offer、library account、delivery surface、asset version、authorization/rights/consent、精确 `commercial_relationship + disclosure_text`、`audience_age_floor >= 18`、非空 `minor_access_controls`、series/product/UGC lineage、distribution/destination/attribution、人工 reviewer、与本次 run 同日的 reviewed_at、gate status、limitations 与 canonical receipt SHA-256。`receipt_sha256` 使用对“移除 receipt_sha256 后的完整 object”做 UTF-8、key sort、compact JSON 的 SHA-256；改变任何字段都要重新审查并重签。
 
 只有所有必填字段可核验且 `gate_status=pass` 才能进入商业 CTA 审查；missing/unknown/expired/blocked 一律使 draft blocked。Receipt 只是当前稿件与 surface 的生产门禁，不是平台批准、流量证据、风格证据或对其他 SKU/账号/素材的通行证。模板 `assets/production-gate-receipts-template.jsonl` 默认 blocked，不能复制其占位值冒充 pass。
 
@@ -294,7 +313,7 @@ status: needs_review
 ---
 ```
 
-V2 成稿还必须写 `style_contract_version: 2`、`style_requirement`、library/query scope、published binding 或 starter 的完整 XOR 字段、`claim_kind`、保守的 `performance_evidence_scope`、`style_binding_status`、visual delivery、brief/prototype/final asset IDs 与 hash。曝光主指标与任务主指标必须分开：`traffic_primary_metric` 只描述 impressions/reach 或明确不可得；`job_primary_metric` 按 primary job 选择，并同时写 `job_metric_event_definition`、`job_metric_denominator`、`job_metric_data_scope` 与 `job_metric_verdict`。公开评论只能使用 `comment_semantic_proxy/comments/not_applicable`，不能包装成任务胜负。`style_binding_status=needs_style_research` 时 draft 顶层只能 needs_review/blocked；若包含候选稿或探索资产，还必须列 `traffic_mechanism_ids`、`counterexample_ids`、`material_ids` 与候选限定，且视觉状态不得高于 `rendered_needs_review`。`starter_applied` 只允许来自通过 qualified-cell 门禁的当前 pack/prompt publication，不能由自由文本声明。
+V2 成稿还必须写 `style_contract_version: 2`、`style_requirement`、`style_library_path`、`style_taxonomy_version`、category/carrier/job/material/constraint query scope、published binding 的完整回执字段、`performance_rule_claim_kind`、保守的 `performance_evidence_scope`、`primary_performance_rule_id`、`style_binding_status` 与 visual delivery。`grounded` 必填 `draft_binding_id / draft_binding_sha256 / style_rule_ids / primary_style_archetype_id / primary_style_archetype_version / primary_style_archetype_snapshot_sha256`，并与本地 SQLite 中 immutable publication 完全一致；有 performance scope 时 `primary_performance_rule_id` 必须是 selected rules 中唯一明确的主表现规则，且 binding material plan 中的 primary scope 必须与 frontmatter 一致。`needs_style_research` 或 `not_performance_evidence` 时 primary rule 为 `none`，不得自由文本声明。曝光主指标与任务主指标必须分开：`traffic_primary_metric` 只描述 impressions/reach 或明确不可得；`job_primary_metric` 按 primary job 选择，并同时写 `job_metric_event_definition`、`job_metric_denominator`、`job_metric_data_scope` 与 `job_metric_verdict`。一方观测还必须写 `traffic_observation_surface / traffic_outcome_checkpoint_id / traffic_outcome_receipt_sha256`，并与同一个 SQLite checkpoint 完全一致；非一方作用域三项必须为 `none`。公开评论只能使用 `comment_semantic_proxy/comments/not_applicable`，不能包装成任务胜负。`style_binding_status=needs_style_research` 时 draft 顶层只能 needs_review/blocked；候选路径还必须通过下方流量机制合同，且视觉状态不得高于 `prototype_only`。`starter_applied` 在 qualified-cell 门禁发布前不可用。
 
 `truth_label` 只允许：`first_person_documented | authorized_anonymized | authorized_adaptation | composite_cases | fictional_scenario | factual_explainer`。`truth_disclosure_text` 必须使用肯定式合同（如“本内容为明确虚构”“经授权匿名整理”“本人亲历记录”），并在 `truth_disclosure_location=首屏/第一页/首段/开头/标题下` 的实际可见正文里出现；“不是真实虚构”“未经授权”等否定冲突会阻断。HTML 注释、隐藏标签、图片 alt、链接 URL 或只存在元数据中的文字不算可见。`authorization_ids` 必须与标签一致：本人一手材料写 `self_only`；授权匿名/改编引用相应 AUTH；合成案例至少引用两个允许 composite 且对应不同 subject/material/hash 的 AUTH；明确虚构与纯事实解释写 `none`。`source_material_ids` 必须与关联 AUTH 的 `material_id` 完全一致。商业关系是独立维度，`commercial_relationship` 只允许：`none | owned_product | sponsored | gifted | affiliate | commissioned_creator | other_disclosed`；非 `none` 时披露文案必须真实、肯定地写入 `## 成稿`，并与关系类型对应：自有/自营、广告/品牌合作、获赠、佣金/返佣、受委托，或明确的其他利益关系。“不是广告/没有品牌合作”等否认句会阻断。机器可验证位置仅支持首屏/第一页/首段/开头/标题下，或 `CTA前/正文CTA前`；后两者要求同一成稿中披露确实早于精确 `cta_copy`。视频口播与字幕等无法由 Markdown 单独证明的位置先由人工审校，不得伪填成机器 PASS。
 
@@ -306,6 +325,8 @@ V2 成稿还必须写 `style_contract_version: 2`、`style_requirement`、librar
 ## 证据与目标用户
 ## 标题版本
 ## 封面版本
+## 流量机制绑定
+## 视觉方向绑定
 ## 成稿
 ## 关键词与话题
 ## 事实与证明
@@ -314,6 +335,23 @@ V2 成稿还必须写 `style_contract_version: 2`、`style_requirement`、librar
 ## 创意审校
 ## 观测计划
 ```
+
+`## 流量机制绑定` 固定包含以下机器字段：
+
+```text
+contract_status: needs_research | bound_candidate | bound_grounded
+primary_mechanism_id: TMxx | none
+mechanism_ids: TMxx;TMxx;TMxx | none
+counterexample_ids: 本次运行中的真实 Source/Claim/Account/Post ID | none
+material_codes: 统一机制库中的素材代码 | none
+material_evidence_map: 单行 JSON object | none
+mechanism_application_map: 单行 JSON object | none
+research_gap: 精确缺口
+```
+
+绑定态必须恰好一条 content、一条 carrier_router/truth_gate、一条 feedback/measurement/governance；ID、job、stage、carrier、requires/conflicts、required/forbidden materials 全部按 `traffic-mechanisms-v1.json` 校验。`material_evidence_map` 不能引用不存在的材料，反例 ID 不能同时充当支持材料。`mechanism_application_map` 的 keys 必须与三张卡完全一致，并逐卡写 `input_refs / title_action / cover_action / body_action / comments_action / job_metric / failure_condition / intentional_deviation`。
+
+`## 视觉方向绑定` 固定包含 `visual_contract_status / visual_direction_card_ids / selection_mode / asset_manifest_path / asset_manifest_sha256 / style_library_path / draft_binding_id / active_contraindication_codes / research_gap`。选择器必须按 exact `primary_job × carrier × manifest materials × contraindications` 重算；探索态最多 `prototype_only`，production 必须同时命中同一 `style_library_path` 中的 published `draft_binding_id`，卡片本身不得决定 palette、typography、image treatment、density、annotation 或 crop。
 
 商业 CTA 的 `eligibility_ids` 与 `surfaces` 必须对应且全部 approved/confirmed。`cta_type=none` 才可留空。验证器检查结构和引用，不会替代语义、创意、版权、医学或平台人工审核。
 
@@ -329,7 +367,7 @@ V2 成稿还必须写 `style_contract_version: 2`、`style_requirement`、librar
 visual_brief_id,draft_id,brief_revision,visual_brief_sha256,binding_snapshot_sha256,primary_job,carrier,audience_state,attention_paths,functional_need,lived_scene,motive_codes,perceivable_outcome,brand_to_user_translation_trace,offer_or_sku_ref,distribution_mode,content_owner_id,reviewer_ids,reviewer_independence_status,content_model_id,content_model_version,model_lifecycle_stage,page_role_plan,required_material_codes,forbidden_feature_codes,brand_prominence,prototype_count,feed_preview_size,full_size,constraint_codes,benchmark_library_post_ids,target_hypothesis_sha256,benchmark_set_sha256,attention_path_set_sha256,generation_prompt_sha256,supersedes_visual_brief_id,reset_of_visual_brief_id,created_at
 ```
 
-`prototype_count >= 2`，且至少两个去重 attention path。Starter/candidate 只能 `model_lifecycle_stage=explore`；ready 需要独立 reviewer。Brief 不保存选中结果或用户反馈。
+只有选择器找到至少两个各自有证据依据、去重 attention path 时才设置 `prototype_count >= 2`；exact cell 只有一个合格探索方向时最多生成一个 `prototype_only`，不得为凑数临时造方向或声称完成比较；没有合格方向时记录 `prototype_gap` 并停在 `brief_only`。Starter/candidate 只能 `model_lifecycle_stage=explore`；ready 需要独立 reviewer。Brief 不保存选中结果或用户反馈。
 
 `visual-prototypes.csv` 精确表头：
 
@@ -350,10 +388,20 @@ feedback_event_id,draft_id,visual_brief_id,prototype_asset_id,event_index,feedba
 `draft-assets.csv` 精确表头：
 
 ```text
-draft_asset_id,draft_id,draft_binding_id,slide_index,asset_path,asset_sha256,width,height,render_method,binding_rule_bundle_sha256,style_rule_refs,starter_prompt_sha256,review_status,revision_of,notes
+draft_asset_id,draft_id,draft_binding_id,slide_index,asset_path,asset_sha256,width,height,render_method,binding_rule_bundle_sha256,style_rule_refs,starter_prompt_sha256,review_status,review_receipt_id,revision_of,notes
 ```
 
-最终资产必须逐页匹配 draft 的 expected slide index set，文件存在、SHA 一致并实际打开审查。缺页、重复页、额外页、旧 revision 或未发布 binding 都阻断 `rendered_pass`。第三方原图只作观察，不进入 image edit/reference；长中文用确定性排版。
+最终资产必须逐页匹配 draft 的 `expected_slide_indices`，文件存在、SHA 一致，并由 Pillow 完整解码 PNG/JPEG/GIF/WebP；只伪造文件头不能通过。`render_method` 只允许 `deterministic_layout | manual_design | image_model | hybrid | authorized_capture`。当前 manifest 只保存当前资产，所以 `starter_prompt_sha256` 与 `revision_of` 必须为 `none`；历史修订应在独立不可变生产日志中保存，不能用 unverifiable ID 冒充。缺页、重复页、额外页、跨稿重复 asset ID 或未发布 binding 都阻断 `rendered_pass`。
+
+`rendered_pass` 还要求 `visual-review-receipts.jsonl`。每个当前资产一条，精确字段：
+
+```text
+review_receipt_id,draft_id,draft_asset_id,asset_sha256,binding_sha256,slide_index,content_owner_id,reviewer_id,reviewer_independence_status,reviewed_at,feed_review_status,full_review_status,review_status,issues,receipt_sha256
+```
+
+`content_owner_id` 与 `reviewer_id` 必须具体且不同，`reviewer_independence_status=independent`，feed/full/final 三项均为 `PASS`，`issues=[]`，日期不得早于 run 且不得晚于今天。`receipt_sha256` 对移除自身后的完整 object 做 UTF-8、key sort、compact JSON SHA-256。模板故意是 `NEEDS_REVIEW` 占位行；替换所有字段并重算 hash 前绝不会放行。
+
+第三方原图只作观察，不进入 image edit/reference；长中文用确定性排版。视觉文件校验依赖 Pillow；缺少 Pillow 时视觉交付 fail closed，copy-only 研究仍可运行。
 
 这些模板默认只有 header 或空 JSONL，不含伪造 evidence。真实 12 帖发布结果、完整场景矩阵和 3 人实图盲评保持 `deferred/incomplete`；不得据此宣称流量或审美效果已验证。
 

@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Validate a redbook-writing research/content run with no third-party deps."""
+"""Validate a redbook-writing research/content run.
+
+Copy-only validation uses the standard library. Visual artifact validation is
+fail-closed and requires Pillow so that an image is fully decoded rather than
+trusted from a file header.
+"""
 
 from __future__ import annotations
 
@@ -9,12 +14,20 @@ import hashlib
 import json
 import math
 import re
+import sqlite3
 import sys
 from collections import Counter
 from dataclasses import asdict, dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Iterable
+from urllib.parse import quote
+
+try:
+    from PIL import Image, UnidentifiedImageError
+except ImportError:  # Visual delivery must fail closed when Pillow is absent.
+    Image = None
+    UnidentifiedImageError = OSError
 
 
 SCHEMAS: dict[str, list[str]] = {
@@ -591,6 +604,7 @@ V2_VISUAL_DELIVERY_REQUIREMENTS = {"none", "brief", "rendered"}
 V2_VISUAL_DELIVERY_STATUSES = {
     "not_requested",
     "brief_only",
+    "prototype_only",
     "rendered_needs_review",
     "rendered_pass",
 }
@@ -615,17 +629,35 @@ V2_DRAFT_META = {
     "style_contract_version",
     "business_objective",
     "style_requirement",
+    "style_library_path",
+    "style_taxonomy_version",
+    "style_query_category",
     "style_query_carrier",
     "style_query_primary_job",
+    "style_query_required_constraint_codes",
+    "style_query_required_material_codes",
+    "style_query_available_material_codes",
+    "style_query_active_constraint_codes",
+    "style_query_active_contraindication_codes",
     "style_binding_source",
     "style_binding_status",
+    "draft_binding_id",
+    "draft_binding_sha256",
+    "style_rule_ids",
+    "primary_style_archetype_id",
+    "primary_style_archetype_version",
+    "primary_style_archetype_snapshot_sha256",
     "performance_rule_claim_kind",
     "style_feature_contrast",
     "performance_evidence_scope",
+    "primary_performance_rule_id",
     "performance_visibility_scope",
     "traffic_primary_metric",
     "traffic_verdict",
     "traffic_stage",
+    "traffic_observation_surface",
+    "traffic_outcome_checkpoint_id",
+    "traffic_outcome_receipt_sha256",
     "job_primary_metric",
     "job_metric_event_definition",
     "job_metric_denominator",
@@ -633,6 +665,10 @@ V2_DRAFT_META = {
     "job_metric_verdict",
     "visual_delivery_requirement",
     "visual_delivery_status",
+    "expected_slide_indices",
+    "cta_product_scope",
+    "production_gate_status",
+    "production_gate_receipt_ids",
 }
 LIFECYCLES = {"hot", "periodic", "evergreen_search"}
 DIRECTIONS = {
@@ -685,6 +721,158 @@ DRAFT_HEADINGS = {
     "合规审校",
     "创意审校",
     "观测计划",
+}
+V2_DRAFT_HEADINGS = {"流量机制绑定", "视觉方向绑定"}
+V2_MECHANISM_CONTRACT_STATUSES = {
+    "needs_research",
+    "bound_candidate",
+    "bound_grounded",
+}
+V2_MECHANISM_CONTRACT_FIELDS = {
+    "contract_status",
+    "primary_mechanism_id",
+    "mechanism_ids",
+    "counterexample_ids",
+    "material_codes",
+    "material_evidence_map",
+    "mechanism_application_map",
+    "research_gap",
+}
+V2_MECHANISM_SLOTS = {
+    "content": {"content"},
+    "carrier_or_truth": {"carrier_router", "truth_gate"},
+    "learning_or_governance": {"feedback", "measurement", "governance"},
+}
+V2_MATERIAL_REF_TYPES = {
+    "promise": {"draft_anchor"},
+    "real_proof": {"source", "claim", "post", "authorized_material"},
+    "user_language": {"source", "post", "authorized_material"},
+    "scene_observation": {"source", "post", "authorized_material"},
+    "before_after_sequence": {"source", "post", "authorized_material"},
+    "constraint_cost": {"source", "claim", "post", "authorized_material"},
+    "work_object": {"source", "post", "authorized_material"},
+    "current_source": {"source", "claim"},
+    "comparison_candidates": {"source", "claim", "post"},
+    "uniform_protocol": {"source", "claim", "draft_anchor"},
+    "search_intent_sample": {"query", "source", "post"},
+    "proof_inventory": {"source", "claim", "post", "authorized_material", "draft_anchor"},
+    "human_use_record": {"source", "post", "authorized_material"},
+    "rights_clearance": {"authorization"},
+    "series_promise": {"draft_anchor"},
+    "fresh_payload": {"source", "post", "authorized_material"},
+    "authorized_experience": {"authorization", "authorized_material", "source"},
+    "actionable_method": {"source", "claim", "post", "draft_anchor"},
+    "problem_evidence": {"source", "claim", "post", "authorized_material"},
+    "category_facts": {"source", "claim"},
+    "real_comments": {"source", "post", "authorized_material"},
+    "first_party_metrics": {"source", "claim"},
+    "comment_semantics": {"source", "post", "draft_anchor"},
+    "variant_log": {"source", "draft_anchor"},
+    "ai_draft": {"source", "draft_anchor"},
+    "human_review": {"source", "draft_anchor"},
+    "source_ledger": {"query", "source", "claim", "account", "post", "draft_anchor"},
+    "version_log": {"source", "draft_anchor"},
+    "authorized_chat_original": {"authorization", "authorized_material"},
+    "fiction_disclosure": {"draft_anchor"},
+    "real_process_video": {"source", "authorization", "authorized_material"},
+    "current_interface_capture": {"source", "authorized_material"},
+    "privacy_redaction": {"authorization", "draft_anchor"},
+    "real_person_authorized": {"authorization", "authorized_material"},
+    "spoken_claim_sources": {"source", "claim"},
+    "surface_entry_observation": {"query", "source", "post", "account"},
+    "independent_demand_signal": {"query", "source", "post"},
+    "supply_source_audit": {"source", "post", "account", "draft_anchor"},
+    "freshness_signal": {"source", "claim", "post", "draft_anchor"},
+}
+V2_VISUAL_CONTRACT_STATUSES = {
+    "not_requested",
+    "needs_visual_research",
+    "prototype_gap",
+    "selected_exploration",
+    "selected_production",
+}
+V2_VISUAL_CONTRACT_FIELDS = {
+    "visual_contract_status",
+    "visual_direction_card_ids",
+    "selection_mode",
+    "asset_manifest_path",
+    "asset_manifest_sha256",
+    "style_library_path",
+    "draft_binding_id",
+    "active_contraindication_codes",
+    "research_gap",
+}
+V2_VISUAL_PROTOTYPE_FIELDS = {
+    "prototype_asset_id",
+    "draft_id",
+    "visual_brief_id",
+    "concept_id",
+    "attention_path",
+    "prototype_prompt_sha256",
+    "asset_path",
+    "asset_sha256",
+    "width",
+    "height",
+    "render_method",
+    "binding_rule_bundle_sha256",
+    "style_rule_refs",
+    "starter_prompt_id",
+    "starter_prompt_sha256",
+    "feed_preview_path",
+    "feed_preview_sha256",
+    "feed_review_status",
+    "full_review_status",
+    "selection_status",
+    "selection_reason",
+    "revision_of",
+    "notes",
+}
+V2_VISUAL_BRIEF_FIELDS = {
+    "visual_brief_id", "draft_id", "brief_revision", "visual_brief_sha256",
+    "binding_snapshot_sha256", "primary_job", "carrier", "audience_state",
+    "attention_paths", "functional_need", "lived_scene", "motive_codes",
+    "perceivable_outcome", "brand_to_user_translation_trace", "offer_or_sku_ref",
+    "distribution_mode", "content_owner_id", "reviewer_ids",
+    "reviewer_independence_status", "content_model_id", "content_model_version",
+    "model_lifecycle_stage", "page_role_plan", "required_material_codes",
+    "forbidden_feature_codes", "brand_prominence", "prototype_count",
+    "feed_preview_size", "full_size", "constraint_codes",
+    "benchmark_library_post_ids", "target_hypothesis_sha256",
+    "benchmark_set_sha256", "attention_path_set_sha256",
+    "generation_prompt_sha256", "supersedes_visual_brief_id",
+    "reset_of_visual_brief_id", "created_at",
+}
+V2_DRAFT_ASSET_FIELDS = {
+    "draft_asset_id",
+    "draft_id",
+    "draft_binding_id",
+    "slide_index",
+    "asset_path",
+    "asset_sha256",
+    "width",
+    "height",
+    "render_method",
+    "binding_rule_bundle_sha256",
+    "style_rule_refs",
+    "starter_prompt_sha256",
+    "review_status",
+    "review_receipt_id",
+    "revision_of",
+    "notes",
+}
+V2_FINAL_RENDER_METHODS = {
+    "deterministic_layout",
+    "manual_design",
+    "image_model",
+    "hybrid",
+    "authorized_capture",
+}
+V2_VISUAL_REVIEW_FIELDS = {
+    "review_receipt_id", "draft_id", "draft_asset_id", "asset_sha256",
+    "binding_sha256", "slide_index", "content_owner_id", "reviewer_id",
+    "reviewer_independence_status", "reviewed_at",
+    "feed_review_status", "full_review_status", "review_status", "issues",
+    "receipt_sha256",
 }
 DRAFT_META = {
     "draft_id",
@@ -871,6 +1059,17 @@ def parse_dateish(value: str) -> date | None:
         return datetime.fromisoformat(normalized).date()
     except ValueError:
         return parse_iso(normalized)
+
+
+def parse_timestamp_utc(value: object) -> datetime:
+    """Parse SQLite/ISO timestamps and normalize naive SQLite UTC to UTC."""
+    normalized = str(value).strip()
+    if normalized.endswith("Z"):
+        normalized = normalized[:-1] + "+00:00"
+    parsed = datetime.fromisoformat(normalized)
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
 
 
 def parse_partial_iso(value: str) -> date | None:
@@ -1158,6 +1357,7 @@ class RunValidator:
         self.rows: dict[str, list[dict[str, str]]] = {}
         self.run: dict[str, str] = {}
         self.style_taxonomy_v2: dict[str, object] = {}
+        self.traffic_mechanism_library: dict[str, object] = {}
 
     def _is_v2(self) -> bool:
         return self.run.get("run_contract_version", "").strip() == "2"
@@ -1177,6 +1377,35 @@ class RunValidator:
             )
             return
         self.style_taxonomy_v2 = payload
+
+    def _load_traffic_mechanism_library(self) -> None:
+        path = Path(__file__).resolve().parents[1] / "assets" / "traffic-mechanisms-v1.json"
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            self.error("mechanism_library_unavailable", "run.yaml", str(exc))
+            return
+        cards = payload.get("mechanisms")
+        if payload.get("schema_version") != "1.0.0" or not isinstance(cards, list):
+            self.error(
+                "mechanism_library_unavailable",
+                "run.yaml",
+                "traffic mechanism library must be schema_version=1.0.0",
+            )
+            return
+        ids = [
+            card.get("mechanism_id")
+            for card in cards
+            if isinstance(card, dict)
+        ]
+        if len(ids) != len(cards) or any(not value for value in ids) or len(set(ids)) != len(ids):
+            self.error(
+                "mechanism_library_unavailable",
+                "run.yaml",
+                "traffic mechanism IDs must be present and unique",
+            )
+            return
+        self.traffic_mechanism_library = payload
 
     def _v2_codes(self, key: str) -> set[str]:
         value = self.style_taxonomy_v2.get(key, [])
@@ -1212,6 +1441,7 @@ class RunValidator:
         self._check_sources()
         self._check_claims()
         self._check_accounts_and_posts()
+        self._check_style_capture_receipts()
         self._check_topics()
         self._check_registry_rows()
         self._check_authorizations()
@@ -1290,6 +1520,7 @@ class RunValidator:
                 )
             else:
                 self._load_style_taxonomy_v2()
+                self._load_traffic_mechanism_library()
                 self._check_v2_run_contract()
 
     def _check_v2_run_contract(self) -> None:
@@ -1969,6 +2200,204 @@ class RunValidator:
                         location,
                         "account_baseline_multiple must be a non-negative number or blank",
                     )
+
+    def _check_style_capture_receipts(self) -> None:
+        if not self._is_v2():
+            return
+        posts = self.rows.get("posts.csv", [])
+        if not posts:
+            return
+        mode = self.run.get("mode", "")
+        completed_research = (
+            mode in {"discovery", "refresh"}
+            and self.run.get("status") == "complete"
+        )
+        topic_post_ids = {
+            value
+            for topic in self.rows.get("topics.csv", [])
+            for value in split_ids(topic.get("evidence_ids"))
+        }
+        required_posts = {
+            row.get("post_id", "")
+            for row in posts
+            if row.get("status") == "active"
+            and (
+                row.get("performance_tier") in {"high", "low"}
+                or row.get("post_id", "") in topic_post_ids
+            )
+        }
+        if completed_research:
+            for index, row in enumerate(posts, start=2):
+                if (
+                    row.get("post_id", "") in required_posts
+                    and row.get("style_capture_status") != "complete"
+                ):
+                    self.error(
+                        "incomplete_style_capture",
+                        f"posts.csv:{index}",
+                        "completed discovery/refresh requires complete copy+visual capture for every active high/low or topic-evidence post",
+                    )
+
+        captured = [row for row in posts if row.get("style_capture_status") == "complete"]
+        if not captured:
+            return
+        raw_library_path = self.run.get("style_library_path", "").strip()
+        library_path = (self.run_dir / raw_library_path).resolve()
+        if not library_path.is_file():
+            self.error(
+                "style_capture_receipt_missing",
+                "posts.csv",
+                f"complete style capture requires the SQLite library: {raw_library_path}",
+            )
+            return
+        try:
+            from style_library import (  # type: ignore
+                StyleLibraryError,
+                _preflight_existing_database,
+            )
+        except ImportError as exc:
+            self.error("style_capture_receipt_invalid", "posts.csv", str(exc))
+            return
+        try:
+            if _preflight_existing_database(library_path) != 2:
+                raise StyleLibraryError("schema_version_mismatch")
+        except StyleLibraryError as exc:
+            self.error("style_capture_receipt_invalid", "posts.csv", str(exc))
+            return
+        posts_csv_path = self.run_dir / "posts.csv"
+        posts_csv_sha = hashlib.sha256(posts_csv_path.read_bytes()).hexdigest()
+        try:
+            uri_path = quote(str(library_path), safe="/")
+            con = sqlite3.connect(f"file:{uri_path}?mode=ro", uri=True)
+            con.row_factory = sqlite3.Row
+            con.execute("PRAGMA query_only = ON")
+            foreign_key_violations = con.execute("PRAGMA foreign_key_check").fetchall()
+            if foreign_key_violations:
+                self.error(
+                    "style_capture_receipt_invalid",
+                    "posts.csv",
+                    "style library contains foreign-key violations",
+                )
+                return
+            for index, row in enumerate(posts, start=2):
+                if row.get("style_capture_status") != "complete":
+                    continue
+                location = f"posts.csv:{index}"
+                library_post_id = row.get("style_library_post_id", "").strip()
+                style_post = con.execute(
+                    "SELECT * FROM style_posts WHERE library_post_id=?",
+                    (library_post_id,),
+                ).fetchone()
+                if style_post is None:
+                    self.error(
+                        "style_capture_receipt_missing",
+                        location,
+                        f"unknown style_library_post_id {library_post_id}",
+                    )
+                    continue
+                identity_mismatches = []
+                if str(style_post["platform"]).strip().lower() not in {
+                    str(row.get("platform", "xiaohongshu")).strip().lower(),
+                    "xiaohongshu", "小红书", "redbook",
+                }:
+                    identity_mismatches.append("platform")
+                if row.get("note_id") and style_post["note_id"] != row.get("note_id"):
+                    identity_mismatches.append("note_id")
+                if row.get("url") and str(style_post["canonical_url"] or "").rstrip("/") != row.get(
+                    "url", ""
+                ).rstrip("/"):
+                    identity_mismatches.append("canonical_url")
+                if style_post["category"] != self.run.get("category", ""):
+                    identity_mismatches.append("category")
+                if identity_mismatches:
+                    self.error(
+                        "style_capture_receipt_mismatch",
+                        location,
+                        "style post identity disagrees on: "
+                        + ", ".join(identity_mismatches),
+                    )
+                run_ref = con.execute(
+                    """
+                    SELECT 1 FROM run_post_refs
+                    WHERE run_id=? AND run_post_id=? AND library_post_id=?
+                    """,
+                    (self.run.get("run_id"), row.get("post_id"), library_post_id),
+                ).fetchone()
+                if run_ref is None:
+                    self.error(
+                        "style_capture_receipt_missing",
+                        location,
+                        "run_post_refs does not bind this run post to the library post",
+                    )
+                observation = con.execute(
+                    """
+                    SELECT * FROM style_post_observations
+                    WHERE run_id=? AND run_post_id=? AND library_post_id=?
+                      AND source_csv_sha256=? AND observation_state='complete'
+                    """,
+                    (
+                        self.run.get("run_id"), row.get("post_id"),
+                        library_post_id, posts_csv_sha,
+                    ),
+                ).fetchone()
+                if observation is None:
+                    self.error(
+                        "style_capture_receipt_missing",
+                        location,
+                        "no complete style_post_observation matches the exact posts.csv snapshot",
+                    )
+                elif observation["performance_tier"] != row.get("performance_tier"):
+                    self.error(
+                        "style_capture_receipt_mismatch",
+                        location,
+                        "performance_tier does not match the recomputed SQLite observation",
+                    )
+                observation_ids = set(split_ids(row.get("style_observation_ids")))
+                if not observation_ids:
+                    continue
+                placeholders = ",".join("?" for _ in observation_ids)
+                copy_ids = {
+                    item[0]
+                    for item in con.execute(
+                        f"""
+                        SELECT observation_id FROM copy_observations
+                        WHERE library_post_id=? AND observation_id IN ({placeholders})
+                        """,
+                        (library_post_id, *sorted(observation_ids)),
+                    ).fetchall()
+                }
+                visual_ids = {
+                    item[0]
+                    for item in con.execute(
+                        f"""
+                        SELECT visual_observation_id FROM visual_observations
+                        WHERE library_post_id=? AND visual_observation_id IN ({placeholders})
+                        """,
+                        (library_post_id, *sorted(observation_ids)),
+                    ).fetchall()
+                }
+                if copy_ids | visual_ids != observation_ids:
+                    self.error(
+                        "style_capture_receipt_missing",
+                        location,
+                        "style_observation_ids contain unknown or cross-post IDs",
+                    )
+                style_requirement = self.run.get("style_requirement", "both")
+                missing_required_observation = (
+                    (style_requirement in {"copy", "both"} and not copy_ids)
+                    or (style_requirement in {"visual", "both"} and not visual_ids)
+                )
+                if missing_required_observation:
+                    self.error(
+                        "incomplete_style_capture",
+                        location,
+                        "complete style capture lacks the copy/visual observation required by run.style_requirement",
+                    )
+        except sqlite3.Error as exc:
+            self.error("style_capture_receipt_invalid", "posts.csv", str(exc))
+        finally:
+            if "con" in locals():
+                con.close()
 
     def _source_is_demand_sample(self, row: dict[str, str]) -> bool:
         if row.get("access_status") not in {"full", "partial"}:
@@ -2856,6 +3285,28 @@ class RunValidator:
                 "draft style_requirement must match run.yaml",
             )
 
+        if meta.get("style_library_path", "") != self.run.get("style_library_path", ""):
+            self.error(
+                "style_run_mismatch",
+                path.name,
+                "draft style_library_path must match run.yaml",
+            )
+        if meta.get("style_taxonomy_version", "") != "2":
+            invalid("style_taxonomy_version", meta.get("style_taxonomy_version", ""))
+        category = meta.get("style_query_category", "").strip()
+        if category.lower() in {"", "none", "unknown", "待填写"}:
+            self.error(
+                "style_query_incomplete",
+                path.name,
+                "style_query_category must name the current content category",
+            )
+        elif category != self.run.get("category", "").strip():
+            self.error(
+                "style_query_mismatch",
+                path.name,
+                "style_query_category must exactly match run.yaml category",
+            )
+
         primary_jobs = self._v2_codes("primary_job")
         query_job = meta.get("style_query_primary_job", "")
         if query_job not in primary_jobs:
@@ -2880,6 +3331,51 @@ class RunValidator:
                 invalid("style_query_carrier", carrier)
         elif carrier not in carriers:
             invalid("style_query_carrier", carrier)
+
+        def checked_codes(field: str, taxonomy_key: str) -> set[str]:
+            values = {
+                value
+                for value in split_ids(meta.get(field, ""))
+                if value.lower() != "none"
+            }
+            unknown = sorted(values - self._v2_codes(taxonomy_key))
+            if unknown:
+                invalid(field, ",".join(unknown))
+            return values
+
+        available_style_materials = checked_codes(
+            "style_query_available_material_codes", "material_code"
+        )
+        required_style_materials = checked_codes(
+            "style_query_required_material_codes", "material_code"
+        )
+        required_constraints = checked_codes(
+            "style_query_required_constraint_codes", "production_constraint_code"
+        )
+        active_constraints = checked_codes(
+            "style_query_active_constraint_codes", "production_constraint_code"
+        )
+        checked_codes(
+            "style_query_active_contraindication_codes", "contraindication_code"
+        )
+        if requirement != "none" and not available_style_materials:
+            self.error(
+                "style_query_incomplete",
+                path.name,
+                "style query requires at least one controlled available material code",
+            )
+        if required_style_materials - available_style_materials:
+            self.error(
+                "style_query_material_gap",
+                path.name,
+                "required style materials must be present in available materials",
+            )
+        if required_constraints - active_constraints:
+            self.error(
+                "style_query_constraint_gap",
+                path.name,
+                "required style constraints must be present in active constraints",
+            )
 
         binding_status = meta.get("style_binding_status", "")
         if binding_status == "starter_applied":
@@ -2931,6 +3427,14 @@ class RunValidator:
         evidence_scope = meta.get("performance_evidence_scope", "")
         if evidence_scope not in V2_PERFORMANCE_EVIDENCE_SCOPES:
             invalid("performance_evidence_scope", evidence_scope)
+        if evidence_scope == "first_party_traffic_validated":
+            self.error(
+                "first_party_scope_release_gate",
+                path.name,
+                "first_party_traffic_validated is disabled until this validator can import "
+                "the original analytics export and recompute the experiment verdict; a "
+                "hand-populated checkpoint database is not traffic validation",
+            )
         if claim_kind in {"series_constant", "task_fit"} and evidence_scope != "not_performance_evidence":
             self.error(
                 "nonperformance_rule_scope",
@@ -2958,6 +3462,29 @@ class RunValidator:
                 path.name,
                 "performance evidence requires a differentiated contrastive hypothesis",
             )
+        primary_performance_rule_id = normalize_none(
+            meta.get("primary_performance_rule_id")
+        )
+        if evidence_scope == "not_performance_evidence":
+            if primary_performance_rule_id != "none":
+                self.error(
+                    "primary_performance_rule_mismatch",
+                    path.name,
+                    "non-performance drafts must use primary_performance_rule_id=none",
+                )
+        else:
+            if not scope_is_specific(primary_performance_rule_id):
+                self.error(
+                    "primary_performance_rule_missing",
+                    path.name,
+                    "performance evidence requires one explicit primary_performance_rule_id",
+                )
+            if binding_status != "grounded":
+                self.error(
+                    "primary_performance_rule_missing",
+                    path.name,
+                    "a primary performance rule requires a grounded published binding",
+                )
 
         visibility = meta.get("performance_visibility_scope", "")
         if visibility not in V2_PERFORMANCE_VISIBILITY_SCOPES:
@@ -3080,6 +3607,52 @@ class RunValidator:
                 path.name,
                 "first_party_traffic_validated requires first-party impressions or reach",
             )
+        outcome_surface = normalize_none(meta.get("traffic_observation_surface"))
+        outcome_id = normalize_none(meta.get("traffic_outcome_checkpoint_id"))
+        outcome_sha = normalize_none(meta.get("traffic_outcome_receipt_sha256"))
+        if evidence_scope == "first_party_traffic_validated":
+            if traffic_verdict != "inconclusive":
+                self.error(
+                    "traffic_verdict_release_gate",
+                    path.name,
+                    "this release records first-party checkpoints but does not promote win/loss until verdict recomputation is published",
+                )
+            if binding_status != "grounded":
+                self.error(
+                    "traffic_outcome_receipt_missing",
+                    path.name,
+                    "first-party traffic validation requires a grounded published style binding",
+                )
+            if not scope_is_specific(outcome_surface):
+                self.error(
+                    "traffic_outcome_receipt_missing",
+                    path.name,
+                    "first-party traffic validation requires one exact observation surface",
+                )
+            if outcome_id == "none" or not valid_sha256(outcome_sha):
+                self.error(
+                    "traffic_outcome_receipt_missing",
+                    path.name,
+                    "first-party traffic validation requires checkpoint ID and receipt SHA-256",
+                )
+        elif any(value != "none" for value in (outcome_surface, outcome_id, outcome_sha)):
+            self.error(
+                "traffic_outcome_receipt_mismatch",
+                path.name,
+                "non-validated evidence scope cannot claim first-party outcome receipt fields",
+            )
+        if traffic_verdict in {"win", "loss"} and evidence_scope != "first_party_traffic_validated":
+            self.error(
+                "traffic_outcome_receipt_missing",
+                path.name,
+                "traffic win/loss requires performance_evidence_scope=first_party_traffic_validated",
+            )
+        if job_metric_verdict in {"win", "loss"}:
+            self.error(
+                "job_metric_verdict_release_gate",
+                path.name,
+                "job win/loss is disabled until an immutable recomputable job-outcome publication exists",
+            )
 
         visual_requirement = meta.get("visual_delivery_requirement", "")
         if visual_requirement not in V2_VISUAL_DELIVERY_REQUIREMENTS:
@@ -3087,14 +3660,16 @@ class RunValidator:
         visual_status = meta.get("visual_delivery_status", "")
         if visual_status not in V2_VISUAL_DELIVERY_STATUSES:
             invalid("visual_delivery_status", visual_status)
-        if visual_requirement == "rendered" and visual_status in {
-            "not_requested",
-            "brief_only",
-        }:
+        allowed_visual_states = {
+            "none": {"not_requested"},
+            "brief": {"brief_only", "prototype_only"},
+            "rendered": {"rendered_needs_review", "rendered_pass"},
+        }
+        if visual_status not in allowed_visual_states.get(visual_requirement, set()):
             self.error(
-                "rendered_delivery_missing",
+                "visual_delivery_state_mismatch",
                 path.name,
-                "a rendered-image request cannot be delivered as a brief",
+                f"visual_delivery_requirement={visual_requirement} cannot use visual_delivery_status={visual_status}",
             )
         if visual_requirement == "rendered" and draft_status == "ready" and visual_status != "rendered_pass":
             self.error(
@@ -3108,12 +3683,45 @@ class RunValidator:
                 path.name,
                 "rendered_pass requires visual_delivery_requirement=rendered",
             )
+        if visual_status == "rendered_pass":
+            self._check_rendered_assets(path, meta, require_pass=True)
+        elif visual_status == "rendered_needs_review":
+            if draft_status == "ready":
+                self.error(
+                    "rendered_asset_review_missing",
+                    path.name,
+                    "rendered_needs_review cannot be marked ready",
+                )
+            self._check_rendered_assets(path, meta, require_pass=False)
+
+        expected_slide_indices = self._contract_ids(meta.get("expected_slide_indices"))
+        if visual_status in {"rendered_needs_review", "rendered_pass"}:
+            try:
+                parsed_expected = [int(value) for value in expected_slide_indices]
+            except ValueError:
+                parsed_expected = []
+            if (
+                not parsed_expected
+                or len(set(parsed_expected)) != len(parsed_expected)
+                or sorted(parsed_expected) != list(range(1, max(parsed_expected, default=0) + 1))
+            ):
+                self.error(
+                    "expected_slide_contract",
+                    path.name,
+                    "rendered delivery requires explicit contiguous expected_slide_indices starting at 1",
+                )
+        elif expected_slide_indices:
+            self.error(
+                "expected_slide_contract",
+                path.name,
+                "expected_slide_indices must be none unless rendered assets were requested",
+            )
 
         product_scope = meta.get("cta_product_scope", "").strip()
-        if product_scope and product_scope not in V2_CTA_PRODUCT_SCOPES:
+        if product_scope not in V2_CTA_PRODUCT_SCOPES:
             invalid("cta_product_scope", product_scope)
         gate_status = meta.get("production_gate_status", "").strip()
-        if gate_status and gate_status not in V2_PRODUCTION_GATE_STATUSES:
+        if gate_status not in V2_PRODUCTION_GATE_STATUSES:
             invalid("production_gate_status", gate_status)
         receipt_ids = [
             value
@@ -3142,6 +3750,2545 @@ class RunValidator:
                     path.name,
                     "adult-product CTA requires a current production-gate receipt or an explicitly blocked draft",
                 )
+            if gate_ready:
+                self._check_production_gate_receipts(path, meta, receipt_ids)
+
+    @staticmethod
+    def _decoded_image_dimensions(asset_path: Path) -> tuple[int, int] | None:
+        """Fully decode a supported image and return its true dimensions.
+
+        ``Image.verify`` catches truncated containers while the second open and
+        ``load`` force pixel decoding. Merely parsing PNG/GIF/JPEG/WebP headers is
+        insufficient evidence that a reviewer could actually open the asset.
+        """
+        if Image is None:
+            return None
+        try:
+            with Image.open(asset_path) as image:
+                if image.format not in {"PNG", "JPEG", "GIF", "WEBP"}:
+                    return None
+                image.verify()
+            with Image.open(asset_path) as image:
+                if image.format not in {"PNG", "JPEG", "GIF", "WEBP"}:
+                    return None
+                image.load()
+                width, height = image.size
+        except (OSError, ValueError, UnidentifiedImageError):
+            return None
+        if width < 1 or height < 1:
+            return None
+        return int(width), int(height)
+
+    def _check_rendered_assets(
+        self,
+        path: Path,
+        meta: dict[str, str],
+        *,
+        require_pass: bool,
+    ) -> None:
+        if Image is None:
+            self.error(
+                "visual_decoder_unavailable",
+                path.name,
+                "visual artifact validation requires Pillow; install redbook-writing/requirements-visual.txt",
+            )
+            return
+        manifest_path = self.run_dir / "draft-assets.csv"
+        if meta.get("style_binding_status") != "grounded":
+            self.error(
+                "rendered_asset_receipt_missing",
+                path.name,
+                "rendered assets require a grounded, published style binding",
+            )
+        if not manifest_path.is_file():
+            self.error(
+                "rendered_asset_receipt_missing",
+                path.name,
+                "rendered delivery requires draft-assets.csv",
+            )
+            return
+        try:
+            with manifest_path.open(encoding="utf-8-sig", newline="") as handle:
+                reader = csv.DictReader(handle)
+                fields = set(reader.fieldnames or [])
+                all_rows = list(reader)
+                rows = [row for row in all_rows if row.get("draft_id") == meta.get("draft_id")]
+        except (OSError, UnicodeDecodeError, csv.Error) as exc:
+            self.error("rendered_asset_receipt_invalid", path.name, str(exc))
+            return
+        if fields != V2_DRAFT_ASSET_FIELDS:
+            self.error(
+                "rendered_asset_receipt_invalid",
+                "draft-assets.csv",
+                "header must exactly match the v2 draft asset contract",
+            )
+            return
+        if not rows:
+            self.error(
+                "rendered_asset_receipt_missing",
+                path.name,
+                "no final asset rows match this draft_id",
+            )
+            return
+        all_asset_ids = [row.get("draft_asset_id", "").strip() for row in all_rows]
+        duplicate_asset_ids = sorted(
+            asset_id
+            for asset_id, count in Counter(all_asset_ids).items()
+            if asset_id and count > 1
+        )
+        if duplicate_asset_ids:
+            self.error(
+                "rendered_asset_receipt_invalid",
+                "draft-assets.csv",
+                "draft_asset_id must be globally unique across the manifest: "
+                + ", ".join(duplicate_asset_ids),
+            )
+        review_receipts: dict[str, dict[str, object]] = {}
+        if require_pass:
+            reviews_path = self.run_dir / "visual-review-receipts.jsonl"
+            if not reviews_path.is_file():
+                self.error(
+                    "rendered_asset_review_missing",
+                    path.name,
+                    "rendered_pass requires visual-review-receipts.jsonl",
+                )
+            else:
+                try:
+                    for line_number, line in enumerate(
+                        reviews_path.read_text(encoding="utf-8-sig").splitlines(), start=1
+                    ):
+                        if not line.strip():
+                            continue
+                        item = json.loads(line)
+                        if not isinstance(item, dict) or set(item) != V2_VISUAL_REVIEW_FIELDS:
+                            raise ValueError(
+                                f"line {line_number}: visual review fields do not match v2 contract"
+                            )
+                        receipt_id = item.get("review_receipt_id")
+                        if (
+                            not isinstance(receipt_id, str)
+                            or not receipt_id
+                            or receipt_id in review_receipts
+                        ):
+                            raise ValueError(
+                                f"line {line_number}: review_receipt_id must be present and unique"
+                            )
+                        canonical = dict(item)
+                        supplied_sha = canonical.pop("receipt_sha256", None)
+                        calculated_sha = hashlib.sha256(
+                            json.dumps(
+                                canonical,
+                                ensure_ascii=False,
+                                sort_keys=True,
+                                separators=(",", ":"),
+                            ).encode("utf-8")
+                        ).hexdigest()
+                        if supplied_sha != calculated_sha:
+                            raise ValueError(
+                                f"line {line_number}: receipt_sha256 mismatch"
+                            )
+                        review_receipts[receipt_id] = item
+                except (
+                    OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError
+                ) as exc:
+                    self.error("rendered_asset_review_invalid", path.name, str(exc))
+        indices: list[int] = []
+        expected_indices = [
+            int(value)
+            for value in self._contract_ids(meta.get("expected_slide_indices"))
+            if value.isdigit()
+        ]
+        asset_ids: set[str] = set()
+        review_statuses: list[str] = []
+        expected_rules = set(self._contract_ids(meta.get("style_rule_ids")))
+        used_rules: set[str] = set()
+        for row_number, row in enumerate(rows, start=2):
+            location = f"draft-assets.csv:{row_number}"
+            asset_id = row.get("draft_asset_id", "").strip()
+            if not asset_id or asset_id in asset_ids:
+                self.error(
+                    "rendered_asset_receipt_invalid",
+                    location,
+                    "draft_asset_id must be present and unique",
+                )
+            asset_ids.add(asset_id)
+            try:
+                slide_index = int(row.get("slide_index", ""))
+            except ValueError:
+                slide_index = 0
+            if slide_index < 1 or slide_index in indices:
+                self.error(
+                    "rendered_asset_receipt_invalid",
+                    location,
+                    "slide_index must be a unique positive integer",
+                )
+            indices.append(slide_index)
+            if row.get("draft_binding_id") != meta.get("draft_binding_id"):
+                self.error(
+                    "rendered_asset_receipt_mismatch",
+                    location,
+                    "draft_binding_id does not match the draft",
+                )
+            if row.get("binding_rule_bundle_sha256") != meta.get("draft_binding_sha256"):
+                self.error(
+                    "rendered_asset_receipt_mismatch",
+                    location,
+                    "binding_rule_bundle_sha256 does not match the published binding",
+                )
+            asset_rules = set(self._contract_ids(row.get("style_rule_refs")))
+            if not asset_rules or not asset_rules.issubset(expected_rules):
+                self.error(
+                    "rendered_asset_receipt_mismatch",
+                    location,
+                    "style_rule_refs must be a non-empty subset of the bound rules",
+                )
+            used_rules.update(asset_rules)
+            review_status = row.get("review_status", "")
+            review_statuses.append(review_status)
+            if require_pass and review_status != "PASS":
+                self.error(
+                    "rendered_asset_review_missing",
+                    location,
+                    "each final asset requires review_status=PASS",
+                )
+            elif not require_pass and review_status not in {"PASS", "NEEDS_REVIEW"}:
+                self.error(
+                    "rendered_asset_review_missing",
+                    location,
+                    "review-pending assets require review_status=NEEDS_REVIEW or PASS",
+                )
+            receipt_id = normalize_none(row.get("review_receipt_id"))
+            if require_pass:
+                receipt = review_receipts.get(receipt_id)
+                if receipt is None:
+                    self.error(
+                        "rendered_asset_review_missing",
+                        location,
+                        f"unknown or missing visual review receipt {receipt_id}",
+                    )
+                else:
+                    reviewed_at = parse_dateish(str(receipt.get("reviewed_at", "")))
+                    run_date = parse_iso(self.run.get("created_at", ""))
+                    expected_review = {
+                        "draft_id": meta.get("draft_id"),
+                        "draft_asset_id": asset_id,
+                        "asset_sha256": row.get("asset_sha256"),
+                        "binding_sha256": meta.get("draft_binding_sha256"),
+                        "slide_index": slide_index,
+                        "feed_review_status": "PASS",
+                        "full_review_status": "PASS",
+                        "review_status": "PASS",
+                        "reviewer_independence_status": "independent",
+                    }
+                    review_mismatches = [
+                        field
+                        for field, expected in expected_review.items()
+                        if str(receipt.get(field, "")) != str(expected)
+                    ]
+                    if (
+                        not scope_is_specific(str(receipt.get("reviewer_id", "")))
+                        or not scope_is_specific(str(receipt.get("content_owner_id", "")))
+                        or receipt.get("reviewer_id") == receipt.get("content_owner_id")
+                        or not reviewed_at
+                        or (run_date and reviewed_at < run_date)
+                        or reviewed_at > date.today()
+                    ):
+                        review_mismatches.extend(
+                            ["content_owner_id", "reviewer_id", "reviewed_at"]
+                        )
+                    if receipt.get("issues") not in ([], None):
+                        review_mismatches.append("issues")
+                    if review_mismatches:
+                        self.error(
+                            "rendered_asset_review_mismatch",
+                            location,
+                            "visual review receipt disagrees on: "
+                            + ", ".join(sorted(set(review_mismatches))),
+                        )
+            elif receipt_id != "none":
+                self.error(
+                    "rendered_asset_review_mismatch",
+                    location,
+                    "rendered_needs_review must not claim a PASS review receipt",
+                )
+            try:
+                width = int(row.get("width", ""))
+                height = int(row.get("height", ""))
+            except ValueError:
+                width = height = 0
+            if width < 1 or height < 1:
+                self.error(
+                    "rendered_asset_receipt_invalid",
+                    location,
+                    "width and height must be positive integers",
+                )
+            if row.get("render_method") not in V2_FINAL_RENDER_METHODS:
+                self.error(
+                    "rendered_asset_receipt_invalid",
+                    location,
+                    "render_method must be one of: "
+                    + ", ".join(sorted(V2_FINAL_RENDER_METHODS)),
+                )
+            if normalize_none(row.get("starter_prompt_sha256")) != "none":
+                self.error(
+                    "rendered_asset_receipt_mismatch",
+                    location,
+                    "starter prompt lineage is disabled; final assets must use the published library binding",
+                )
+            if normalize_none(row.get("revision_of")) != "none":
+                self.error(
+                    "rendered_asset_receipt_invalid",
+                    location,
+                    "final manifest contains current assets only; revision_of must be none",
+                )
+            raw_asset_path = row.get("asset_path", "").strip()
+            asset_path = (self.run_dir / raw_asset_path).resolve()
+            try:
+                asset_path.relative_to(self.run_dir.resolve())
+            except ValueError:
+                self.error(
+                    "rendered_asset_receipt_invalid",
+                    location,
+                    "asset_path must stay inside the run directory",
+                )
+                continue
+            if not asset_path.is_file():
+                self.error(
+                    "rendered_asset_receipt_missing",
+                    location,
+                    f"asset file is missing: {raw_asset_path}",
+                )
+                continue
+            actual_sha = hashlib.sha256(asset_path.read_bytes()).hexdigest()
+            if row.get("asset_sha256") != actual_sha:
+                self.error(
+                    "rendered_asset_receipt_mismatch",
+                    location,
+                    "asset_sha256 does not match the final file",
+                )
+            decoded = self._decoded_image_dimensions(asset_path)
+            if decoded is None:
+                self.error(
+                    "rendered_asset_receipt_invalid",
+                    location,
+                    "final slide must be a decodable PNG/JPEG/GIF/WebP image by signature",
+                )
+            elif decoded != (width, height):
+                self.error(
+                    "rendered_asset_receipt_mismatch",
+                    location,
+                    "manifest width/height do not match the decoded image",
+                )
+        if sorted(indices) != list(range(1, len(rows) + 1)):
+            self.error(
+                "rendered_asset_receipt_invalid",
+                path.name,
+                "final slide indices must be contiguous from 1 with no gaps or extras",
+            )
+        if expected_indices and sorted(indices) != sorted(expected_indices):
+            self.error(
+                "rendered_asset_receipt_mismatch",
+                path.name,
+                "draft-assets.csv slide indices do not exactly match expected_slide_indices",
+            )
+        if expected_rules - used_rules:
+            self.error(
+                "rendered_asset_receipt_mismatch",
+                path.name,
+                "final assets do not collectively cover every bound style rule: "
+                + ", ".join(sorted(expected_rules - used_rules)),
+            )
+        if not require_pass and review_statuses and all(
+            status == "PASS" for status in review_statuses
+        ):
+            self.error(
+                "rendered_asset_review_mismatch",
+                path.name,
+                "all assets already PASS; use visual_delivery_status=rendered_pass",
+            )
+
+    def _check_production_gate_receipts(
+        self,
+        path: Path,
+        meta: dict[str, str],
+        receipt_ids: list[str],
+    ) -> None:
+        receipt_path = self.run_dir / "production-gate-receipts.jsonl"
+        if not receipt_path.is_file():
+            self.error(
+                "production_gate_receipt_missing",
+                path.name,
+                "production_gate_status=ready requires production-gate-receipts.jsonl",
+            )
+            return
+        rows: dict[str, dict[str, object]] = {}
+        try:
+            lines = receipt_path.read_text(encoding="utf-8-sig").splitlines()
+        except (OSError, UnicodeDecodeError) as exc:
+            self.error("production_gate_receipt_invalid", path.name, str(exc))
+            return
+        for line_number, line in enumerate(lines, start=1):
+            if not line.strip():
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError as exc:
+                self.error(
+                    "production_gate_receipt_invalid",
+                    f"production-gate-receipts.jsonl:{line_number}",
+                    exc.msg,
+                )
+                continue
+            receipt_id = row.get("receipt_id") if isinstance(row, dict) else None
+            if not isinstance(receipt_id, str) or not receipt_id.strip():
+                self.error(
+                    "production_gate_receipt_invalid",
+                    f"production-gate-receipts.jsonl:{line_number}",
+                    "receipt_id is required",
+                )
+                continue
+            if receipt_id in rows:
+                self.error(
+                    "production_gate_receipt_invalid",
+                    f"production-gate-receipts.jsonl:{line_number}",
+                    f"duplicate receipt_id {receipt_id}",
+                )
+                continue
+            rows[receipt_id] = row
+
+        registry = self._registry()
+        eligibility_rows = [
+            registry[value]
+            for value in self._contract_ids(meta.get("eligibility_ids"))
+            if value in registry
+        ]
+        expected_skus = {
+            row.get("sku_id", "") for row in eligibility_rows if row.get("sku_id", "")
+        }
+        expected_offers = {
+            row.get("offer_id", "") for row in eligibility_rows if row.get("offer_id", "")
+        }
+        expected_surfaces = set(self._contract_ids(meta.get("surfaces")))
+        draft_sha = hashlib.sha256(path.read_bytes()).hexdigest()
+        expected_sku_units = {
+            (
+                row.get("sku_id", ""), row.get("surface", ""),
+                row.get("account_scope", ""), row.get("source_asset_id", ""),
+                row.get("source_asset_sha256", ""),
+            )
+            for row in eligibility_rows
+            if row.get("sku_id", "")
+        }
+        expected_offer_units = {
+            (
+                row.get("offer_id", ""), row.get("surface", ""),
+                row.get("account_scope", ""), row.get("source_asset_id", ""),
+                row.get("source_asset_sha256", ""),
+            )
+            for row in eligibility_rows
+            if row.get("offer_id", "")
+        }
+        run_date = parse_iso(self.run.get("created_at", ""))
+        required_fields = {
+            "receipt_id", "draft_id", "draft_sha256", "exact_sku_id",
+            "library_account_id", "delivery_surface", "commercial_relationship",
+            "disclosure_text", "audience_age_floor", "minor_access_controls",
+            "rule_claim_id", "rule_claim_sha256", "claim_ledger_snapshot_sha256",
+            "rule_verified_at", "reviewed_at", "reviewer_id", "gate_status",
+            "not_applicable_reason", "brand_role", "agency_role",
+            "authorization_scope", "authorization_ids", "authorization_status",
+            "authorization_expires_at", "authorization_claim_id",
+            "authorization_claim_sha256", "query_matrix_sha256",
+            "query_matrix_as_of", "query_matrix_origin", "query_matrix_status",
+            "asset_origin_codes", "rights_basis_codes", "consent_status",
+            "reuse_scope", "rights_evidence_origin", "rights_evidence_status",
+            "rights_evidence_sha256", "series_id", "content_stage", "product_id",
+            "ugc_lineage_origin", "ugc_lineage_status", "ugc_lineage_sha256",
+            "distribution_mode", "account_capability_codes", "offer_id",
+            "destination_id", "asset_version", "metric_name", "metric_source",
+            "attribution_source", "distribution_evidence_origin",
+            "distribution_evidence_status", "distribution_evidence_sha256",
+            "limitations", "receipt_sha256",
+        }
+        claims = {
+            row.get("claim_id", ""): row
+            for row in self.rows.get("claim-ledger.csv", [])
+            if row.get("claim_id", "")
+        }
+        sources = {
+            row.get("source_id", ""): row
+            for row in self.rows.get("source-log.csv", [])
+            if row.get("source_id", "")
+        }
+        authorizations = {
+            row.get("authorization_id", ""): row
+            for row in self.rows.get("authorization-log.csv", [])
+            if row.get("authorization_id", "")
+        }
+        claim_ledger_path = self.run_dir / "claim-ledger.csv"
+        claim_ledger_sha = (
+            hashlib.sha256(claim_ledger_path.read_bytes()).hexdigest()
+            if claim_ledger_path.is_file()
+            else None
+        )
+
+        def canonical_row_sha(row: dict[str, str]) -> str:
+            return hashlib.sha256(
+                json.dumps(
+                    row,
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode("utf-8")
+            ).hexdigest()
+
+        def is_placeholder(value: object) -> bool:
+            normalized = str(value or "").strip().lower()
+            return (
+                normalized in {
+                    "", "unknown", "missing", "required", "none", "null",
+                    "required_account", "required_asset_version",
+                    "required_destination", "required_exact_sku",
+                    "required_human_reviewer", "required_offer",
+                    "required_product", "required_relationship",
+                    "required_visible_disclosure",
+                }
+                or normalized.startswith("required_")
+                or normalized.startswith("missing_")
+            )
+
+        def verify_origin_hash(
+            row: dict[str, object],
+            *,
+            prefix: str,
+            mismatches: list[str],
+            allow_not_applicable: bool,
+        ) -> None:
+            status_field = f"{prefix}_status"
+            origin_field = f"{prefix}_origin"
+            hash_field = f"{prefix}_sha256"
+            status = str(row.get(status_field, ""))
+            if status == "not_applicable" and allow_not_applicable:
+                if is_placeholder(row.get("not_applicable_reason")):
+                    mismatches.append("not_applicable_reason")
+                return
+            if status != "verified":
+                mismatches.append(status_field)
+                return
+            origin = str(row.get(origin_field, "")).strip()
+            supplied_hash = str(row.get(hash_field, ""))
+            if is_placeholder(origin) or not valid_sha256(supplied_hash):
+                mismatches.extend([origin_field, hash_field])
+                return
+            if "://" not in origin:
+                evidence_path = (self.run_dir / origin).resolve()
+                try:
+                    evidence_path.relative_to(self.run_dir.resolve())
+                except ValueError:
+                    mismatches.append(origin_field)
+                    return
+                if not evidence_path.is_file():
+                    mismatches.append(origin_field)
+                elif hashlib.sha256(evidence_path.read_bytes()).hexdigest() != supplied_hash:
+                    mismatches.append(hash_field)
+
+        covered_sku_units: set[tuple[str, str, str, str, str]] = set()
+        covered_offer_units: set[tuple[str, str, str, str, str]] = set()
+        covered_surfaces: set[str] = set()
+        for receipt_id in receipt_ids:
+            row = rows.get(receipt_id)
+            if row is None:
+                self.error(
+                    "production_gate_receipt_missing",
+                    path.name,
+                    f"unknown production gate receipt {receipt_id}",
+                )
+                continue
+            missing = sorted(required_fields - set(row))
+            if missing:
+                self.error(
+                    "production_gate_receipt_invalid",
+                    receipt_id,
+                    "missing fields: " + ", ".join(missing),
+                )
+                continue
+            canonical = dict(row)
+            supplied_sha = canonical.pop("receipt_sha256", None)
+            calculated_sha = hashlib.sha256(
+                json.dumps(
+                    canonical,
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode("utf-8")
+            ).hexdigest()
+            if supplied_sha != calculated_sha:
+                self.error(
+                    "production_gate_receipt_invalid",
+                    receipt_id,
+                    "receipt_sha256 does not match the canonical receipt",
+                )
+            reviewed_at = parse_dateish(str(row.get("reviewed_at", "")))
+            rule_verified_at = parse_dateish(str(row.get("rule_verified_at", "")))
+            query_matrix_as_of = parse_dateish(str(row.get("query_matrix_as_of", "")))
+            floor = row.get("audience_age_floor")
+            try:
+                age_floor = int(floor) if not isinstance(floor, bool) else 0
+            except (TypeError, ValueError):
+                age_floor = 0
+            exact_checks = {
+                "draft_id": meta.get("draft_id"),
+                "draft_sha256": draft_sha,
+                "library_account_id": meta.get("account_scope"),
+                "commercial_relationship": meta.get("commercial_relationship"),
+                "disclosure_text": meta.get("disclosure_text"),
+                "gate_status": "pass",
+                "authorization_status": "approved",
+                "rights_evidence_status": "verified",
+                "consent_status": "approved",
+                "query_matrix_status": "verified",
+            }
+            mismatches = [
+                field
+                for field, expected in exact_checks.items()
+                if str(row.get(field, "")) != str(expected)
+            ]
+            sku_id = str(row.get("exact_sku_id", ""))
+            offer_id = str(row.get("offer_id", ""))
+            surface = str(row.get("delivery_surface", ""))
+            sku_unit = (
+                sku_id, surface, str(row.get("library_account_id", "")),
+                str(row.get("draft_id", "")), str(row.get("draft_sha256", "")),
+            )
+            offer_unit = (
+                offer_id, surface, str(row.get("library_account_id", "")),
+                str(row.get("draft_id", "")), str(row.get("draft_sha256", "")),
+            )
+            if expected_sku_units:
+                if sku_unit not in expected_sku_units:
+                    mismatches.append("exact_sku_id")
+            elif sku_id != "not_applicable":
+                mismatches.append("exact_sku_id")
+            if expected_offer_units:
+                if offer_unit not in expected_offer_units:
+                    mismatches.append("offer_id")
+            elif offer_id != "not_applicable":
+                mismatches.append("offer_id")
+            if row.get("delivery_surface") not in expected_surfaces:
+                mismatches.append("delivery_surface")
+            if age_floor < 18:
+                mismatches.append("audience_age_floor")
+            for field in (
+                "minor_access_controls", "asset_origin_codes", "rights_basis_codes",
+                "reuse_scope", "limitations", "authorization_ids",
+            ):
+                values = row.get(field)
+                if (
+                    not isinstance(values, list)
+                    or not values
+                    or not all(isinstance(value, str) and not is_placeholder(value) for value in values)
+                ):
+                    mismatches.append(field)
+            if not reviewed_at or (run_date and reviewed_at != run_date):
+                mismatches.append("reviewed_at")
+            if not rule_verified_at or (run_date and rule_verified_at > run_date):
+                mismatches.append("rule_verified_at")
+            if not query_matrix_as_of or (run_date and query_matrix_as_of > run_date):
+                mismatches.append("query_matrix_as_of")
+            authorization_expires_at = row.get("authorization_expires_at")
+            if authorization_expires_at not in {None, "", "not_applicable"}:
+                expires = parse_dateish(str(authorization_expires_at))
+                if not expires or (run_date and expires < run_date):
+                    mismatches.append("authorization_expires_at")
+            for field in (
+                "asset_version", "destination_id", "reviewer_id", "brand_role",
+                "agency_role", "authorization_scope", "content_stage", "product_id",
+                "distribution_mode",
+            ):
+                if is_placeholder(row.get(field)):
+                    mismatches.append(field)
+
+            if row.get("claim_ledger_snapshot_sha256") != claim_ledger_sha:
+                mismatches.append("claim_ledger_snapshot_sha256")
+            for id_field, hash_field in (
+                ("rule_claim_id", "rule_claim_sha256"),
+                ("authorization_claim_id", "authorization_claim_sha256"),
+            ):
+                claim_id = str(row.get(id_field, ""))
+                claim = claims.get(claim_id)
+                if claim is None:
+                    mismatches.append(id_field)
+                    continue
+                if row.get(hash_field) != canonical_row_sha(claim):
+                    mismatches.append(hash_field)
+                if claim.get("claim_status") != "confirmed":
+                    mismatches.append(id_field)
+                verified = parse_dateish(claim.get("last_verified_at", ""))
+                if not verified or (run_date and verified > run_date):
+                    mismatches.append(id_field)
+            rule_claim = claims.get(str(row.get("rule_claim_id", "")))
+            if rule_claim and parse_dateish(rule_claim.get("last_verified_at", "")) != rule_verified_at:
+                mismatches.append("rule_verified_at")
+            base_claim_scope = {
+                "platform": meta.get("platform"),
+                "account_scope": meta.get("account_scope"),
+                "surface": surface,
+                "draft_id": meta.get("draft_id"),
+                "draft_sha256": draft_sha,
+            }
+            if expected_skus:
+                base_claim_scope["sku_id"] = sku_id
+            if expected_offers:
+                base_claim_scope["offer_id"] = offer_id
+            if rule_claim:
+                if rule_claim.get("category") not in {
+                    "current_rule", "current_rules", "platform_capability",
+                    "compliance", "advertising_law", "governance",
+                    "sku_eligibility", "offer_eligibility",
+                }:
+                    mismatches.append("rule_claim_id")
+                rule_scope = parse_scope_contract(rule_claim.get("scope"))
+                if any(
+                    not platforms_equivalent(rule_scope.get(field), expected)
+                    if field == "platform"
+                    else rule_scope.get(field) != expected
+                    for field, expected in base_claim_scope.items()
+                ):
+                    mismatches.append("rule_claim_id")
+                official_sources = [
+                    sources[value]
+                    for value in split_ids(rule_claim.get("source_ids"))
+                    if value in sources
+                    and sources[value].get("source_layer") == "official"
+                    and sources[value].get("access_status") in {"full", "partial"}
+                    and sources[value].get("evidence_grade") in {"A", "B"}
+                ]
+                if not official_sources:
+                    mismatches.append("rule_claim_id")
+
+            receipt_authorization_ids = row.get("authorization_ids")
+            if isinstance(receipt_authorization_ids, list):
+                authorization_id_set = {
+                    value for value in receipt_authorization_ids if isinstance(value, str)
+                }
+            else:
+                authorization_id_set = set()
+            authorization_rows = [
+                authorizations[value]
+                for value in authorization_id_set
+                if value in authorizations
+            ]
+            if len(authorization_rows) != len(authorization_id_set) or not authorization_rows:
+                mismatches.append("authorization_ids")
+            for authorization in authorization_rows:
+                expires = parse_dateish(authorization.get("expires_at", ""))
+                if not (
+                    authorization.get("status") == "approved"
+                    and authorization.get("commercial_use") == "approved"
+                    and authorization.get("source_asset_id") == meta.get("draft_id")
+                    and (not authorization.get("expires_at") or not run_date or (expires and expires >= run_date))
+                ):
+                    mismatches.append("authorization_ids")
+            authorization_claim = claims.get(str(row.get("authorization_claim_id", "")))
+            if authorization_claim:
+                if authorization_claim.get("category") not in {
+                    "authorization", "rights", "material_rights", "consent",
+                    "commercial_authorization",
+                }:
+                    mismatches.append("authorization_claim_id")
+                authorization_scope = parse_scope_contract(
+                    authorization_claim.get("scope")
+                )
+                expected_authorization_scope = dict(base_claim_scope)
+                expected_authorization_scope["authorization_ids"] = ";".join(
+                    sorted(authorization_id_set)
+                )
+                if any(
+                    not platforms_equivalent(authorization_scope.get(field), expected)
+                    if field == "platform"
+                    else authorization_scope.get(field) != expected
+                    for field, expected in expected_authorization_scope.items()
+                ):
+                    mismatches.append("authorization_claim_id")
+
+            verify_origin_hash(
+                row, prefix="query_matrix", mismatches=mismatches,
+                allow_not_applicable=False,
+            )
+            verify_origin_hash(
+                row, prefix="rights_evidence", mismatches=mismatches,
+                allow_not_applicable=False,
+            )
+            verify_origin_hash(
+                row, prefix="ugc_lineage", mismatches=mismatches,
+                allow_not_applicable=True,
+            )
+            paid_distribution = str(row.get("distribution_mode", "")) in {
+                "paid", "boosted", "paid_and_organic", "pgy_paid",
+            }
+            verify_origin_hash(
+                row, prefix="distribution_evidence", mismatches=mismatches,
+                allow_not_applicable=not paid_distribution,
+            )
+            capabilities = row.get("account_capability_codes")
+            if paid_distribution and (
+                not isinstance(capabilities, list)
+                or not capabilities
+                or not all(isinstance(value, str) and not is_placeholder(value) for value in capabilities)
+            ):
+                mismatches.append("account_capability_codes")
+            if paid_distribution:
+                for field in ("metric_name", "metric_source", "attribution_source"):
+                    if is_placeholder(row.get(field)):
+                        mismatches.append(field)
+            if mismatches:
+                self.error(
+                    "production_gate_receipt_mismatch",
+                    receipt_id,
+                    "receipt disagrees or is incomplete on: "
+                    + ", ".join(sorted(set(mismatches))),
+                )
+            else:
+                if expected_sku_units:
+                    covered_sku_units.add(sku_unit)
+                if expected_offer_units:
+                    covered_offer_units.add(offer_unit)
+                covered_surfaces.add(surface)
+
+        coverage_gaps: list[str] = []
+        if covered_sku_units != expected_sku_units:
+            coverage_gaps.append(
+                f"sku units expected={sorted(expected_sku_units)} covered={sorted(covered_sku_units)}"
+            )
+        if covered_offer_units != expected_offer_units:
+            coverage_gaps.append(
+                f"offer units expected={sorted(expected_offer_units)} covered={sorted(covered_offer_units)}"
+            )
+        if covered_surfaces != expected_surfaces:
+            coverage_gaps.append(
+                f"surface expected={sorted(expected_surfaces)} covered={sorted(covered_surfaces)}"
+            )
+        if coverage_gaps:
+            self.error(
+                "production_gate_scope_incomplete",
+                path.name,
+                "; ".join(coverage_gaps),
+            )
+
+    @staticmethod
+    def _contract_ids(value: str | None) -> list[str]:
+        return [item for item in split_ids(value) if item.lower() != "none"]
+
+    def _known_evidence_ids(self) -> tuple[set[str], set[str]]:
+        known: set[str] = set()
+        authorization_ids: set[str] = set()
+        for filename, id_field in ID_FIELDS.items():
+            for row in self.rows.get(filename, []):
+                value = row.get(id_field, "").strip()
+                if value:
+                    known.add(value)
+                    if filename == "authorization-log.csv":
+                        authorization_ids.add(value)
+        for row in self.rows.get("authorization-log.csv", []):
+            material_id = row.get("material_id", "").strip()
+            if material_id:
+                known.add(material_id)
+        return known, authorization_ids
+
+    def _evidence_id_types(self) -> dict[str, set[str]]:
+        typed: dict[str, set[str]] = {}
+
+        def add(value: str, ref_type: str) -> None:
+            value = (value or "").strip()
+            if value:
+                typed.setdefault(value, set()).add(ref_type)
+
+        file_types = {
+            "query-log.csv": ("query_id", "query"),
+            "source-log.csv": ("source_id", "source"),
+            "claim-ledger.csv": ("claim_id", "claim"),
+            "accounts.csv": ("account_id", "account"),
+            "posts.csv": ("post_id", "post"),
+            "topics.csv": ("topic_id", "topic"),
+            "sku-registry.csv": ("eligibility_id", "eligibility"),
+            "offer-registry.csv": ("eligibility_id", "eligibility"),
+            "authorization-log.csv": ("authorization_id", "authorization"),
+        }
+        for filename, (id_field, ref_type) in file_types.items():
+            for row in self.rows.get(filename, []):
+                add(row.get(id_field, ""), ref_type)
+        for row in self.rows.get("authorization-log.csv", []):
+            add(row.get("material_id", ""), "authorized_material")
+        return typed
+
+    def _contract_json(
+        self,
+        path: Path,
+        contract: dict[str, str],
+        key: str,
+        expected_type: type,
+    ) -> object | None:
+        raw = contract.get(key, "").strip()
+        if raw.lower() in {"", "none"}:
+            return None
+        try:
+            value = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            self.error(
+                "mechanism_contract_json",
+                path.name,
+                f"{key} must be one-line valid JSON: {exc.msg}",
+            )
+            return None
+        if not isinstance(value, expected_type):
+            self.error(
+                "mechanism_contract_json",
+                path.name,
+                f"{key} must be a JSON {expected_type.__name__}",
+            )
+            return None
+        return value
+
+    def _check_v2_mechanism_contract(
+        self,
+        path: Path,
+        rendered_text: str,
+        meta: dict[str, str],
+        headings: set[str],
+    ) -> None:
+        if "流量机制绑定" not in headings:
+            return
+        contract = parse_contract_block(markdown_section(rendered_text, "流量机制绑定"))
+        missing = sorted(V2_MECHANISM_CONTRACT_FIELDS - contract.keys())
+        if missing:
+            self.error(
+                "mechanism_contract_missing",
+                path.name,
+                "流量机制绑定 missing keys: " + ", ".join(missing),
+            )
+            return
+
+        status = contract.get("contract_status", "")
+        if status not in V2_MECHANISM_CONTRACT_STATUSES:
+            self.error(
+                "mechanism_contract_status",
+                path.name,
+                f"invalid contract_status: {status}",
+            )
+            return
+        selected_ids = self._contract_ids(contract.get("mechanism_ids"))
+        counterexample_ids = self._contract_ids(contract.get("counterexample_ids"))
+        material_codes = set(self._contract_ids(contract.get("material_codes")))
+        draft_status = meta.get("status", "")
+        research_gap = contract.get("research_gap", "").strip()
+
+        if status == "needs_research":
+            if selected_ids or counterexample_ids or material_codes:
+                self.error(
+                    "mechanism_contract_unbound",
+                    path.name,
+                    "needs_research cannot claim mechanism, counterexample, or material bindings",
+                )
+            for key in ("primary_mechanism_id", "material_evidence_map", "mechanism_application_map"):
+                if contract.get(key, "").strip().lower() not in {"", "none", "{}"}:
+                    self.error(
+                        "mechanism_contract_unbound",
+                        path.name,
+                        f"needs_research requires {key}=none",
+                    )
+            if not research_gap or research_gap.lower() == "none":
+                self.error(
+                    "mechanism_research_gap_missing",
+                    path.name,
+                    "needs_research must name the exact missing evidence or materials",
+                )
+            if draft_status == "ready":
+                self.error(
+                    "mechanism_contract_unbound",
+                    path.name,
+                    "an unbound mechanism contract cannot be ready",
+                )
+            return
+
+        if status == "bound_candidate" and (
+            meta.get("style_binding_status") != "needs_style_research"
+            or draft_status != "needs_review"
+        ):
+            self.error(
+                "mechanism_candidate_status",
+                path.name,
+                "bound_candidate requires style_binding_status=needs_style_research and status=needs_review",
+            )
+        if status == "bound_grounded" and meta.get("style_binding_status") != "grounded":
+            self.error(
+                "mechanism_grounded_status",
+                path.name,
+                "bound_grounded requires an independently published grounded style binding",
+            )
+
+        cards = self.traffic_mechanism_library.get("mechanisms", [])
+        card_by_id = {
+            card.get("mechanism_id"): card
+            for card in cards
+            if isinstance(card, dict) and card.get("mechanism_id")
+        }
+        unknown_ids = sorted(set(selected_ids) - set(card_by_id))
+        if unknown_ids:
+            self.error(
+                "unknown_mechanism_id",
+                path.name,
+                "unknown mechanism IDs: " + ", ".join(unknown_ids),
+            )
+        if len(selected_ids) != 3 or len(set(selected_ids)) != 3:
+            self.error(
+                "mechanism_stack_shape",
+                path.name,
+                "bound contract must select exactly three distinct mechanisms",
+            )
+        selected_cards = [card_by_id[value] for value in selected_ids if value in card_by_id]
+        primary_id = contract.get("primary_mechanism_id", "").strip()
+        if primary_id not in selected_ids or card_by_id.get(primary_id, {}).get("mechanism_kind") != "content":
+            self.error(
+                "primary_mechanism_mismatch",
+                path.name,
+                "primary_mechanism_id must identify the selected content mechanism",
+            )
+
+        slot_counts = {slot: 0 for slot in V2_MECHANISM_SLOTS}
+        for card in selected_cards:
+            kind = card.get("mechanism_kind")
+            for slot, kinds in V2_MECHANISM_SLOTS.items():
+                if kind in kinds:
+                    slot_counts[slot] += 1
+                    break
+        if any(count != 1 for count in slot_counts.values()):
+            self.error(
+                "mechanism_stack_shape",
+                path.name,
+                "mechanism stack requires one content, one carrier/truth, and one learning/governance card",
+            )
+
+        job = meta.get("primary_job", "")
+        stage = meta.get("traffic_stage", "")
+        carrier = meta.get("style_query_carrier", "")
+        for card in selected_cards:
+            mechanism_id = card["mechanism_id"]
+            activation = card.get("activation", {})
+            if job not in activation.get("eligible_primary_jobs", []):
+                self.error(
+                    "mechanism_job_mismatch",
+                    path.name,
+                    f"{mechanism_id} is not eligible for primary_job={job}",
+                )
+            if stage not in activation.get("eligible_traffic_stages", []):
+                self.error(
+                    "mechanism_stage_mismatch",
+                    path.name,
+                    f"{mechanism_id} is not eligible for traffic_stage={stage}",
+                )
+            fit = card.get("carrier_task_fit", {})
+            if carrier not in set(fit.get("preferred", [])) | set(fit.get("compatible", [])):
+                self.error(
+                    "mechanism_carrier_mismatch",
+                    path.name,
+                    f"{mechanism_id} is not task-fit for carrier={carrier}",
+                )
+            missing_materials = set(card.get("required_material_codes", [])) - material_codes
+            forbidden_materials = set(card.get("forbidden_material_codes", [])) & material_codes
+            if missing_materials or forbidden_materials:
+                self.error(
+                    "mechanism_material_gate",
+                    path.name,
+                    f"{mechanism_id} missing={sorted(missing_materials)} forbidden={sorted(forbidden_materials)}",
+                )
+            missing_requires = set(card.get("requires", [])) - set(selected_ids)
+            conflicts = set(card.get("conflicts_with", [])) & set(selected_ids)
+            if missing_requires or conflicts:
+                self.error(
+                    "mechanism_relation_gate",
+                    path.name,
+                    f"{mechanism_id} missing_requires={sorted(missing_requires)} conflicts={sorted(conflicts)}",
+                )
+
+        known_materials = set(self.traffic_mechanism_library.get("material_code_taxonomy", []))
+        known_forbidden = set(
+            self.traffic_mechanism_library.get("forbidden_material_code_taxonomy", [])
+        )
+        unknown_materials = sorted(material_codes - known_materials - known_forbidden)
+        if unknown_materials:
+            self.error(
+                "mechanism_material_gate",
+                path.name,
+                "unknown material codes: " + ", ".join(unknown_materials),
+            )
+        globally_forbidden = sorted(material_codes & known_forbidden)
+        if globally_forbidden:
+            self.error(
+                "mechanism_material_gate",
+                path.name,
+                "globally forbidden material codes cannot be selected: "
+                + ", ".join(globally_forbidden),
+            )
+        carrier_truth = self.traffic_mechanism_library.get("carrier_truth_conditions", {}).get(
+            carrier, {}
+        )
+        carrier_truth_required_codes: set[str] = set()
+        if carrier_truth:
+            required_all = set(carrier_truth.get("required_all_material_codes", []))
+            carrier_truth_required_codes.update(required_all)
+            truth_missing = required_all - material_codes
+            required_any = set(carrier_truth.get("required_any_material_codes", []))
+            selected_any = required_any.intersection(material_codes)
+            carrier_truth_required_codes.update(selected_any)
+            if required_any and not selected_any:
+                truth_missing.add(carrier_truth.get("missing_material_code", "carrier_truth_material"))
+            truth_forbidden = set(carrier_truth.get("forbidden_material_codes", [])) & material_codes
+            if truth_missing or truth_forbidden:
+                self.error(
+                    "carrier_truth_gate",
+                    path.name,
+                    f"carrier={carrier} missing={sorted(truth_missing)} forbidden={sorted(truth_forbidden)}",
+                )
+
+        known_ids, authorization_ids = self._known_evidence_ids()
+        evidence_types = self._evidence_id_types()
+        counterexample_capable_ids = {
+            evidence_id
+            for evidence_id, ref_types in evidence_types.items()
+            if ref_types.intersection({"source", "claim", "account", "post"})
+        }
+        unknown_counterexamples = sorted(
+            set(counterexample_ids) - counterexample_capable_ids
+        )
+        if not counterexample_ids or unknown_counterexamples:
+            self.error(
+                "counterexample_binding",
+                path.name,
+                "bound mechanism contract needs a real local counterexample ID; unknown="
+                + ", ".join(unknown_counterexamples),
+            )
+        topic = next(
+            (
+                row
+                for row in self.rows.get("topics.csv", [])
+                if row.get("topic_id") == meta.get("topic_id")
+            ),
+            None,
+        )
+        declared_counterexamples: set[str] = set()
+        if topic is not None:
+            counter_text = topic.get("counterexamples", "")
+            declared_counterexamples = {
+                evidence_id
+                for evidence_id in counterexample_capable_ids
+                if re.search(
+                    rf"(?<![A-Za-z0-9_-]){re.escape(evidence_id)}(?![A-Za-z0-9_-])",
+                    counter_text,
+                )
+            }
+        undeclared_counterexamples = sorted(
+            set(counterexample_ids) - declared_counterexamples
+        )
+        if undeclared_counterexamples:
+            self.error(
+                "counterexample_binding",
+                path.name,
+                "counterexample IDs must be declared with bounded interpretation on the selected topic: "
+                + ", ".join(undeclared_counterexamples),
+            )
+
+        material_map = self._contract_json(path, contract, "material_evidence_map", dict)
+        application_map = self._contract_json(path, contract, "mechanism_application_map", dict)
+        if not isinstance(material_map, dict):
+            self.error(
+                "material_evidence_binding",
+                path.name,
+                "bound contract requires material_evidence_map to be a non-empty JSON object",
+            )
+        if not isinstance(application_map, dict):
+            self.error(
+                "mechanism_application_binding",
+                path.name,
+                "bound contract requires mechanism_application_map to be a non-empty JSON object",
+            )
+        draft_prefix = meta.get("draft_id", "") + "#"
+        self_produced_codes = {
+            "promise",
+            "ai_draft",
+            "human_review",
+            "variant_log",
+            "version_log",
+            "series_promise",
+        }
+        required_codes = {
+            code
+            for card in selected_cards
+            for code in card.get("required_material_codes", [])
+        }
+        required_codes.update(carrier_truth_required_codes)
+        bound_material_refs: set[str] = set()
+        material_refs_by_code: dict[str, set[str]] = {}
+        if isinstance(material_map, dict):
+            missing_codes = sorted(required_codes - set(material_map))
+            if missing_codes:
+                self.error(
+                    "material_evidence_binding",
+                    path.name,
+                    "missing material evidence for: " + ", ".join(missing_codes),
+                )
+            for code in required_codes & set(material_map):
+                refs = material_map.get(code)
+                if not isinstance(refs, list) or not refs or not all(
+                    isinstance(value, str) and value.strip() for value in refs
+                ):
+                    self.error(
+                        "material_evidence_binding",
+                        path.name,
+                        f"{code} must map to a non-empty JSON string array",
+                    )
+                    continue
+                real_refs = {value for value in refs if value in known_ids}
+                draft_refs = {
+                    value for value in refs if draft_prefix and value.startswith(draft_prefix)
+                }
+                unknown_refs = set(refs) - real_refs - draft_refs
+                valid_refs = real_refs | draft_refs
+                material_refs_by_code[code] = valid_refs
+                bound_material_refs.update(valid_refs)
+                if unknown_refs:
+                    self.error(
+                        "material_evidence_binding",
+                        path.name,
+                        f"{code} has unknown evidence refs: {sorted(unknown_refs)}",
+                    )
+                allowed_ref_types = V2_MATERIAL_REF_TYPES.get(code)
+                if allowed_ref_types is None:
+                    self.error(
+                        "material_evidence_binding",
+                        path.name,
+                        f"{code} has no controlled evidence-type contract",
+                    )
+                else:
+                    incompatible_refs = sorted(
+                        value
+                        for value in refs
+                        if not (
+                            ({"draft_anchor"} if value in draft_refs else evidence_types.get(value, set()))
+                            & allowed_ref_types
+                        )
+                    )
+                    if incompatible_refs:
+                        self.error(
+                            "material_evidence_binding",
+                            path.name,
+                            f"{code} has incompatible evidence ID types: {incompatible_refs}",
+                        )
+                if code not in self_produced_codes and not real_refs:
+                    self.error(
+                        "material_evidence_binding",
+                        path.name,
+                        f"{code} requires at least one local source/post/claim/material ID",
+                    )
+                if code == "rights_clearance" and not set(refs).intersection(authorization_ids):
+                    self.error(
+                        "material_evidence_binding",
+                        path.name,
+                        "rights_clearance requires a referenced authorization_id",
+                    )
+        overlap = sorted(set(counterexample_ids).intersection(bound_material_refs))
+        if overlap:
+            self.error(
+                "counterexample_binding",
+                path.name,
+                "counterexample IDs cannot also be bound as supporting material: "
+                + ", ".join(overlap),
+            )
+        if "first_party_metrics" in material_codes and meta.get(
+            "performance_visibility_scope"
+        ) != "first_party_analytics":
+            self.error(
+                "mechanism_material_gate",
+                path.name,
+                "first_party_metrics cannot be claimed under a public_proxy or unavailable scope",
+            )
+
+        if isinstance(application_map, dict):
+            if set(application_map) != set(selected_ids):
+                self.error(
+                    "mechanism_application_binding",
+                    path.name,
+                    "mechanism_application_map keys must exactly equal mechanism_ids",
+                )
+            for mechanism_id in set(selected_ids).intersection(application_map):
+                item = application_map.get(mechanism_id)
+                if not isinstance(item, dict):
+                    self.error(
+                        "mechanism_application_binding",
+                        path.name,
+                        f"{mechanism_id} application must be an object",
+                    )
+                    continue
+                required_fields = {
+                    "input_refs",
+                    "title_action",
+                    "cover_action",
+                    "body_action",
+                    "comments_action",
+                    "job_metric",
+                    "failure_condition",
+                    "intentional_deviation",
+                }
+                missing_fields = sorted(required_fields - set(item))
+                if missing_fields:
+                    self.error(
+                        "mechanism_application_binding",
+                        path.name,
+                        f"{mechanism_id} missing application fields: {', '.join(missing_fields)}",
+                    )
+                    continue
+                input_refs = item.get("input_refs")
+                if not isinstance(input_refs, list) or not input_refs:
+                    self.error(
+                        "mechanism_application_binding",
+                        path.name,
+                        f"{mechanism_id} input_refs must be a non-empty array",
+                    )
+                elif not all(isinstance(value, str) for value in input_refs):
+                    self.error(
+                        "mechanism_application_binding",
+                        path.name,
+                        f"{mechanism_id} input_refs must contain only string IDs",
+                    )
+                else:
+                    unbound_inputs = sorted(set(input_refs) - bound_material_refs)
+                    if unbound_inputs:
+                        self.error(
+                            "mechanism_application_binding",
+                            path.name,
+                            f"{mechanism_id} input_refs are not in material_evidence_map: {unbound_inputs}",
+                        )
+                    card = card_by_id.get(mechanism_id, {})
+                    card_required_codes = set(card.get("required_material_codes", []))
+                    if card.get("mechanism_kind") in {"carrier_router", "truth_gate"}:
+                        card_required_codes.update(carrier_truth_required_codes)
+                    uncovered_codes = sorted(
+                        code
+                        for code in card_required_codes
+                        if not set(input_refs).intersection(
+                            material_refs_by_code.get(code, set())
+                        )
+                    )
+                    if uncovered_codes:
+                        self.error(
+                            "mechanism_application_binding",
+                            path.name,
+                            f"{mechanism_id} input_refs do not cover its required material codes: {uncovered_codes}",
+                        )
+                for field in (
+                    "title_action",
+                    "cover_action",
+                    "body_action",
+                    "comments_action",
+                    "intentional_deviation",
+                ):
+                    value = item.get(field)
+                    substantive = False
+                    if isinstance(value, str):
+                        cleaned = value.strip()
+                        lowered = cleaned.lower()
+                        placeholders = {
+                            "", "none", "unknown", "tbd", "todo", "n/a", "na",
+                            "待填写", "待定", "暂无", "无",
+                        }
+                        if lowered.startswith("not_applicable:"):
+                            reason = cleaned.split(":", 1)[1].strip()
+                            substantive = len(reason) >= 4 and reason.lower() not in placeholders
+                        elif cleaned.startswith("不适用："):
+                            reason = cleaned.split("：", 1)[1].strip()
+                            substantive = len(reason) >= 4 and reason.lower() not in placeholders
+                        else:
+                            substantive = (
+                                lowered not in placeholders
+                                and not lowered.startswith(("tbd:", "todo:", "待填写："))
+                                and len(re.sub(r"\W+", "", cleaned, flags=re.UNICODE)) >= 6
+                            )
+                    if not substantive:
+                        self.error(
+                            "mechanism_application_binding",
+                            path.name,
+                            f"{mechanism_id} {field} must be substantive or not_applicable: reason",
+                        )
+                if item.get("job_metric") != meta.get("job_primary_metric"):
+                    self.error(
+                        "mechanism_application_binding",
+                        path.name,
+                        f"{mechanism_id} job_metric must match the draft job_primary_metric",
+                    )
+                card = card_by_id.get(mechanism_id, {})
+                if item.get("failure_condition") not in card.get("failure_conditions", []):
+                    self.error(
+                        "mechanism_application_binding",
+                        path.name,
+                        f"{mechanism_id} failure_condition must quote one packaged failure condition exactly",
+                    )
+
+    def _resolve_visual_contract_file(
+        self,
+        path: Path,
+        raw_path: str,
+        supplied_sha256: str,
+        label: str,
+    ) -> Path | None:
+        if normalize_none(raw_path) == "none":
+            return None
+        if not valid_sha256(supplied_sha256):
+            self.error(
+                "visual_contract_artifact_invalid",
+                path.name,
+                f"{label} requires a 64-character SHA-256",
+            )
+            return None
+        resolved = (self.run_dir / raw_path).resolve()
+        try:
+            resolved.relative_to(self.run_dir.resolve())
+        except ValueError:
+            self.error(
+                "visual_contract_artifact_invalid",
+                path.name,
+                f"{label} must stay inside the run directory",
+            )
+            return None
+        if not resolved.is_file():
+            self.error(
+                "visual_contract_artifact_missing",
+                path.name,
+                f"{label} does not exist: {raw_path}",
+            )
+            return None
+        actual_sha = hashlib.sha256(resolved.read_bytes()).hexdigest()
+        if actual_sha != supplied_sha256:
+            self.error(
+                "visual_contract_artifact_mismatch",
+                path.name,
+                f"{label} SHA-256 does not match its bytes",
+            )
+            return None
+        return resolved
+
+    def _check_visual_prototypes(
+        self,
+        path: Path,
+        meta: dict[str, str],
+        selected_card_ids: list[str],
+    ) -> None:
+        if Image is None:
+            self.error(
+                "visual_decoder_unavailable",
+                path.name,
+                "prototype artifact validation requires Pillow; install redbook-writing/requirements-visual.txt",
+            )
+            return
+        prototype_path = self.run_dir / "visual-prototypes.csv"
+        if not prototype_path.is_file():
+            self.error(
+                "visual_prototype_artifact_missing",
+                path.name,
+                "prototype_only requires visual-prototypes.csv and viewable prototype files",
+            )
+            return
+        try:
+            with prototype_path.open(encoding="utf-8-sig", newline="") as handle:
+                reader = csv.DictReader(handle)
+                fields = set(reader.fieldnames or [])
+                rows = [
+                    row for row in reader
+                    if row.get("draft_id") == meta.get("draft_id")
+                ]
+        except (OSError, UnicodeDecodeError, csv.Error) as exc:
+            self.error("visual_prototype_artifact_invalid", path.name, str(exc))
+            return
+        if fields != V2_VISUAL_PROTOTYPE_FIELDS:
+            self.error(
+                "visual_prototype_artifact_invalid",
+                "visual-prototypes.csv",
+                "header must exactly match the v2 prototype contract",
+            )
+            return
+        if not rows:
+            self.error(
+                "visual_prototype_artifact_missing",
+                path.name,
+                "no visual prototype rows match this draft_id",
+            )
+            return
+        brief_path = self.run_dir / "visual-briefs.jsonl"
+        briefs: dict[str, dict[str, object]] = {}
+        if not brief_path.is_file():
+            self.error(
+                "visual_brief_artifact_missing",
+                path.name,
+                "prototype_only requires visual-briefs.jsonl",
+            )
+        else:
+            try:
+                for line_number, line in enumerate(
+                    brief_path.read_text(encoding="utf-8-sig").splitlines(), start=1
+                ):
+                    if not line.strip():
+                        continue
+                    item = json.loads(line)
+                    if not isinstance(item, dict):
+                        raise ValueError("visual brief row must be an object")
+                    brief_id = item.get("visual_brief_id")
+                    if not isinstance(brief_id, str) or not brief_id or brief_id in briefs:
+                        raise ValueError("visual_brief_id must be present and unique")
+                    if set(item) != V2_VISUAL_BRIEF_FIELDS:
+                        raise ValueError("visual brief fields do not match the v2 contract")
+                    canonical = dict(item)
+                    supplied_sha = canonical.pop("visual_brief_sha256", None)
+                    calculated_sha = hashlib.sha256(
+                        json.dumps(
+                            canonical,
+                            ensure_ascii=False,
+                            sort_keys=True,
+                            separators=(",", ":"),
+                        ).encode("utf-8")
+                    ).hexdigest()
+                    if supplied_sha != calculated_sha:
+                        raise ValueError("visual_brief_sha256 mismatch")
+                    briefs[brief_id] = item
+            except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+                self.error("visual_brief_artifact_invalid", path.name, str(exc))
+        concept_ids = [row.get("concept_id", "") for row in rows]
+        if sorted(concept_ids) != sorted(selected_card_ids) or len(set(concept_ids)) != len(rows):
+            self.error(
+                "visual_prototype_binding_mismatch",
+                path.name,
+                "prototype concept_id values must exactly equal the selected direction-card IDs",
+            )
+        used_brief_ids = {row.get("visual_brief_id", "") for row in rows}
+        for brief_id in sorted(used_brief_ids):
+            brief = briefs.get(brief_id)
+            if brief is None:
+                self.error(
+                    "visual_brief_artifact_missing",
+                    path.name,
+                    f"prototype references unknown visual brief {brief_id}",
+                )
+                continue
+            attention_paths = brief.get("attention_paths")
+            if not isinstance(attention_paths, list) or attention_paths != selected_card_ids:
+                self.error(
+                    "visual_prototype_binding_mismatch",
+                    brief_id,
+                    "visual brief attention_paths must exactly equal selected direction cards",
+                )
+            exact_brief_fields = {
+                "draft_id": meta.get("draft_id"),
+                "primary_job": meta.get("primary_job"),
+                "carrier": meta.get("style_query_carrier"),
+                "model_lifecycle_stage": "explore",
+            }
+            for field, expected in exact_brief_fields.items():
+                if str(brief.get(field, "")) != str(expected):
+                    self.error(
+                        "visual_prototype_binding_mismatch",
+                        brief_id,
+                        f"visual brief {field} does not match the draft",
+                    )
+            if brief.get("prototype_count") != len(selected_card_ids):
+                self.error(
+                    "visual_prototype_binding_mismatch",
+                    brief_id,
+                    "visual brief prototype_count does not match selected directions",
+                )
+            if not valid_sha256(str(brief.get("generation_prompt_sha256", ""))):
+                self.error(
+                    "visual_brief_artifact_invalid",
+                    brief_id,
+                    "generation_prompt_sha256 must be a SHA-256",
+                )
+            expected_binding = (
+                meta.get("draft_binding_sha256")
+                if meta.get("style_binding_status") == "grounded"
+                else "none"
+            )
+            if normalize_none(str(brief.get("binding_snapshot_sha256", ""))) != normalize_none(
+                expected_binding
+            ):
+                self.error(
+                    "visual_prototype_binding_mismatch",
+                    brief_id,
+                    "visual brief binding snapshot does not match the draft",
+                )
+        prototype_ids = {row.get("prototype_asset_id", "") for row in rows}
+        if "" in prototype_ids or len(prototype_ids) != len(rows):
+            self.error(
+                "visual_prototype_artifact_invalid",
+                path.name,
+                "prototype_asset_id values must be present and unique",
+            )
+        for row_number, row in enumerate(rows, start=2):
+            location = f"visual-prototypes.csv:{row_number}"
+            brief = briefs.get(row.get("visual_brief_id", ""))
+            if row.get("attention_path") != row.get("concept_id"):
+                self.error(
+                    "visual_prototype_binding_mismatch",
+                    location,
+                    "attention_path and concept_id must both use the selected direction-card ID",
+                )
+            if brief and row.get("prototype_prompt_sha256") != brief.get(
+                "generation_prompt_sha256"
+            ):
+                self.error(
+                    "visual_prototype_binding_mismatch",
+                    location,
+                    "prototype prompt hash must match its immutable visual brief",
+                )
+            for hash_field in (
+                "prototype_prompt_sha256", "asset_sha256", "feed_preview_sha256",
+            ):
+                if not valid_sha256(row.get(hash_field)):
+                    self.error(
+                        "visual_prototype_artifact_invalid",
+                        location,
+                        f"{hash_field} must be a SHA-256",
+                    )
+            try:
+                width = int(row.get("width", ""))
+                height = int(row.get("height", ""))
+            except ValueError:
+                width = height = 0
+            if width < 1 or height < 1:
+                self.error(
+                    "visual_prototype_artifact_invalid",
+                    location,
+                    "width and height must be positive integers",
+                )
+            for path_field, hash_field in (
+                ("asset_path", "asset_sha256"),
+                ("feed_preview_path", "feed_preview_sha256"),
+            ):
+                raw = row.get(path_field, "").strip()
+                resolved = (self.run_dir / raw).resolve()
+                try:
+                    resolved.relative_to(self.run_dir.resolve())
+                except ValueError:
+                    self.error(
+                        "visual_prototype_artifact_invalid",
+                        location,
+                        f"{path_field} must stay inside the run directory",
+                    )
+                    continue
+                if not resolved.is_file():
+                    self.error(
+                        "visual_prototype_artifact_missing",
+                        location,
+                        f"missing {path_field}: {raw}",
+                    )
+                    continue
+                if hashlib.sha256(resolved.read_bytes()).hexdigest() != row.get(hash_field):
+                    self.error(
+                        "visual_prototype_artifact_mismatch",
+                        location,
+                        f"{hash_field} does not match {path_field}",
+                    )
+                decoded = self._decoded_image_dimensions(resolved)
+                if decoded is None:
+                    self.error(
+                        "visual_prototype_artifact_invalid",
+                        location,
+                        f"{path_field} must be a decodable PNG/JPEG/GIF/WebP by signature",
+                    )
+                elif path_field == "asset_path" and decoded != (width, height):
+                    self.error(
+                        "visual_prototype_artifact_mismatch",
+                        location,
+                        "prototype width/height do not match the decoded image",
+                    )
+            if row.get("feed_review_status") != "PASS":
+                self.error(
+                    "visual_prototype_review_missing",
+                    location,
+                    "prototype requires feed_review_status=PASS",
+                )
+            if row.get("full_review_status") not in {"PASS", "NEEDS_REVIEW"}:
+                self.error(
+                    "visual_prototype_review_missing",
+                    location,
+                    "full_review_status must be PASS or NEEDS_REVIEW",
+                )
+            if row.get("selection_status") not in {"selected", "rejected", "pending"}:
+                self.error(
+                    "visual_prototype_review_missing",
+                    location,
+                    "selection_status must be selected, rejected, or pending",
+                )
+            if not row.get("selection_reason", "").strip():
+                self.error(
+                    "visual_prototype_review_missing",
+                    location,
+                    "selection_reason is required",
+                )
+            if meta.get("style_binding_status") == "grounded":
+                if row.get("binding_rule_bundle_sha256") != meta.get("draft_binding_sha256"):
+                    self.error(
+                        "visual_prototype_binding_mismatch",
+                        location,
+                        "prototype binding hash does not match the published draft binding",
+                    )
+                prototype_rules = set(self._contract_ids(row.get("style_rule_refs")))
+                bound_rules = set(self._contract_ids(meta.get("style_rule_ids")))
+                if not prototype_rules or not prototype_rules.issubset(bound_rules):
+                    self.error(
+                        "visual_prototype_binding_mismatch",
+                        location,
+                        "grounded prototype rule refs must be a non-empty subset of bound rules",
+                    )
+            elif normalize_none(row.get("binding_rule_bundle_sha256")) != "none":
+                self.error(
+                    "visual_prototype_binding_mismatch",
+                    location,
+                    "ungrounded prototype cannot claim a style binding hash",
+                )
+            elif self._contract_ids(row.get("style_rule_refs")):
+                self.error(
+                    "visual_prototype_binding_mismatch",
+                    location,
+                    "ungrounded prototype cannot claim published style rule refs",
+                )
+            for starter_field in ("starter_prompt_id", "starter_prompt_sha256"):
+                if normalize_none(row.get(starter_field)) != "none":
+                    self.error(
+                        "visual_prototype_binding_mismatch",
+                        location,
+                        "starter prompt lineage is disabled until its release gate passes",
+                    )
+            revision_of = normalize_none(row.get("revision_of"))
+            if revision_of != "none":
+                previous = next(
+                    (
+                        candidate for candidate in rows
+                        if candidate.get("prototype_asset_id") == revision_of
+                    ),
+                    None,
+                )
+                if (
+                    previous is None
+                    or previous.get("draft_id") != row.get("draft_id")
+                    or previous.get("concept_id") != row.get("concept_id")
+                    or previous.get("prototype_asset_id") == row.get("prototype_asset_id")
+                ):
+                    self.error(
+                        "visual_prototype_artifact_invalid",
+                        location,
+                        "revision_of must reference an earlier prototype of the same draft/concept",
+                    )
+
+    def _check_v2_visual_contract(
+        self,
+        path: Path,
+        rendered_text: str,
+        meta: dict[str, str],
+        headings: set[str],
+    ) -> None:
+        if "视觉方向绑定" not in headings:
+            return
+        contract = parse_contract_block(markdown_section(rendered_text, "视觉方向绑定"))
+        missing = sorted(V2_VISUAL_CONTRACT_FIELDS - contract.keys())
+        if missing:
+            self.error(
+                "visual_contract_missing",
+                path.name,
+                "视觉方向绑定 missing keys: " + ", ".join(missing),
+            )
+            return
+        status = contract.get("visual_contract_status", "")
+        if status not in V2_VISUAL_CONTRACT_STATUSES:
+            self.error(
+                "visual_contract_status",
+                path.name,
+                f"invalid visual_contract_status: {status}",
+            )
+            return
+        selection_mode = contract.get("selection_mode", "")
+        if selection_mode not in {"none", "exploration", "production"}:
+            self.error(
+                "visual_contract_status",
+                path.name,
+                f"invalid selection_mode: {selection_mode}",
+            )
+            return
+        selected_ids = self._contract_ids(contract.get("visual_direction_card_ids"))
+        research_gap = contract.get("research_gap", "").strip()
+        active_contraindications = set(
+            self._contract_ids(contract.get("active_contraindication_codes"))
+        )
+        frontmatter_contraindications = set(
+            self._contract_ids(meta.get("style_query_active_contraindication_codes"))
+        )
+        if active_contraindications != frontmatter_contraindications:
+            self.error(
+                "visual_contract_binding_mismatch",
+                path.name,
+                "visual contraindications must exactly match the style query",
+            )
+        unknown_contraindications = sorted(
+            active_contraindications - self._v2_codes("contraindication_code")
+        )
+        if unknown_contraindications:
+            self.error(
+                "visual_contract_binding_mismatch",
+                path.name,
+                "unknown visual contraindications: " + ", ".join(unknown_contraindications),
+            )
+        if contract.get("style_library_path") != meta.get("style_library_path"):
+            self.error(
+                "visual_contract_binding_mismatch",
+                path.name,
+                "visual style_library_path must exactly match frontmatter",
+            )
+        if normalize_none(contract.get("draft_binding_id")) != normalize_none(
+            meta.get("draft_binding_id")
+        ):
+            self.error(
+                "visual_contract_binding_mismatch",
+                path.name,
+                "visual draft_binding_id must exactly match frontmatter",
+            )
+
+        raw_manifest = contract.get("asset_manifest_path", "").strip()
+        manifest_sha = contract.get("asset_manifest_sha256", "").strip()
+        if status == "not_requested":
+            if (
+                selected_ids
+                or selection_mode != "none"
+                or normalize_none(raw_manifest) != "none"
+                or normalize_none(manifest_sha) != "none"
+                or active_contraindications
+                or normalize_none(research_gap) != "none"
+            ):
+                self.error(
+                    "visual_contract_unbound",
+                    path.name,
+                    "not_requested requires no cards, manifest, contraindications, or research gap",
+                )
+            if (
+                meta.get("visual_delivery_requirement") != "none"
+                or meta.get("visual_delivery_status") != "not_requested"
+            ):
+                self.error(
+                    "visual_contract_status",
+                    path.name,
+                    "not_requested requires visual delivery requirement/status none/not_requested",
+                )
+            return
+        if status == "needs_visual_research":
+            if selected_ids or normalize_none(raw_manifest) != "none":
+                self.error(
+                    "visual_contract_unbound",
+                    path.name,
+                    "needs_visual_research cannot claim cards or an asset manifest",
+                )
+            if selection_mode != "exploration":
+                self.error(
+                    "visual_contract_unbound",
+                    path.name,
+                    "needs_visual_research must use selection_mode=exploration",
+                )
+            if normalize_none(manifest_sha) != "none":
+                self.error(
+                    "visual_contract_unbound",
+                    path.name,
+                    "needs_visual_research requires asset_manifest_sha256=none",
+                )
+            if not research_gap or research_gap.lower() == "none":
+                self.error(
+                    "visual_research_gap_missing",
+                    path.name,
+                    "needs_visual_research must name the exact missing assets or evidence",
+                )
+            if meta.get("visual_delivery_status") != "brief_only":
+                self.error(
+                    "visual_contract_unbound",
+                    path.name,
+                    "needs_visual_research can only deliver brief_only",
+                )
+            return
+
+        manifest_path = self._resolve_visual_contract_file(
+            path, raw_manifest, manifest_sha, "asset_manifest_path"
+        )
+        if manifest_path is None:
+            return
+        style_library_path = None
+        draft_binding_id = None
+        if selection_mode == "production":
+            style_library_path = (
+                self.run_dir / meta.get("style_library_path", "")
+            ).resolve()
+            draft_binding_id = meta.get("draft_binding_id")
+        try:
+            from select_visual_directions import (  # type: ignore
+                ContractError as VisualContractError,
+                select_from_paths,
+            )
+        except ImportError as exc:
+            self.error("visual_selector_invalid", path.name, str(exc))
+            return
+        try:
+            selector_payload, selector_code = select_from_paths(
+                category=meta.get("style_query_category", ""),
+                job=meta.get("primary_job", ""),
+                carrier=meta.get("style_query_carrier", ""),
+                asset_manifest_path=manifest_path,
+                style_library_path=style_library_path,
+                draft_binding_id=draft_binding_id,
+                active_contraindications=active_contraindications,
+                mode=selection_mode,
+                limit=2,
+            )
+        except (OSError, VisualContractError) as exc:
+            self.error("visual_selector_invalid", path.name, str(exc))
+            return
+
+        selector_status = selector_payload.get("status")
+        matches = selector_payload.get("matches", [])
+        recomputed_ids = [
+            item.get("card_id") for item in matches if isinstance(item, dict)
+        ]
+        if status == "prototype_gap":
+            if selected_ids:
+                self.error(
+                    "visual_contract_unbound",
+                    path.name,
+                    "prototype_gap cannot claim selected direction cards",
+                )
+            if selector_code == 0 or selector_status not in {
+                "prototype_gap", "no_eligible_card",
+            }:
+                self.error(
+                    "visual_selector_mismatch",
+                    path.name,
+                    "prototype_gap must be reproduced by the selector",
+                )
+            if meta.get("visual_delivery_status") != "brief_only":
+                self.error(
+                    "visual_contract_unbound",
+                    path.name,
+                    "prototype_gap can only deliver brief_only",
+                )
+            if not research_gap or research_gap.lower() == "none":
+                self.error(
+                    "visual_research_gap_missing",
+                    path.name,
+                    "prototype_gap must preserve the selector/material gap",
+                )
+            return
+
+        expected_status = (
+            "matched_exploration" if status == "selected_exploration" else "matched"
+        )
+        if selector_code != 0 or selector_status != expected_status:
+            self.error(
+                "visual_selector_mismatch",
+                path.name,
+                "selected visual directions cannot be reproduced: "
+                + str(selector_payload.get("message", selector_status)),
+            )
+            return
+        if selected_ids != recomputed_ids:
+            self.error(
+                "visual_selector_mismatch",
+                path.name,
+                f"declared cards {selected_ids} do not equal selector result {recomputed_ids}",
+            )
+        if status == "selected_exploration":
+            if selection_mode != "exploration":
+                self.error(
+                    "visual_contract_status", path.name,
+                    "selected_exploration requires selection_mode=exploration",
+                )
+            if meta.get("status") == "ready" or meta.get("visual_delivery_status") != "prototype_only":
+                self.error(
+                    "visual_contract_status",
+                    path.name,
+                    "selected_exploration requires needs_review/prototype_only",
+                )
+            if selected_ids:
+                self._check_visual_prototypes(path, meta, selected_ids)
+        else:
+            if selection_mode != "production":
+                self.error(
+                    "visual_contract_status", path.name,
+                    "selected_production requires selection_mode=production",
+                )
+            if meta.get("style_binding_status") != "grounded":
+                self.error(
+                    "visual_contract_binding_mismatch",
+                    path.name,
+                    "selected_production requires a grounded published style binding",
+                )
+            if meta.get("visual_delivery_status") not in {
+                "rendered_needs_review", "rendered_pass",
+            }:
+                self.error(
+                    "visual_contract_status",
+                    path.name,
+                    "selected_production requires a rendered delivery status",
+                )
+
+    def _check_grounded_style_binding(self, path: Path, meta: dict[str, str]) -> None:
+        fields = {
+            "draft_binding_id",
+            "draft_binding_sha256",
+            "style_rule_ids",
+            "primary_style_archetype_id",
+            "primary_style_archetype_version",
+            "primary_style_archetype_snapshot_sha256",
+        }
+        binding_status = meta.get("style_binding_status", "")
+        if binding_status != "grounded":
+            nonempty = [
+                field
+                for field in fields
+                if normalize_none(meta.get(field)) != "none"
+            ]
+            if nonempty:
+                self.error(
+                    "style_binding_receipt_mismatch",
+                    path.name,
+                    "unpublished style state cannot claim binding receipt fields: "
+                    + ", ".join(sorted(nonempty)),
+                )
+            return
+
+        missing = [field for field in fields if normalize_none(meta.get(field)) == "none"]
+        if missing:
+            self.error(
+                "style_binding_receipt_missing",
+                path.name,
+                "grounded binding missing receipt fields: " + ", ".join(sorted(missing)),
+            )
+            return
+        if meta.get("style_binding_source") != "library":
+            self.error(
+                "style_binding_receipt_mismatch",
+                path.name,
+                "grounded binding must use style_binding_source=library",
+            )
+            return
+        raw_library_path = meta.get("style_library_path", "").strip()
+        if raw_library_path != self.run.get("style_library_path", "").strip():
+            self.error(
+                "style_binding_receipt_mismatch",
+                path.name,
+                "draft style_library_path must exactly match run.yaml",
+            )
+            return
+        library_path = (self.run_dir / raw_library_path).resolve()
+        if not library_path.is_file():
+            self.error(
+                "style_binding_receipt_missing",
+                path.name,
+                f"style library does not exist: {raw_library_path}",
+            )
+            return
+        expected_rules = self._contract_ids(meta.get("style_rule_ids"))
+        try:
+            from style_library import (  # type: ignore
+                StyleLibraryError,
+                _preflight_existing_database,
+            )
+        except ImportError as exc:
+            self.error("style_binding_receipt_invalid", path.name, str(exc))
+            return
+        try:
+            if _preflight_existing_database(library_path) != 2:
+                raise StyleLibraryError("schema_version_mismatch")
+        except StyleLibraryError as exc:
+            self.error("style_binding_receipt_invalid", path.name, str(exc))
+            return
+        try:
+            uri_path = quote(str(library_path), safe="/")
+            con = sqlite3.connect(f"file:{uri_path}?mode=ro", uri=True)
+            con.row_factory = sqlite3.Row
+            con.execute("PRAGMA query_only = ON")
+            foreign_key_violations = con.execute("PRAGMA foreign_key_check").fetchall()
+            if foreign_key_violations:
+                self.error(
+                    "style_binding_receipt_invalid",
+                    path.name,
+                    "style library contains foreign-key violations",
+                )
+                return
+            binding = con.execute(
+                """
+                SELECT binding.*, publication.binding_sha256,
+                       archetype.carrier, archetype.primary_job_scope,
+                       archetype.category_scope
+                FROM draft_style_bindings AS binding
+                JOIN draft_binding_publications AS publication
+                  ON publication.draft_binding_id = binding.draft_binding_id
+                 AND publication.draft_id = binding.draft_id
+                JOIN style_archetypes AS archetype
+                  ON archetype.archetype_id = binding.archetype_id
+                WHERE binding.draft_binding_id=? AND binding.draft_id=?
+                """,
+                (meta.get("draft_binding_id"), meta.get("draft_id")),
+            ).fetchone()
+        except sqlite3.Error as exc:
+            self.error("style_binding_receipt_invalid", path.name, str(exc))
+            return
+        finally:
+            if "con" in locals():
+                con.close()
+        if binding is None:
+            self.error(
+                "style_binding_receipt_missing",
+                path.name,
+                "no immutable binding publication matches this draft",
+            )
+            return
+        try:
+            actual_rules = json.loads(binding["selected_rule_ids"])
+        except (TypeError, json.JSONDecodeError):
+            actual_rules = []
+        try:
+            material_plan = json.loads(binding["material_plan_json"])
+        except (TypeError, json.JSONDecodeError):
+            material_plan = None
+        try:
+            anti_patterns_checked = json.loads(binding["anti_patterns_checked_json"])
+        except (TypeError, json.JSONDecodeError):
+            anti_patterns_checked = None
+        mismatches: list[str] = []
+        expected_pairs = {
+            "binding_sha256": meta.get("draft_binding_sha256"),
+            "archetype_id": meta.get("primary_style_archetype_id"),
+            "archetype_version": meta.get("primary_style_archetype_version"),
+            "archetype_snapshot_sha256": meta.get(
+                "primary_style_archetype_snapshot_sha256"
+            ),
+            "carrier": meta.get("style_query_carrier"),
+        }
+        for field, expected in expected_pairs.items():
+            if str(binding[field]) != str(expected):
+                mismatches.append(field)
+        if str(binding["primary_job_scope"]) != meta.get("primary_job"):
+            mismatches.append("primary_job_scope")
+        if str(binding["category_scope"]) != meta.get("style_query_category"):
+            mismatches.append("category_scope")
+        if binding["binding_source"] != "library" or binding["review_status"] != "PASS":
+            mismatches.append("review_status")
+        if actual_rules != expected_rules:
+            mismatches.append("style_rule_ids")
+        if (
+            meta.get("performance_evidence_scope") != "not_performance_evidence"
+            and meta.get("primary_performance_rule_id") not in actual_rules
+        ):
+            mismatches.append("primary_performance_rule_id")
+        expected_material_plan = {
+            "category": meta.get("style_query_category"),
+            "carrier": meta.get("style_query_carrier"),
+            "primary_job": meta.get("primary_job"),
+            "traffic_stage": meta.get("traffic_stage"),
+            "business_objective": meta.get("business_objective"),
+            "performance_evidence_scope": meta.get("performance_evidence_scope"),
+            "primary_performance_rule_id": meta.get("primary_performance_rule_id"),
+            "primary_performance_evidence_scope": meta.get(
+                "performance_evidence_scope"
+            ),
+            "available_material_codes": sorted(
+                self._contract_ids(meta.get("style_query_available_material_codes"))
+            ),
+            "required_material_codes": sorted(
+                self._contract_ids(meta.get("style_query_required_material_codes"))
+            ),
+            "required_constraint_codes": sorted(
+                self._contract_ids(meta.get("style_query_required_constraint_codes"))
+            ),
+            "active_constraint_codes": sorted(
+                self._contract_ids(meta.get("style_query_active_constraint_codes"))
+            ),
+            "active_contraindication_codes": sorted(
+                self._contract_ids(meta.get("style_query_active_contraindication_codes"))
+            ),
+        }
+        normalized_material_plan = None
+        if isinstance(material_plan, dict) and set(material_plan) == set(expected_material_plan):
+            normalized_material_plan = {}
+            for key, expected in expected_material_plan.items():
+                value = material_plan.get(key)
+                if isinstance(expected, list):
+                    if not isinstance(value, list) or not all(
+                        isinstance(item, str) for item in value
+                    ):
+                        normalized_material_plan = None
+                        break
+                    normalized_material_plan[key] = sorted(value)
+                else:
+                    normalized_material_plan[key] = value
+        if normalized_material_plan != expected_material_plan:
+            mismatches.append("material_plan_json")
+        active_contraindications = set(
+            expected_material_plan["active_contraindication_codes"]
+        )
+        checked_codes = {
+            value
+            for value in anti_patterns_checked or []
+            if isinstance(value, str)
+        } if isinstance(anti_patterns_checked, list) else set()
+        if not active_contraindications.issubset(checked_codes):
+            mismatches.append("anti_patterns_checked_json")
+        if mismatches:
+            self.error(
+                "style_binding_receipt_mismatch",
+                path.name,
+                "published binding disagrees on: " + ", ".join(sorted(set(mismatches))),
+            )
+
+    def _check_first_party_outcome(self, path: Path, meta: dict[str, str]) -> None:
+        if meta.get("performance_evidence_scope") != "first_party_traffic_validated":
+            return
+        raw_library_path = meta.get("style_library_path", "").strip()
+        library_path = (self.run_dir / raw_library_path).resolve()
+        if not library_path.is_file():
+            self.error(
+                "traffic_outcome_receipt_missing",
+                path.name,
+                "first-party outcome style library is missing",
+            )
+            return
+        try:
+            uri_path = quote(str(library_path), safe="/")
+            con = sqlite3.connect(f"file:{uri_path}?mode=ro", uri=True)
+            con.row_factory = sqlite3.Row
+            con.execute("PRAGMA query_only = ON")
+            foreign_key_violations = con.execute("PRAGMA foreign_key_check").fetchall()
+            if foreign_key_violations:
+                self.error(
+                    "traffic_outcome_receipt_invalid",
+                    path.name,
+                    "style library contains foreign-key violations",
+                )
+                return
+            outcome_id = meta.get("traffic_outcome_checkpoint_id")
+            checkpoint = con.execute(
+                "SELECT * FROM draft_outcome_checkpoints WHERE outcome_checkpoint_id=?",
+                (outcome_id,),
+            ).fetchone()
+            publication = con.execute(
+                "SELECT * FROM draft_outcome_publications WHERE outcome_checkpoint_id=?",
+                (outcome_id,),
+            ).fetchone()
+            if checkpoint is None or publication is None:
+                self.error(
+                    "traffic_outcome_receipt_missing",
+                    path.name,
+                    "no immutable draft outcome publication matches the checkpoint",
+                )
+                return
+            experiment = con.execute(
+                "SELECT * FROM draft_experiments WHERE experiment_id=?",
+                (checkpoint["experiment_id"],),
+            ).fetchone()
+            experiment_publication = con.execute(
+                "SELECT * FROM draft_experiment_publications WHERE experiment_id=?",
+                (checkpoint["experiment_id"],),
+            ).fetchone()
+            assignment = con.execute(
+                """
+                SELECT * FROM draft_experiment_assignments
+                WHERE experiment_id=? AND draft_binding_id=?
+                """,
+                (checkpoint["experiment_id"], checkpoint["draft_binding_id"]),
+            ).fetchone()
+            publish_event = con.execute(
+                """
+                SELECT * FROM draft_publish_events
+                WHERE experiment_id=? AND draft_binding_id=?
+                """,
+                (checkpoint["experiment_id"], checkpoint["draft_binding_id"]),
+            ).fetchone()
+            performance_definition = con.execute(
+                """
+                SELECT * FROM performance_definitions
+                WHERE performance_definition_id=? AND metric_name=?
+                """,
+                (
+                    checkpoint["performance_definition_id"],
+                    checkpoint["primary_metric_name"],
+                ),
+            ).fetchone()
+            baseline_publication = con.execute(
+                """
+                SELECT * FROM baseline_snapshot_publications
+                WHERE baseline_snapshot_id=?
+                  AND library_account_id=?
+                  AND performance_definition_id=?
+                  AND metric_name=?
+                  AND baseline_snapshot_sha256=?
+                """,
+                (
+                    checkpoint["baseline_snapshot_id"],
+                    checkpoint["library_account_id"],
+                    checkpoint["performance_definition_id"],
+                    checkpoint["primary_metric_name"],
+                    checkpoint["baseline_snapshot_sha256"],
+                ),
+            ).fetchone()
+            baseline_member_audit = con.execute(
+                """
+                SELECT
+                    COUNT(*) AS included_count,
+                    SUM(CASE WHEN metric.visibility_scope='first_party_analytics'
+                                  AND metric.metric_name=?
+                             THEN 0 ELSE 1 END) AS invalid_count
+                FROM account_baseline_members AS member
+                JOIN post_metrics AS metric
+                  ON metric.post_metric_id=member.member_post_metric_id
+                 AND metric.post_observation_id=member.member_post_observation_id
+                 AND metric.metric_name=member.metric_name
+                WHERE member.baseline_snapshot_id=?
+                  AND member.inclusion_status='included'
+                """,
+                (
+                    checkpoint["primary_metric_name"],
+                    checkpoint["baseline_snapshot_id"],
+                ),
+            ).fetchone()
+            metrics = con.execute(
+                """
+                SELECT * FROM draft_outcome_metrics
+                WHERE outcome_checkpoint_id=?
+                ORDER BY metric_ordinal, outcome_metric_id
+                """,
+                (outcome_id,),
+            ).fetchall()
+        except sqlite3.Error as exc:
+            self.error("traffic_outcome_receipt_invalid", path.name, str(exc))
+            return
+        finally:
+            if "con" in locals():
+                con.close()
+        mismatches: list[str] = []
+        exact_checkpoint = {
+            "draft_binding_id": meta.get("draft_binding_id"),
+            "library_account_id": meta.get("account_scope"),
+            "visibility_scope": "first_party_analytics",
+            "primary_metric_name": meta.get("traffic_primary_metric"),
+            "primary_metric_status": "observed",
+            "traffic_verdict": meta.get("traffic_verdict"),
+        }
+        if not scope_is_specific(meta.get("account_scope")):
+            mismatches.append("account_scope")
+        for field, expected in exact_checkpoint.items():
+            if str(checkpoint[field]) != str(expected):
+                mismatches.append(field)
+        if not isinstance(checkpoint["checkpoint_hours"], int) or checkpoint["checkpoint_hours"] <= 0:
+            mismatches.append("checkpoint_hours")
+        if publication["draft_binding_id"] != meta.get("draft_binding_id"):
+            mismatches.append("publication.draft_binding_id")
+        if (
+            publication["metric_set_sha256"] != checkpoint["metric_set_sha256"]
+            or publication["metric_count"] != checkpoint["metric_count"]
+            or publication["traffic_verdict"] != checkpoint["traffic_verdict"]
+        ):
+            mismatches.append("outcome_publication")
+        if (
+            experiment is None
+            or experiment_publication is None
+            or assignment is None
+            or publish_event is None
+        ):
+            mismatches.append("experiment_publication")
+        else:
+            exact_experiment = {
+                "library_account_id": meta.get("account_scope"),
+                "business_objective": self.run.get("business_objective"),
+                "visibility_scope": "first_party_analytics",
+                "primary_metric_name": meta.get("traffic_primary_metric"),
+            }
+            for field, expected in exact_experiment.items():
+                if str(experiment[field]) != str(expected):
+                    mismatches.append(f"experiment.{field}")
+            if experiment["status"] not in {"preregistered", "closed"}:
+                mismatches.append("experiment.status")
+            if assignment["actual_publish_at"] is not None:
+                mismatches.append("assignment.actual_publish_at")
+            expected_publish_event = {
+                "library_account_id": meta.get("account_scope"),
+                "surface": meta.get("traffic_observation_surface"),
+            }
+            for field, expected in expected_publish_event.items():
+                if str(publish_event[field]) != str(expected):
+                    mismatches.append(f"publish_event.{field}")
+            if not scope_is_specific(str(publish_event["platform_post_id"])):
+                mismatches.append("publish_event.platform_post_id")
+            if not str(publish_event["publication_url"]).strip():
+                mismatches.append("publish_event.publication_url")
+            calculated_publish_event_sha = hashlib.sha256(
+                json.dumps(
+                    [
+                        publish_event["publish_event_id"],
+                        publish_event["experiment_id"],
+                        publish_event["draft_binding_id"],
+                        publish_event["library_account_id"],
+                        publish_event["surface"],
+                        publish_event["platform_post_id"],
+                        publish_event["publication_url"],
+                        publish_event["actual_publish_at"],
+                    ],
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode("utf-8")
+            ).hexdigest()
+            if publish_event["publish_event_sha256"] != calculated_publish_event_sha:
+                mismatches.append("publish_event.publish_event_sha256")
+            try:
+                preregistered_at = parse_timestamp_utc(
+                    experiment_publication["published_at"]
+                )
+                published_at = parse_timestamp_utc(
+                    publish_event["actual_publish_at"]
+                )
+                observed_at = parse_timestamp_utc(checkpoint["observed_at"])
+                elapsed_hours = (observed_at - published_at).total_seconds() / 3600
+                if not (preregistered_at <= published_at <= observed_at):
+                    mismatches.append("publish_event.actual_publish_at")
+                checkpoint_hours = float(checkpoint["checkpoint_hours"])
+                checkpoint_tolerance = min(2.0, checkpoint_hours * 0.1)
+                if abs(elapsed_hours - checkpoint_hours) > checkpoint_tolerance:
+                    mismatches.append("checkpoint.observed_at")
+            except (TypeError, ValueError):
+                mismatches.append("checkpoint.observed_at")
+            try:
+                held_constants = json.loads(experiment["held_constants_json"])
+            except (TypeError, json.JSONDecodeError):
+                held_constants = {}
+            expected_constants = {
+                "platform": meta.get("platform"),
+                "account_scope": meta.get("account_scope"),
+                "surface": meta.get("traffic_observation_surface"),
+                "category": meta.get("style_query_category"),
+                "carrier": meta.get("style_query_carrier"),
+                "primary_job": meta.get("primary_job"),
+                "traffic_stage": meta.get("traffic_stage"),
+                "window_start": self.run.get("window_start"),
+                "window_end": self.run.get("window_end"),
+            }
+            if not isinstance(held_constants, dict) or any(
+                str(held_constants.get(field, "")) != str(expected)
+                for field, expected in expected_constants.items()
+            ):
+                mismatches.append("experiment.held_constants_json")
+        if performance_definition is None:
+            mismatches.append("performance_definition")
+        else:
+            expected_definition = {
+                "business_objective": "traffic_first",
+                "primary_job": meta.get("primary_job"),
+                "traffic_stage": meta.get("traffic_stage"),
+                "metric_name": meta.get("traffic_primary_metric"),
+            }
+            for field, expected in expected_definition.items():
+                if str(performance_definition[field]) != str(expected):
+                    mismatches.append(f"performance_definition.{field}")
+            if performance_definition["metric_name"] not in {"impressions", "reach"}:
+                mismatches.append("performance_definition.metric_name")
+        if baseline_publication is None:
+            mismatches.append("baseline_snapshot_publication")
+        if (
+            baseline_member_audit is None
+            or int(baseline_member_audit["included_count"] or 0) < 1
+            or int(baseline_member_audit["invalid_count"] or 0) != 0
+        ):
+            mismatches.append("baseline_first_party_members")
+        if checkpoint["metric_count"] != len(metrics):
+            mismatches.append("metric_count")
+        metric_hashes: list[str] = []
+        for metric in metrics:
+            metric_values = [
+                metric["outcome_metric_id"], metric["outcome_checkpoint_id"],
+                metric["experiment_id"], metric["draft_binding_id"],
+                metric["metric_role"], metric["metric_name"],
+                metric["metric_status"], metric["metric_value"],
+                metric["numerator"], metric["denominator"],
+                metric["denominator_metric_name"], metric["metric_unit"],
+                metric["metric_ordinal"],
+            ]
+            calculated_metric_sha = hashlib.sha256(
+                json.dumps(
+                    metric_values,
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode("utf-8")
+            ).hexdigest()
+            if metric["metric_sha256"] != calculated_metric_sha:
+                mismatches.append(f"metric_sha256:{metric['outcome_metric_id']}")
+            metric_hashes.append(calculated_metric_sha)
+        calculated_metric_set_sha = hashlib.sha256(
+            json.dumps(
+                metric_hashes,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+        ).hexdigest()
+        if checkpoint["metric_set_sha256"] != calculated_metric_set_sha:
+            mismatches.append("metric_set_sha256")
+        primary_metrics = [
+            row for row in metrics
+            if row["metric_role"] == "primary_exposure"
+            and row["metric_name"] == meta.get("traffic_primary_metric")
+            and row["metric_status"] == "observed"
+            and row["metric_value"] is not None
+        ]
+        if len(primary_metrics) != 1:
+            mismatches.append("primary_exposure_metric")
+        receipt_payload = {
+            "checkpoint": dict(checkpoint),
+            "publication": dict(publication),
+            "experiment": dict(experiment) if experiment is not None else None,
+            "experiment_publication": (
+                dict(experiment_publication)
+                if experiment_publication is not None else None
+            ),
+            "assignment": dict(assignment) if assignment is not None else None,
+            "publish_event": dict(publish_event) if publish_event is not None else None,
+            "performance_definition": (
+                dict(performance_definition)
+                if performance_definition is not None else None
+            ),
+            "baseline_publication": (
+                dict(baseline_publication) if baseline_publication is not None else None
+            ),
+            "baseline_member_audit": (
+                dict(baseline_member_audit)
+                if baseline_member_audit is not None else None
+            ),
+            "metrics": [dict(row) for row in metrics],
+        }
+        actual_receipt_sha = hashlib.sha256(
+            json.dumps(
+                receipt_payload,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+        ).hexdigest()
+        if actual_receipt_sha != meta.get("traffic_outcome_receipt_sha256"):
+            mismatches.append("traffic_outcome_receipt_sha256")
+        if mismatches:
+            self.error(
+                "traffic_outcome_receipt_mismatch",
+                path.name,
+                "published first-party outcome disagrees on: "
+                + ", ".join(sorted(set(mismatches))),
+            )
 
     def _check_drafts(self) -> None:
         drafts = self.run_dir / "drafts"
@@ -3176,6 +6323,8 @@ class RunValidator:
                 )
             if self._is_v2():
                 self._check_v2_draft_style_contract(path, meta)
+                self._check_grounded_style_binding(path, meta)
+                self._check_first_party_outcome(path, meta)
             if self.run.get("status") == "complete":
                 for field in sorted(DRAFT_NONEMPTY_META):
                     if not meta.get(field, "").strip():
@@ -3240,7 +6389,8 @@ class RunValidator:
                     path.name,
                     "duplicate sections are forbidden: " + ", ".join(duplicate_headings),
                 )
-            missing_headings = sorted(DRAFT_HEADINGS - headings)
+            required_headings = DRAFT_HEADINGS | (V2_DRAFT_HEADINGS if self._is_v2() else set())
+            missing_headings = sorted(required_headings - headings)
             if missing_headings:
                 self.error(
                     "draft_contract",
@@ -3248,7 +6398,7 @@ class RunValidator:
                     "missing sections: " + ", ".join(missing_headings),
                 )
             if self.run.get("status") == "complete":
-                for heading in sorted(DRAFT_HEADINGS & headings):
+                for heading in sorted(required_headings & headings):
                     body = markdown_section(rendered_text, heading)
                     if not re.sub(r"[#>*_`\-\s]", "", body):
                         self.error(
@@ -3256,6 +6406,9 @@ class RunValidator:
                             path.name,
                             f"completed draft section has no substantive content: {heading}",
                         )
+            if self._is_v2():
+                self._check_v2_mechanism_contract(path, rendered_text, meta, headings)
+                self._check_v2_visual_contract(path, rendered_text, meta, headings)
             cta_contract: dict[str, str] = {}
             if "CTA 与披露" in headings:
                 cta_contract = parse_contract_block(
@@ -3426,6 +6579,7 @@ class RunValidator:
                         path.name,
                         "completed draft run requires draft status ready",
                     )
+            if draft_status == "ready" or self.run.get("status") == "complete":
                 for heading in ("合规审校", "创意审校"):
                     review = parse_contract_block(markdown_section(rendered_text, heading))
                     if review.get("review_status") != "PASS":

@@ -72,7 +72,7 @@ metric definition / baseline window / missing policy
 required materials / constraints / contraindications
 ```
 
-`primary_job` 是硬条件：`feed_stop`、`search_answer`、`explain`、`trust_build`、`decision_support`、`relationship_build`、`conversion`、`authority_statement`。运行时只能放宽 category，不能为了找到结果而悄悄换 job。
+`primary_job` 是硬条件：`feed_stop`、`search_answer`、`explain`、`trust_build`、`decision_support`、`relationship_build`、`conversion`、`authority_statement`。相邻 category 只能作为补采线索和 analogue review，不能进入 production binding；不能为了找到结果而悄悄换 category、job 或 carrier。
 
 ### 3.2 保存完整页面，不只看封面
 
@@ -161,17 +161,17 @@ required materials / constraints / contraindications
 
 ```text
 exact category + exact carrier + exact primary_job + constraints/materials
-→ 放宽 category，保持 carrier/job/约束
-→ 若仍无当前、完整、可绑定规则：needs_style_research
+→ 没有 exact published rule：needs_style_research
+→ 可另搜相邻 category 形成 analogue research lead，但不得绑定到当前 draft
 ```
 
-不得放宽 primary job，不得混入 contraindicated 素材。`series_constant` 和 `task_fit` 可作为身份/生产辅助，但 `traffic_first` 的 primary performance rule 必须是 contrastive hypothesis。只有 `first_party_traffic_validated` 可以写“已验证流量”，`public_proxy_association` 必须明确是公开互动关联。
+不得放宽 category、primary job 或 carrier，不得混入 contraindicated 素材。`series_constant` 和 `task_fit` 可作为身份/生产辅助，但 `traffic_first` 的 primary performance rule 必须是 contrastive hypothesis。只有 `first_party_traffic_validated` 才能写“已验证流量”，但当前 release gate 整体禁用该 scope；`public_proxy_association` 必须明确是公开互动关联。
 
 没有 qualified rule 时：
 
 - 输出缺口、补采 query、需要的真实素材和测试方案；
 - 只有绑定至少 2 条 task-fit 机制、1 条反例/anti-pattern，且事实、授权和真实性门通过时，才可以给 `candidate_only / needs_review` 的标题、完整候选文案、逐页结构与探索 brief；
-- 若生成图像，真实素材与权利必须满足，且状态最多为 `rendered_needs_review`；不得用 AI 图、伪截图或临时仿版补造证明素材；
+- 若生成探索图像，真实素材与权利必须满足，且状态最多为 `prototype_only`；不得用 AI 图、伪截图或临时仿版补造证明素材。`rendered_needs_review` 仅用于已经有 published binding、已生成最终逐页文件但尚未取得独立人工 PASS receipt 的情形；
 - 不得称 ready、可直接发布或爆款公式；
 - 不得为了交稿跳过检索，或用单篇截图临时造母版。
 
@@ -199,7 +199,7 @@ primary_job / carrier / audience_state
 
 ### 概念原型
 
-至少做两个注意力路径真正不同的可查看原型，例如“真实证据先行”与“冲突命题先行”。只换配色、字体或标题不算第二概念。先看双列 feed 缩略图，再看全尺寸；记录选中/淘汰理由后，只扩展选中方向。
+有两个证据充分的合格方向时，做两个注意力路径真正不同的可查看原型，例如“真实证据先行”与“冲突命题先行”。只换配色、字体或标题不算第二概念。exact cell 只有一个合格探索方向时最多做一个 `prototype_only`，不为凑数自创第二方向，也不能声称已完成比较；没有方向才停在 `prototype_gap / brief_only`。先看双列 feed 缩略图，再看全尺寸；记录选中/淘汰理由后，只扩展有依据的方向。
 
 用户连续两次评价整体“丑、不像小红书、方向不对”时，停止微调。新 brief 必须在目标、参考集合、注意力路径三类中至少改变两类，再渲染。
 
@@ -227,7 +227,7 @@ primary_job / carrier / audience_state
 
 发布前冻结：随机种子、计划顺序、时间窗、每格 proposition hash、carrier、视觉生产类型、证据深度、CTA、商业浓度、held constants hash 和允许偏离原因。首轮不放成人商品 CTA，只验证获客载体；商业承接另开实验。
 
-每格记录 24h/72h 同一个一方 exposure primary（impressions 或 reach），以及 CTR/停留、主页访问、关注、隐藏/举报/审核等诊断。不允许因为前几篇先高就提前停；只有合规、真实性、授权或账号安全 hard gate 可以停止。
+每格在预注册的同一 checkpoint 记录同一个一方 exposure primary（impressions 或 reach），以及 CTR/停留、主页访问、关注、隐藏/举报/审核等诊断。checkpoint 由内容生命周期、平台数据可得性和账号基线决定，不把 24h/72h 当跨类目默认。不允许因为前几篇先高就提前停；只有合规、真实性、授权或账号安全 hard gate 可以停止。
 
 放大至少满足：3 个主题中 2 个同方向、没有严重反向 block、质量 guardrail 未显著退化、全部 hard gate 通过。否则保持 directional/inconclusive。
 

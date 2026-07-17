@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import json
 import re
 import subprocess
 import tempfile
@@ -418,6 +419,8 @@ def base_channel(**overrides: str) -> dict[str, str]:
 
 
 def write_complete_draft(path: Path, **overrides: str) -> None:
+    mechanism_contract = overrides.pop("mechanism_contract", None)
+    visual_contract = overrides.pop("visual_contract", None)
     meta = {
         "draft_id": "DRAFT-001",
         "topic_id": "TOPIC-001",
@@ -441,8 +444,7 @@ def write_complete_draft(path: Path, **overrides: str) -> None:
     }
     meta.update(overrides)
     sections: list[str] = []
-    for heading in sorted(
-        {
+    headings = {
             "证据与目标用户",
             "标题版本",
             "封面版本",
@@ -453,8 +455,11 @@ def write_complete_draft(path: Path, **overrides: str) -> None:
             "合规审校",
             "创意审校",
             "观测计划",
-        }
-    ):
+    }
+    if meta.get("style_contract_version") == "2":
+        headings.add("流量机制绑定")
+        headings.add("视觉方向绑定")
+    for heading in sorted(headings):
         if heading == "CTA 与披露":
             cta_copy = "none" if meta["cta_type"] == "none" else "使用已审核站内商品组件"
             body = "\n".join(
@@ -472,6 +477,33 @@ def write_complete_draft(path: Path, **overrides: str) -> None:
             )
         elif heading in {"合规审校", "创意审校"}:
             body = "review_status: PASS\nfindings: none"
+        elif heading == "流量机制绑定":
+            body = mechanism_contract or "\n".join(
+                [
+                    "contract_status: needs_research",
+                    "primary_mechanism_id: none",
+                    "mechanism_ids: none",
+                    "counterexample_ids: none",
+                    "material_codes: none",
+                    "material_evidence_map: none",
+                    "mechanism_application_map: none",
+                    "research_gap: exact task-fit materials and counterexample not yet captured",
+                ]
+            )
+        elif heading == "视觉方向绑定":
+            body = visual_contract or "\n".join(
+                [
+                    "visual_contract_status: needs_visual_research",
+                    "visual_direction_card_ids: none",
+                    "selection_mode: exploration",
+                    "asset_manifest_path: none",
+                    "asset_manifest_sha256: none",
+                    "style_library_path: ../_style_library/style-library.sqlite",
+                    "draft_binding_id: none",
+                    "active_contraindication_codes: none",
+                    "research_gap: exact visual materials and rights receipts not yet captured",
+                ]
+            )
         elif heading == "成稿" and meta["commercial_relationship"] != "none":
             body_lines = [
                 meta["disclosure_text"],
@@ -497,17 +529,35 @@ def v2_style_meta(**overrides: str) -> dict[str, str]:
         "style_contract_version": "2",
         "business_objective": "traffic_first",
         "style_requirement": "both",
+        "style_library_path": "../_style_library/style-library.sqlite",
+        "style_taxonomy_version": "2",
+        "style_query_category": "测试类目",
         "style_query_carrier": "text_card",
         "style_query_primary_job": "feed_stop",
+        "style_query_required_constraint_codes": "none",
+        "style_query_required_material_codes": "text_only",
+        "style_query_available_material_codes": "text_only",
+        "style_query_active_constraint_codes": "none",
+        "style_query_active_contraindication_codes": "none",
         "style_binding_source": "none",
         "style_binding_status": "needs_style_research",
+        "draft_binding_id": "none",
+        "draft_binding_sha256": "none",
+        "style_rule_ids": "none",
+        "primary_style_archetype_id": "none",
+        "primary_style_archetype_version": "none",
+        "primary_style_archetype_snapshot_sha256": "none",
         "performance_rule_claim_kind": "series_constant",
         "style_feature_contrast": "invariant",
         "performance_evidence_scope": "not_performance_evidence",
+        "primary_performance_rule_id": "none",
         "performance_visibility_scope": "public_proxy",
         "traffic_primary_metric": "engagement_proxy",
         "traffic_verdict": "not_applicable",
         "traffic_stage": "feed_stop",
+        "traffic_observation_surface": "none",
+        "traffic_outcome_checkpoint_id": "none",
+        "traffic_outcome_receipt_sha256": "none",
         "job_primary_metric": "comment_semantic_proxy",
         "job_metric_event_definition": "目标问题语义评论数；只作公开评论代理，不推断曝光或总体比例",
         "job_metric_denominator": "comments",
@@ -515,9 +565,80 @@ def v2_style_meta(**overrides: str) -> dict[str, str]:
         "job_metric_verdict": "not_applicable",
         "visual_delivery_requirement": "brief",
         "visual_delivery_status": "brief_only",
+        "expected_slide_indices": "none",
+        "cta_product_scope": "none",
+        "production_gate_status": "not_applicable",
+        "production_gate_receipt_ids": "none",
     }
     meta.update(overrides)
     return meta
+
+
+def valid_v2_mechanism_contract(
+    *, mechanism_ids: tuple[str, str, str] = ("TM01", "TM02", "TM17")
+) -> str:
+    failures = {
+        "TM01": "第一份证据与承诺不是同一件事",
+        "TM02": "标题答 A、正文答 B",
+        "TM04": "只有漂亮成片没有过程",
+        "TM17": "素材后补、权利不明、验收人缺失",
+    }
+    material_map = {
+        "promise": ["DRAFT-001#标题版本"],
+        "real_proof": ["USER-001"],
+        "source_ledger": ["USER-001"],
+        "version_log": ["DRAFT-001#版本记录"],
+        "rights_clearance": ["AUTH-RIGHTS-001"],
+        "before_after_sequence": ["USER-001"],
+        "constraint_cost": ["USER-001"],
+    }
+    materials = {
+        "TM01": {"promise", "real_proof"},
+        "TM02": {"promise", "real_proof"},
+        "TM04": {"before_after_sequence", "constraint_cost"},
+        "TM17": {"source_ledger", "version_log", "rights_clearance"},
+    }
+    application = {}
+    for mechanism_id in mechanism_ids:
+        card_refs = sorted(
+            {
+                ref
+                for code in materials[mechanism_id]
+                for ref in material_map[code]
+            }
+        )
+        application[mechanism_id] = {
+            "input_refs": card_refs,
+            "title_action": f"按 {mechanism_id} 校对唯一承诺",
+            "cover_action": f"按 {mechanism_id} 放置首份证据",
+            "body_action": f"按 {mechanism_id} 逐页兑现",
+            "comments_action": f"按 {mechanism_id} 记录真实问题",
+            "job_metric": "comment_semantic_proxy",
+            "failure_condition": failures[mechanism_id],
+            "intentional_deviation": "not_applicable: 本轮严格执行卡片边界",
+        }
+    selected_materials = sorted(
+        {code for mechanism_id in mechanism_ids for code in materials[mechanism_id]}
+    )
+    primary = mechanism_ids[0]
+    return "\n".join(
+        [
+            "contract_status: bound_candidate",
+            f"primary_mechanism_id: {primary}",
+            "mechanism_ids: " + ";".join(mechanism_ids),
+            "counterexample_ids: COUNTER-001",
+            "material_codes: " + ";".join(selected_materials),
+            "material_evidence_map: "
+            + json.dumps(
+                {code: material_map[code] for code in selected_materials},
+                ensure_ascii=False,
+                separators=(",", ":"),
+            ),
+            "mechanism_application_map: "
+            + json.dumps(application, ensure_ascii=False, separators=(",", ":")),
+            "research_gap: exact style cell is still unqualified; candidate only",
+        ]
+    )
 
 
 def asset_sha256(path: Path) -> str:
@@ -3414,9 +3535,20 @@ class StyleContractFastPathTests(unittest.TestCase):
                 "evidence_grade": "C",
             }
         )
+        counter_source = base_source("COUNTER-001")
+        counter_source.update(
+            {
+                "source_layer": "creator_experience",
+                "source_type": "user_material",
+                "title": "边界反例材料",
+                "author_org": "用户授权材料",
+                "evidence_form": "user_material",
+                "evidence_grade": "C",
+            }
+        )
         write_csv(
             self.fixture.path / "source-log.csv",
-            [base_source(), demand_source],
+            [base_source(), demand_source, counter_source],
         )
         for field, value in {
             "run_contract_version": "2",
@@ -3430,7 +3562,12 @@ class StyleContractFastPathTests(unittest.TestCase):
             self.fixture.set_run_field(field, value)
         write_csv(
             self.fixture.path / "topics.csv",
-            [base_topic(primary_job="feed_stop")],
+            [
+                base_topic(
+                    primary_job="feed_stop",
+                    counterexamples="COUNTER-001：相邻场景反例，不外推",
+                )
+            ],
         )
         drafts = self.fixture.path / "drafts"
         drafts.mkdir()
@@ -3457,10 +3594,217 @@ class StyleContractFastPathTests(unittest.TestCase):
             **meta,
         )
 
+    def write_rights_authorization(self) -> None:
+        write_csv(
+            self.fixture.path / "authorization-log.csv",
+            [
+                {
+                    "authorization_id": "AUTH-RIGHTS-001",
+                    "subject_scope": "licensed-production-assets-001",
+                    "source_asset_id": "DRAFT-001",
+                    "material_id": "MATERIAL-RIGHTS-001",
+                    "material_sha256": "b" * 64,
+                    "material_type": "other",
+                    "permission_scope": "verbatim",
+                    "commercial_use": "prohibited",
+                    "anonymization_requirements": "none",
+                    "granted_at": "2026-07-16",
+                    "expires_at": "2026-08-16",
+                    "withdrawal_process": "remove the bound asset and re-review",
+                    "evidence_locator": "private://rights/AUTH-RIGHTS-001",
+                    "verified_by": "rights-reviewer-001",
+                    "verified_at": "2026-07-16",
+                    "status": "approved",
+                    "authorized_output_sha256": "c" * 64,
+                }
+            ],
+        )
+
     def test_needs_style_research_is_a_valid_nonready_v2_stop(self) -> None:
         self.write_v2_draft()
         result = self.run_validator()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_v2_requires_machine_readable_mechanism_contract_section(self) -> None:
+        self.write_v2_draft()
+        text = self.draft.read_text(encoding="utf-8")
+        text = re.sub(
+            r"\n## 流量机制绑定\n.*?(?=\n## |\Z)",
+            "",
+            text,
+            flags=re.DOTALL,
+        )
+        self.draft.write_text(text, encoding="utf-8")
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("missing sections: 流量机制绑定", result.stdout)
+
+    def test_bound_candidate_rejects_fabricated_mechanism_id(self) -> None:
+        self.write_rights_authorization()
+        contract = valid_v2_mechanism_contract().replace("TM01", "TM99")
+        self.write_v2_draft(mechanism_contract=contract)
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("unknown_mechanism_id", result.stdout)
+
+    def test_bound_candidate_rejects_job_mismatched_mechanism(self) -> None:
+        self.write_rights_authorization()
+        self.write_v2_draft(
+            mechanism_contract=valid_v2_mechanism_contract(
+                mechanism_ids=("TM04", "TM02", "TM17")
+            )
+        )
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("mechanism_job_mismatch", result.stdout)
+
+    def test_task_fit_three_slot_candidate_contract_passes(self) -> None:
+        self.write_rights_authorization()
+        self.write_v2_draft(mechanism_contract=valid_v2_mechanism_contract())
+        result = self.run_validator()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_bound_candidate_requires_material_evidence_map(self) -> None:
+        self.write_rights_authorization()
+        contract = re.sub(
+            r"^material_evidence_map: .+$",
+            "material_evidence_map: none",
+            valid_v2_mechanism_contract(),
+            flags=re.MULTILINE,
+        )
+        self.write_v2_draft(mechanism_contract=contract)
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("material_evidence_binding", result.stdout)
+
+    def test_bound_candidate_requires_mechanism_application_map(self) -> None:
+        self.write_rights_authorization()
+        contract = re.sub(
+            r"^mechanism_application_map: .+$",
+            "mechanism_application_map: none",
+            valid_v2_mechanism_contract(),
+            flags=re.MULTILINE,
+        )
+        self.write_v2_draft(mechanism_contract=contract)
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("mechanism_application_binding", result.stdout)
+
+    def test_bound_candidate_rejects_globally_forbidden_material(self) -> None:
+        self.write_rights_authorization()
+        contract = valid_v2_mechanism_contract().replace(
+            "material_codes: ",
+            "material_codes: fabricated_comment;",
+            1,
+        )
+        self.write_v2_draft(mechanism_contract=contract)
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("globally forbidden material codes", result.stdout)
+
+    def test_bound_candidate_rejects_placeholder_application_actions(self) -> None:
+        self.write_rights_authorization()
+        contract = re.sub(
+            r'("(?:title_action|cover_action|body_action|comments_action|intentional_deviation)":)"[^"]*"',
+            r'\1"none"',
+            valid_v2_mechanism_contract(),
+        )
+        self.write_v2_draft(mechanism_contract=contract)
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("must be substantive", result.stdout)
+
+    def test_counterexample_id_must_be_counterexample_capable_type(self) -> None:
+        self.write_rights_authorization()
+        write_csv(
+            self.fixture.path / "topics.csv",
+            [base_topic(primary_job="feed_stop", counterexamples="Q-001：普通查询不能冒充反例")],
+        )
+        contract = valid_v2_mechanism_contract().replace("COUNTER-001", "Q-001")
+        self.write_v2_draft(mechanism_contract=contract)
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("counterexample_binding", result.stdout)
+
+    def test_real_proof_rejects_query_log_id(self) -> None:
+        self.write_rights_authorization()
+        contract = valid_v2_mechanism_contract().replace("USER-001", "Q-001")
+        self.write_v2_draft(mechanism_contract=contract)
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("incompatible evidence ID types", result.stdout)
+
+    def test_v2_rejects_blank_sensitive_gate_enums(self) -> None:
+        self.write_v2_draft(cta_product_scope="", production_gate_status="")
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("invalid_v2_style_enum", result.stdout)
+
+    def test_v2_style_query_category_must_match_run_category(self) -> None:
+        self.write_v2_draft(style_query_category="另一个类目")
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("style_query_mismatch", result.stdout)
+
+    def test_selected_production_visual_contract_cannot_be_self_declared(self) -> None:
+        visual_contract = "\n".join(
+            [
+                "visual_contract_status: selected_production",
+                "visual_direction_card_ids: FAKE-CARD",
+                "selection_mode: production",
+                "asset_manifest_path: missing-assets.json",
+                "asset_manifest_sha256: " + "a" * 64,
+                "style_library_path: ../_style_library/style-library.sqlite",
+                "draft_binding_id: none",
+                "active_contraindication_codes: FAKE-CONTRAINDICATION",
+                "research_gap: none",
+            ]
+        )
+        self.write_v2_draft(visual_contract=visual_contract)
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("visual_contract_artifact_missing", result.stdout)
+
+    def test_copy_only_draft_can_explicitly_skip_visual_delivery(self) -> None:
+        self.fixture.set_run_field("style_requirement", "copy")
+        visual_contract = "\n".join(
+            [
+                "visual_contract_status: not_requested",
+                "visual_direction_card_ids: none",
+                "selection_mode: none",
+                "asset_manifest_path: none",
+                "asset_manifest_sha256: none",
+                "style_library_path: ../_style_library/style-library.sqlite",
+                "draft_binding_id: none",
+                "active_contraindication_codes: none",
+                "research_gap: none",
+            ]
+        )
+        self.write_v2_draft(
+            style_requirement="copy",
+            visual_delivery_requirement="none",
+            visual_delivery_status="not_requested",
+            visual_contract=visual_contract,
+        )
+        result = self.run_validator()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_grounded_style_cannot_be_self_declared_without_published_receipt(self) -> None:
+        self.fixture.set_run_field("style_library_path", "missing-style-library.sqlite")
+        self.write_v2_draft(
+            style_library_path="missing-style-library.sqlite",
+            style_binding_source="library",
+            style_binding_status="grounded",
+            draft_binding_id="BIND-FAKE-001",
+            draft_binding_sha256="d" * 64,
+            style_rule_ids="RULE-FAKE-001",
+            primary_style_archetype_id="ARCH-FAKE-001",
+            primary_style_archetype_version="1",
+            primary_style_archetype_snapshot_sha256="e" * 64,
+        )
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("style_binding_receipt_missing", result.stdout)
 
     def test_v2_rejects_uncontrolled_objective_job_and_carrier(self) -> None:
         self.fixture.set_run_field("business_objective", "go_viral")
@@ -3494,6 +3838,18 @@ class StyleContractFastPathTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("style_not_grounded", result.stdout)
 
+    def test_ready_draft_requires_both_review_sections_to_pass(self) -> None:
+        self.write_v2_draft(status="ready")
+        self.draft.write_text(
+            self.draft.read_text(encoding="utf-8")
+            .replace("## 合规审校\nreview_status: PASS", "## 合规审校\nreview_status: FAIL")
+            .replace("## 创意审校\nreview_status: PASS", "## 创意审校\nreview_status: FAIL"),
+            encoding="utf-8",
+        )
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("review_not_passed", result.stdout)
+
     def test_starter_binding_is_unavailable_while_release_gate_is_incomplete(self) -> None:
         self.write_v2_draft(style_binding_status="starter_applied")
         result = self.run_validator()
@@ -3516,6 +3872,41 @@ class StyleContractFastPathTests(unittest.TestCase):
         result = self.run_validator()
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("traffic_primary_metric", result.stdout)
+
+    def test_first_party_traffic_checkpoint_cannot_be_self_declared(self) -> None:
+        self.fixture.set_run_field("performance_visibility_scope", "first_party_analytics")
+        self.write_v2_draft(
+            performance_visibility_scope="first_party_analytics",
+            performance_evidence_scope="first_party_traffic_validated",
+            performance_rule_claim_kind="contrastive_performance_hypothesis",
+            style_feature_contrast="differentiated",
+            traffic_primary_metric="impressions",
+            traffic_verdict="inconclusive",
+            traffic_observation_surface="feed_recommendation",
+            traffic_outcome_checkpoint_id="OUTCOME-FAKE-001",
+            traffic_outcome_receipt_sha256="a" * 64,
+        )
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("first_party_scope_release_gate", result.stdout)
+        self.assertIn("traffic_outcome_receipt_missing", result.stdout)
+
+    def test_first_party_win_is_closed_until_verdict_recomputation_exists(self) -> None:
+        self.fixture.set_run_field("performance_visibility_scope", "first_party_analytics")
+        self.write_v2_draft(
+            performance_visibility_scope="first_party_analytics",
+            performance_evidence_scope="first_party_traffic_validated",
+            performance_rule_claim_kind="contrastive_performance_hypothesis",
+            style_feature_contrast="differentiated",
+            traffic_primary_metric="impressions",
+            traffic_verdict="win",
+            traffic_observation_surface="feed_recommendation",
+            traffic_outcome_checkpoint_id="OUTCOME-FAKE-001",
+            traffic_outcome_receipt_sha256="a" * 64,
+        )
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("traffic_verdict_release_gate", result.stdout)
 
     def test_first_party_job_metric_must_match_primary_job(self) -> None:
         self.write_v2_draft(
@@ -3564,7 +3955,16 @@ class StyleContractFastPathTests(unittest.TestCase):
         )
         result = self.run_validator()
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("rendered_delivery_missing", result.stdout)
+        self.assertIn("visual_delivery_state_mismatch", result.stdout)
+
+    def test_rendered_pass_cannot_be_self_declared_without_final_asset_manifest(self) -> None:
+        self.write_v2_draft(
+            visual_delivery_requirement="rendered",
+            visual_delivery_status="rendered_pass",
+        )
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("rendered_asset_receipt_missing", result.stdout)
 
     def test_adult_product_cta_requires_current_production_gate_receipt(self) -> None:
         write_csv(
@@ -3585,6 +3985,26 @@ class StyleContractFastPathTests(unittest.TestCase):
         result = self.run_validator()
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("sensitive_commercial_gate", result.stdout)
+
+    def test_sensitive_gate_ready_cannot_be_self_declared_without_receipt_file(self) -> None:
+        write_csv(
+            self.fixture.path / "topics.csv",
+            [base_topic(primary_job="conversion")],
+        )
+        self.write_v2_draft(
+            primary_job="conversion",
+            style_query_primary_job="conversion",
+            cta_type="product_component",
+            commercial_relationship="owned_product",
+            disclosure_text="本店自营产品",
+            disclosure_location="CTA前",
+            cta_product_scope="adult_product",
+            production_gate_status="ready",
+            production_gate_receipt_ids="PGATE-FAKE-001",
+        )
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("production_gate_receipt_missing", result.stdout)
 
     def test_relationship_education_is_not_product_eligibility(self) -> None:
         write_csv(

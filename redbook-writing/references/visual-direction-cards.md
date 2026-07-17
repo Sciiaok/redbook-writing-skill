@@ -142,7 +142,7 @@ draft_style_bindings
 
 它会重新计算 archetype snapshot hash、draft binding hash 和每条 selected rule hash，要求 binding 为 `review_status=PASS`、archetype 为 `supported/reusable`、rules 为 `active` 且全部已有 publication。`category + primary_job + carrier` 三项必须与 archetype 精确相等；不做“大类相近”“all category”或 carrier 降级。
 
-最终 aesthetic contract 只从已发布 rule payload 中提取 `palette`、`typography`、`image_treatment`、`density`、`annotation_language`、`crop_logic`。任一字段缺少已发布 rule receipt，都返回 `prototype_gap`，不会从方向卡补齐。
+生产态的最终 aesthetic contract 只从已发布 rule payload 中提取 `palette`、`typography`、`image_treatment`、`density`、`annotation_language`、`crop_logic`。任一字段缺少已发布 rule receipt，都返回 `prototype_gap`，不会从方向卡补齐。唯一的探索例外来自独立的 `aesthetic-exploration-prompts-v1.json`：无 binding、显式 `explicit_exploration`、exact scope cell、真实素材/权利/约束全部闭合时，可以叠一条带 source/prompt hash 的 AP overlay，输出上限仍是 `prototype_only`。AP 不改变本卡 `aesthetic_authority=published_style_binding_only` 的生产权限，也不能进入最终 binding。
 
 权限边界必须清楚：
 
@@ -154,7 +154,7 @@ draft_style_bindings
 | 图像/页文/caption 分工 | 标注语法与装饰语言 |
 | 真实性、权利、隐私、披露边界 | 密度与系列识别常量 |
 
-不要把方向卡里的 prompt 当作审美 system prompt。没有 exact、数据库可回链的 published binding 时，保留 `prototype_gap`；不要从 standalone JSON、卡名、类目印象或模型偏好临时发明色板。
+不要把方向卡里的 prompt 当作审美 system prompt。没有 exact、数据库可回链的 published binding 时，方向卡单独使用仍应停在 `prototype_gap`；只有上述独立 AP selector 返回 `matched_exploration` 时，才可做一次 `prototype_only` 粗原型。不要从卡名、类目印象或模型偏好临时发明色板。
 
 ## 5. 载体角色与单图合并
 
@@ -198,7 +198,7 @@ Prompt 输出回显：已用 asset ID、未用原因、逐角色 proof job、cop
 | `matched_exploration` | 仅允许验证候选骨架 | 保持 prototype_only，不发布 ready |
 | `matched` | 素材和 binding 合同通过 | 仍需事实、视觉、权利与发布前人工审稿 |
 
-选择器不会把“差一点匹配”的卡返回为合格结果。放宽类目可以，放宽任务、载体、素材真实性或权利不可以。
+选择器不会把“差一点匹配”的结果返回为合格 production binding。相邻类目只能登记为补采线索或 analogue review；最终 style binding 与一次性 AP scope cell 都不得自动放宽 category、任务、载体、素材真实性或权利。
 
 ## 8. 审稿边界
 

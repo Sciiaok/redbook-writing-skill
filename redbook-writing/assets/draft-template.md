@@ -14,20 +14,29 @@ style_query_category: "待填写"
 style_query_carrier: text_card
 style_query_primary_job: feed_stop
 style_query_required_constraint_codes: none
+style_query_required_material_codes: text_only
 style_query_active_constraint_codes: none
 style_query_available_material_codes: text_only
 style_query_active_contraindication_codes: none
 style_binding_source: none
 style_binding_status: needs_style_research
+draft_binding_id: none
+draft_binding_sha256: none
+style_rule_ids: none
 primary_style_archetype_id: none
-secondary_style_archetype_id: none
+primary_style_archetype_version: none
+primary_style_archetype_snapshot_sha256: none
 performance_rule_claim_kind: series_constant
 style_feature_contrast: invariant
 performance_evidence_scope: not_performance_evidence
+primary_performance_rule_id: none
 performance_visibility_scope: public_proxy
 traffic_stage: feed_stop
 traffic_primary_metric: engagement_proxy
 traffic_verdict: not_applicable
+traffic_observation_surface: none
+traffic_outcome_checkpoint_id: none
+traffic_outcome_receipt_sha256: none
 job_primary_metric: unavailable
 job_metric_event_definition: "当前没有一方任务指标；发布前按 primary_job 定义事件与分母"
 job_metric_denominator: unavailable
@@ -35,6 +44,7 @@ job_metric_data_scope: unavailable
 job_metric_verdict: unavailable
 visual_delivery_requirement: brief
 visual_delivery_status: brief_only
+expected_slide_indices: none
 truth_label: factual_explainer
 truth_disclosure_text: 事实说明
 truth_disclosure_location: 首屏
@@ -45,6 +55,9 @@ disclosure_text: none
 disclosure_location: none
 answer_location: "待填写：第几页/第几段"
 cta_type: none
+cta_product_scope: none
+production_gate_status: not_applicable
+production_gate_receipt_ids: none
 eligibility_ids: ""
 surfaces: ""
 status: needs_review
@@ -79,11 +92,47 @@ status: needs_review
 
 ## 风格检索与规则合同
 
-- 当前状态：`needs_style_research` 不得写成 ready。若下方列出至少 2 个 task-fit `traffic_mechanism_ids`、1 个 `counterexample_id`，且真实性/授权/事实/商业门通过，可交付显著标注的 `candidate_only / needs_review` 候选稿和探索 brief；否则只交付证据缺口与补采计划。
+- 当前状态：`needs_style_research` 不得写成 ready。若下方严格绑定 1 条内容机制、1 条载体/真实性机制、1 条复盘/治理机制、至少 1 个真实反例，且真实性/授权/事实/商业门通过，可交付显著标注的 `candidate_only / needs_review` 候选稿和探索 brief；否则只交付证据缺口与补采计划。
 - 视觉方向卡：`visual_direction_card_ids: none`。选用时必须逐项填写真实 prompt 变量、禁用项和素材权利；卡片永远不等于风格 binding 或流量验证。
 - `series_constant` / `task_fit` 只说明系列识别或任务适配，必须保持 `not_performance_evidence`。
 - 公开竞品只有 `engagement_proxy`，`traffic_verdict` 必须为 `not_applicable`。
 - starter 当前发布门禁未完成，不得绑定或包装成爆款公式。
+
+## 流量机制绑定
+
+```text
+contract_status: needs_research
+primary_mechanism_id: none
+mechanism_ids: none
+counterexample_ids: none
+material_codes: none
+material_evidence_map: none
+mechanism_application_map: none
+research_gap: 待填写当前 primary_job × carrier 缺少的真实素材、反例或三槽机制
+```
+
+绑定时从 `traffic-mechanisms-v1.json` 精确选择三张卡。`material_evidence_map` 与 `mechanism_application_map` 必须是各占一行的 JSON object；前者把每个 required material code 指向本次运行中的 Source / Claim / Post / Authorization / material ID，后者逐机制写 `input_refs / title_action / cover_action / body_action / comments_action / job_metric / failure_condition / intentional_deviation`。不得用不存在的 ID、空泛动作或临时自创“流量公式”通过合同。
+
+## 视觉方向绑定
+
+```text
+visual_contract_status: needs_visual_research
+visual_direction_card_ids: none
+selection_mode: exploration
+asset_manifest_path: none
+asset_manifest_sha256: none
+style_library_path: ../_style_library/style-library.sqlite
+draft_binding_id: none
+active_contraindication_codes: none
+aesthetic_overlay_status: not_selected
+aesthetic_prompt_id: none
+aesthetic_scope_cell_id: none
+aesthetic_prompt_sha256: none
+aesthetic_selection_receipt_path: none
+research_gap: 待填写 exact primary_job × carrier 的真实素材、权利回执或 published style binding 缺口
+```
+
+先运行 `select_visual_directions.py`。方向卡只决定证据顺序、注意力路径和 carrier role；palette、typography、image treatment、density、annotation 与 crop 在生产态必须来自 exact published style binding。无 binding 的显式探索如需一次性粗原型，再运行 `select_aesthetic_exploration.py` 并把完整 JSON 输出保存为 selection receipt；只有 `matched_exploration` 才能填写 AP ID/cell/hash，状态仍最多 `prototype_only`。没有真实 asset manifest、权利/隐私/商业状态、exact scope 或足够素材时保持 `prototype_gap / brief_only`。
 
 ## 成稿
 
@@ -164,5 +213,7 @@ review_status: pending
 ## 逐页视觉 QA
 
 - 若 `visual_delivery_requirement=rendered`，不能以 `brief_only` 交付。
-- 最终图片未实际生成、打开和逐页复核时，只能写 `rendered_needs_review`，不能写 `rendered_pass`。
+- 探索方向只能写 `prototype_only`；只有 published style binding 才能进入最终逐页渲染。
+- 最终图片未实际生成、用 Pillow 完整解码、打开 feed/full-size 并逐页复核时，只能写 `rendered_needs_review`，不能写 `rendered_pass`。
+- `rendered` 必须在 frontmatter 写从 1 开始连续的 `expected_slide_indices`，并逐页写入 `draft-assets.csv`。`rendered_pass` 还要求不同于 content owner 的 reviewer 在 `visual-review-receipts.jsonl` 对每页签署 canonical receipt；只在 CSV 写 `PASS` 无效。
 - 成人敏感商品 CTA 仅在显式写 `cta_product_scope: adult_product` 时触发精确生产门禁；关系教育本身不产生商品资格。
