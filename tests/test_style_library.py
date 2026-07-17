@@ -27,6 +27,7 @@ FROZEN_V1_SHA256 = {
 }
 
 EXPECTED_TABLES = {
+    "style_schema_metadata",
     "style_accounts",
     "style_posts",
     "run_account_refs",
@@ -39,14 +40,18 @@ EXPECTED_TABLES = {
     "style_slides",
     "visual_observations",
     "copy_observations",
+    "feature_observation_links",
     "style_archetypes",
     "archetype_publications",
     "archetype_rule_publications",
+    "archetype_review_receipts",
+    "qualified_style_publications",
     "starter_pack_publications",
     "archetype_rules",
     "rule_evidence",
     "draft_style_bindings",
     "draft_binding_publications",
+    "draft_binding_review_receipts",
     "draft_assets",
     "draft_outcomes",
     "ingest_receipts",
@@ -59,6 +64,7 @@ EXPECTED_TABLES = {
     "draft_experiments",
     "draft_experiment_assignments",
     "draft_experiment_publications",
+    "draft_publish_events",
     "draft_outcome_checkpoints",
     "draft_outcome_metrics",
     "draft_outcome_publications",
@@ -1742,38 +1748,34 @@ class StyleLibrarySchemaTests(unittest.TestCase):
         ):
             module.publish_draft_binding(self.db, "BIND-FINAL")
         con = module.connect_db(self.db)
-        con.execute(
-            """
-            UPDATE draft_style_bindings SET review_status='PASS'
-            WHERE draft_binding_id='BIND-FINAL'
-            """
-        )
-        con.commit()
+        pending = con.execute(
+            "SELECT * FROM draft_style_bindings WHERE draft_binding_id='BIND-FINAL'"
+        ).fetchone()
+        pending_sha = module._draft_binding_sha256(pending)
         con.close()
-
-        result = module.publish_draft_binding(self.db, "BIND-FINAL")
-        self.assertEqual(result["status"], "published")
-        repeated = module.publish_draft_binding(self.db, "BIND-FINAL")
-        self.assertEqual(repeated["status"], "idempotent")
-        self.assertEqual(repeated["binding_sha256"], result["binding_sha256"])
+        with self.assertRaisesRegex(
+            module.StyleLibraryError, "qualified_publication_missing"
+        ):
+            module.review_draft_binding(
+                self.db,
+                {
+                    "draft_binding_id": "BIND-FINAL",
+                    "decision": "PASS",
+                    "expected_pending_binding_sha256": pending_sha,
+                    "content_owner_id": "OWNER-1",
+                    "reviewer_ids": ["REVIEWER-2"],
+                    "reviewer_independence_status": "independent",
+                    "reviewed_at": "2026-07-18",
+                },
+            )
         con = module.connect_db(self.db)
         self.addCleanup(con.close)
-        receipt = con.execute(
-            """
-            SELECT binding_sha256 FROM draft_binding_publications
-            WHERE draft_binding_id='BIND-FINAL'
-            """
-        ).fetchone()
-        self.assertEqual(receipt["binding_sha256"], result["binding_sha256"])
-        with self.assertRaisesRegex(
-            sqlite3.IntegrityError, "published_binding_frozen"
-        ):
+        self.assertEqual(
             con.execute(
-                """
-                UPDATE draft_style_bindings SET review_status='PASS'
-                WHERE draft_binding_id='BIND-FINAL'
-                """
-            )
+                "SELECT count(*) FROM draft_binding_publications"
+            ).fetchone()[0],
+            0,
+        )
 
     def test_selected_rules_cannot_be_deleted_or_primary_key_updated(self) -> None:
         run_cli("init", self.db)
@@ -1817,14 +1819,24 @@ class StyleLibrarySchemaTests(unittest.TestCase):
             """,
             [("RULE-ASSET-DELETE",), ("RULE-ASSET-UPDATE",)],
         )
-        insert_binding(con, "BIND-A", "DRAFT-A")
+        for rule_id in ("RULE-ASSET-DELETE", "RULE-ASSET-UPDATE"):
+            add_test_rule_post_evidence(con, rule_id, "POST-A", "support")
+            add_test_rule_post_evidence(
+                con, rule_id, "POST-B", "counterexample"
+            )
+        insert_binding(
+            con,
+            "BIND-A",
+            "DRAFT-A",
+            selected_rule_ids='["RULE-ASSET-DELETE", "RULE-ASSET-UPDATE"]',
+        )
         con.execute(
             """
             INSERT INTO draft_assets(
                 draft_asset_id, draft_binding_id, asset_id,
                 slide_index, style_rule_ids
             ) VALUES (
-                'DRAFT-ASSET-A', 'BIND-A', 'ASSET-DRAFT-1', 0,
+                'DRAFT-ASSET-A', 'BIND-A', 'ASSET-DRAFT-1', 1,
                 '["RULE-ASSET-DELETE", "RULE-ASSET-UPDATE"]'
             )
             """
@@ -2086,27 +2098,16 @@ class StyleLibrarySchemaTests(unittest.TestCase):
             """,
             (starter_sha,),
         )
-        con.executemany(
+        con.execute(
             """
             INSERT INTO draft_assets(
                 draft_asset_id, draft_binding_id, asset_id,
                 slide_index, style_rule_ids
-            ) VALUES (?, ?, ?, 0, ?)
+            ) VALUES (
+                'DRAFT-ASSET-LIBRARY','BIND-LIBRARY','ASSET-DRAFT-1',
+                1,'["RULE-A"]'
+            )
             """,
-            [
-                (
-                    "DRAFT-ASSET-LIBRARY",
-                    "BIND-LIBRARY",
-                    "ASSET-DRAFT-1",
-                    '["RULE-A"]',
-                ),
-                (
-                    "DRAFT-ASSET-STARTER",
-                    "BIND-STARTER",
-                    "ASSET-DRAFT-2",
-                    "[]",
-                ),
-            ],
         )
 
         switches = [
@@ -2124,22 +2125,6 @@ class StyleLibrarySchemaTests(unittest.TestCase):
                     starter_pack_sha256 = 'starter-sha',
                     starter_prompt_id = 'PROMPT-COVER'
                 WHERE draft_binding_id = 'BIND-LIBRARY'
-                """,
-            ),
-            (
-                "starter-to-library",
-                """
-                UPDATE draft_style_bindings
-                SET binding_source = 'library',
-                    archetype_id = 'ARCH-A',
-                    archetype_version = 1,
-                    archetype_snapshot_sha256 = 'snapshot-a-v1',
-                    selected_rule_ids = '["RULE-A"]',
-                    starter_pack_id = NULL,
-                    starter_pack_version = NULL,
-                    starter_pack_sha256 = NULL,
-                    starter_prompt_id = NULL
-                WHERE draft_binding_id = 'BIND-STARTER'
                 """,
             ),
         ]
@@ -2168,7 +2153,7 @@ class StyleLibrarySchemaTests(unittest.TestCase):
             INSERT INTO draft_assets(
                 draft_asset_id, draft_binding_id, asset_id,
                 slide_index, style_rule_ids
-            ) VALUES (?, ?, 'ASSET-DRAFT-1', 0, '["RULE-A"]')
+            ) VALUES (?, ?, 'ASSET-DRAFT-1', 1, '["RULE-A"]')
             """,
             [
                 ("DRAFT-ASSET-ARCHETYPE", "BIND-ARCHETYPE"),
@@ -2232,7 +2217,7 @@ class StyleLibrarySchemaTests(unittest.TestCase):
                 draft_asset_id, draft_binding_id, asset_id, slide_index,
                 asset_role, render_method, style_rule_ids, is_current, notes
             ) VALUES (
-                'DRAFT-ASSET-1', 'BIND-A', 'ASSET-DRAFT-1', 0,
+                'DRAFT-ASSET-1', 'BIND-A', 'ASSET-DRAFT-1', 1,
                 'cover', 'template', '["RULE-A"]', 1, 'first revision'
             )
             """
@@ -2244,7 +2229,7 @@ class StyleLibrarySchemaTests(unittest.TestCase):
                     draft_asset_id, draft_binding_id, asset_id, slide_index,
                     asset_role, render_method, style_rule_ids, is_current
                 ) VALUES (
-                    'DRAFT-ASSET-CONFLICT', 'BIND-A', 'ASSET-DRAFT-2', 0,
+                    'DRAFT-ASSET-CONFLICT', 'BIND-A', 'ASSET-DRAFT-2', 1,
                     'cover', 'template', '["RULE-A"]', 1
                 )
                 """
@@ -2259,7 +2244,7 @@ class StyleLibrarySchemaTests(unittest.TestCase):
                 asset_role, render_method, style_rule_ids, revision_of,
                 is_current, notes
             ) VALUES (
-                'DRAFT-ASSET-2', 'BIND-A', 'ASSET-DRAFT-2', 0,
+                'DRAFT-ASSET-2', 'BIND-A', 'ASSET-DRAFT-2', 1,
                 'cover', 'manual', '["RULE-A"]', 'DRAFT-ASSET-1',
                 1, 'current revision'
             )
@@ -2295,7 +2280,7 @@ class StyleLibrarySchemaTests(unittest.TestCase):
             '["RULE-A-V2"]',
             "[1]",
         ]
-        for index, rule_ids in enumerate(invalid_rule_ids):
+        for index, rule_ids in enumerate(invalid_rule_ids, start=1):
             with self.subTest(rule_ids=rule_ids):
                 with self.assertRaises(sqlite3.IntegrityError):
                     con.execute(
@@ -2314,7 +2299,7 @@ class StyleLibrarySchemaTests(unittest.TestCase):
                 slide_index, style_rule_ids, is_current
             ) VALUES (
                 'DRAFT-ASSET-VALID', 'BIND-A', 'ASSET-DRAFT-1',
-                0, '["RULE-A"]', 1
+                1, '["RULE-A"]', 1
             )
             """
         )
@@ -2347,7 +2332,7 @@ class StyleLibrarySchemaTests(unittest.TestCase):
                     slide_index, style_rule_ids
                 ) VALUES (
                     'DRAFT-ASSET-STARTER', 'BIND-STARTER', 'ASSET-DRAFT-1',
-                    0, '["RULE-A"]'
+                    1, '["RULE-A"]'
                 )
                 """
             )
@@ -2368,7 +2353,7 @@ class StyleLibrarySchemaTests(unittest.TestCase):
                 slide_index, style_rule_ids, is_current
             ) VALUES (
                 'DRAFT-ASSET-BASE', 'BIND-A', 'ASSET-DRAFT-1',
-                0, '["RULE-A"]', 0
+                1, '["RULE-A"]', 0
             )
             """
         )
@@ -2380,7 +2365,7 @@ class StyleLibrarySchemaTests(unittest.TestCase):
                     slide_index, style_rule_ids, revision_of, is_current
                 ) VALUES (
                     'DRAFT-ASSET-WRONG-BINDING', 'BIND-B', 'ASSET-DRAFT-2',
-                    0, '["RULE-A"]', 'DRAFT-ASSET-BASE', 1
+                    1, '["RULE-A"]', 'DRAFT-ASSET-BASE', 1
                 )
                 """
             )
@@ -2392,7 +2377,7 @@ class StyleLibrarySchemaTests(unittest.TestCase):
                     slide_index, style_rule_ids, revision_of, is_current
                 ) VALUES (
                     'DRAFT-ASSET-WRONG-SLIDE', 'BIND-A', 'ASSET-DRAFT-3',
-                    1, '["RULE-A"]', 'DRAFT-ASSET-BASE', 1
+                    2, '["RULE-A"]', 'DRAFT-ASSET-BASE', 1
                 )
                 """
             )
@@ -3147,6 +3132,7 @@ class StyleLibraryV2CoreContractTests(unittest.TestCase):
         module.ingest_ledger(self.db, LIVE_LEDGER_PATH)
         result = module.query_library(
             self.db,
+            category="未验证类目",
             carrier="chat_dramatization",
             primary_job="feed_stop",
             traffic_stage="feed_stop",
@@ -3173,6 +3159,8 @@ class StyleLibraryV2CoreContractTests(unittest.TestCase):
                 str(STYLE_CLI),
                 "query",
                 str(self.db),
+                "--category",
+                "未验证类目",
                 "--carrier",
                 "chat_dramatization",
                 "--primary-job",
@@ -3201,8 +3189,11 @@ class StyleLibraryV2CoreContractTests(unittest.TestCase):
             module.bind_draft(
                 self.db,
                 draft_id="DRAFT-FAST-PATH",
+                draft_binding_id="BIND-FAST-PATH",
+                category="未验证类目",
                 carrier="chat_dramatization",
                 primary_job="feed_stop",
+                business_objective="engagement_proxy",
                 available_material_codes=["unknown"],
                 active_constraint_codes=["no_generated_evidence"],
             )
@@ -3427,6 +3418,1122 @@ class StyleLibraryV2CoreContractTests(unittest.TestCase):
             )
         with self.assertRaises(sqlite3.IntegrityError):
             insert_binding(con, "BIND-3", "DRAFT-1", archetype_id="ARCH-B")
+
+
+class StyleLibraryPromotionPipelineTests(unittest.TestCase):
+    """The public CLI can promote real observations without trusting claims."""
+
+    def setUp(self) -> None:
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp_dir.cleanup)
+        self.root = Path(self.temp_dir.name)
+        self.db = self.root / "style-library.sqlite3"
+
+    def _write_json(self, name: str, value: object) -> Path:
+        path = self.root / name
+        path.write_text(
+            json.dumps(value, ensure_ascii=False, sort_keys=True),
+            encoding="utf-8",
+        )
+        return path
+
+    def _seed_structured_observations(self) -> None:
+        module = load_style_module()
+        try:
+            from PIL import Image
+        except ImportError as exc:  # production path intentionally fails closed too
+            self.fail(f"Pillow is required by the style evidence contract: {exc}")
+        raw_dir = self.root / "raw"
+        raw_dir.mkdir()
+        asset_rows: list[tuple[object, ...]] = []
+        for suffix, color in (
+            ("support-1", (230, 40, 70)),
+            ("support-2", (40, 120, 230)),
+            ("boundary", (120, 120, 120)),
+        ):
+            image_path = raw_dir / f"{suffix}.png"
+            Image.new("RGB", (8, 10), color).save(image_path, format="PNG")
+            caption_path = raw_dir / f"{suffix}-caption.txt"
+            caption_path.write_text(f"{suffix} caption\n", encoding="utf-8")
+            asset_rows.append(
+                (
+                    f"ASSET-{suffix.upper()}",
+                    "image",
+                    f"raw/{suffix}.png",
+                    hashlib.sha256(image_path.read_bytes()).hexdigest(),
+                    "image/png",
+                    8,
+                    10,
+                )
+            )
+            asset_rows.append(
+                (
+                    f"CAPTION-{suffix.upper()}",
+                    "caption",
+                    f"raw/{suffix}-caption.txt",
+                    hashlib.sha256(caption_path.read_bytes()).hexdigest(),
+                    "text/plain",
+                    None,
+                    None,
+                )
+            )
+        con = module.connect_db(self.db)
+        try:
+            con.executemany(
+                "INSERT INTO style_accounts(library_account_id,platform) "
+                "VALUES (?,'xiaohongshu')",
+                [("ACC-LAW-1",), ("ACC-LAW-2",)],
+            )
+            con.executemany(
+                """
+                INSERT INTO style_posts(
+                    library_post_id,platform,library_account_id,category,
+                    cluster_id,status
+                ) VALUES (?,'xiaohongshu',?,'法律科普',?,'active')
+                """,
+                [
+                    ("POST-SUPPORT-1", "ACC-LAW-1", "CLUSTER-TOPIC-1"),
+                    ("POST-SUPPORT-2", "ACC-LAW-2", "CLUSTER-TOPIC-2"),
+                    ("POST-BOUNDARY", "ACC-LAW-1", "CLUSTER-TOPIC-3"),
+                    ("BASEPOST-1-1", "ACC-LAW-1", "BASE-1-1"),
+                    ("BASEPOST-1-2", "ACC-LAW-1", "BASE-1-2"),
+                    ("BASEPOST-2-1", "ACC-LAW-2", "BASE-2-1"),
+                    ("BASEPOST-2-2", "ACC-LAW-2", "BASE-2-2"),
+                ],
+            )
+            con.executemany(
+                """
+                INSERT INTO style_assets(
+                    asset_id,asset_kind,asset_path,asset_sha256,mime_type,
+                    width,height,access_status,copyright_notes
+                ) VALUES (?,?,?,?,?,?,?,'available',
+                          'research observation only; do not redistribute')
+                """,
+                asset_rows,
+            )
+            con.executemany(
+                "UPDATE style_posts SET caption_asset_id=? "
+                "WHERE library_post_id=?",
+                [
+                    ("CAPTION-SUPPORT-1", "POST-SUPPORT-1"),
+                    ("CAPTION-SUPPORT-2", "POST-SUPPORT-2"),
+                    ("CAPTION-BOUNDARY", "POST-BOUNDARY"),
+                ],
+            )
+            con.executemany(
+                """
+                INSERT INTO style_slides(
+                    slide_id,library_post_id,slide_index,slide_role,asset_id
+                ) VALUES (?,?,0,'cover',?)
+                """,
+                [
+                    ("SLIDE-SUPPORT-1", "POST-SUPPORT-1", "ASSET-SUPPORT-1"),
+                    ("SLIDE-SUPPORT-2", "POST-SUPPORT-2", "ASSET-SUPPORT-2"),
+                    ("SLIDE-BOUNDARY", "POST-BOUNDARY", "ASSET-BOUNDARY"),
+                ],
+            )
+            con.executemany(
+                """
+                INSERT INTO visual_observations(
+                    visual_observation_id,slide_id,library_post_id,
+                    observation_sha256,composition,dominant_material,
+                    background_type,layout_structure,text_density,
+                    hierarchy_levels,image_text_relationship
+                ) VALUES (?,?,?,?,'single_focus','type_only','solid','list',
+                          'medium','two','text_leads')
+                """,
+                [
+                    ("VIS-SUPPORT-1", "SLIDE-SUPPORT-1", "POST-SUPPORT-1", "c" * 64),
+                    ("VIS-SUPPORT-2", "SLIDE-SUPPORT-2", "POST-SUPPORT-2", "7" * 64),
+                    ("VIS-BOUNDARY", "SLIDE-BOUNDARY", "POST-BOUNDARY", "d" * 64),
+                ],
+            )
+            con.executemany(
+                """
+                INSERT INTO copy_observations(
+                    observation_id,library_post_id,slide_id,observation_sha256,
+                    text_surface,point_of_view,audience_address,register,
+                    sentence_length_pattern,line_break_pattern,
+                    punctuation_pattern,emoji_pattern,hook_move,
+                    narrative_moves,evidence_move,payoff_move,cta_move,
+                    image_caption_division
+                ) VALUES (?,?,?,?, 'cover','second_person','direct',
+                          'plain_explanatory','short','phrase','light','none',
+                          'give_answer','setup','state_limit','framework','save',
+                          'image_core_caption_context')
+                """,
+                [
+                    ("COPY-SUPPORT-1", "POST-SUPPORT-1", "SLIDE-SUPPORT-1", "e" * 64),
+                    ("COPY-SUPPORT-2", "POST-SUPPORT-2", "SLIDE-SUPPORT-2", "8" * 64),
+                    ("COPY-BOUNDARY", "POST-BOUNDARY", "SLIDE-BOUNDARY", "f" * 64),
+                ],
+            )
+            con.executemany(
+                """
+                INSERT INTO copy_observations(
+                    observation_id,library_post_id,slide_id,observation_sha256,
+                    text_surface,point_of_view,audience_address,register,
+                    sentence_length_pattern,line_break_pattern,
+                    punctuation_pattern,emoji_pattern,hook_move,
+                    narrative_moves,evidence_move,payoff_move,cta_move,
+                    image_caption_division
+                ) VALUES (?,?,NULL,?, 'caption','second_person','direct',
+                          'plain_explanatory','short','phrase','light','none',
+                          'give_answer','setup','state_limit','framework','save',
+                          'image_core_caption_context')
+                """,
+                [
+                    ("COPY-POST-SUPPORT-1", "POST-SUPPORT-1", "3" * 64),
+                    ("COPY-POST-SUPPORT-2", "POST-SUPPORT-2", "5" * 64),
+                    ("COPY-POST-BOUNDARY", "POST-BOUNDARY", "4" * 64),
+                ],
+            )
+            con.execute(
+                """
+                INSERT INTO performance_definitions(
+                    performance_definition_id,definition_version,metric_name,
+                    business_objective,primary_job,traffic_stage,
+                    metric_selection_reason,comparison_design,min_baseline_n,
+                    paid_or_pinned_policy,missing_value_policy,tier_rules_json,
+                    as_of,review_by,definition_sha256
+                ) VALUES (
+                    'DEF-LAW',1,'engagement_proxy','engagement_proxy',
+                    'search_answer','read_through','public visible proxy only',
+                    'account_baseline',2,'exclude','exclude',
+                    '{"high_min_multiple":2.0,"low_max_multiple":0.5}',
+                    '2026-07-18','2026-08-18',?
+                )
+                """,
+                ("9" * 64,),
+            )
+            run_refs: list[tuple[str, str, str]] = []
+            for account_index in (1, 2):
+                for ordinal in (1, 2):
+                    run_refs.append(
+                        (
+                            f"RUN-LAW-{account_index}",
+                            f"LOCAL-BASE-{account_index}-{ordinal}",
+                            f"BASEPOST-{account_index}-{ordinal}",
+                        )
+                    )
+            run_refs.extend(
+                [
+                    ("RUN-LAW-1", "LOCAL-SUPPORT-1", "POST-SUPPORT-1"),
+                    ("RUN-LAW-2", "LOCAL-SUPPORT-2", "POST-SUPPORT-2"),
+                    ("RUN-LAW-1", "LOCAL-BOUNDARY", "POST-BOUNDARY"),
+                ]
+            )
+            con.executemany(
+                "INSERT INTO run_post_refs(run_id,run_post_id,library_post_id) "
+                "VALUES (?,?,?)",
+                run_refs,
+            )
+            for account_index in (1, 2):
+                account_id = f"ACC-LAW-{account_index}"
+                baseline_id = f"BASE-LAW-{account_index}"
+                included_rows = [
+                    f"0|OBS-BASE-{account_index}-1|METRIC-BASE-{account_index}-1|10.0||{{}}|[]",
+                    f"1|OBS-BASE-{account_index}-2|METRIC-BASE-{account_index}-2|20.0||{{}}|[]",
+                ]
+                all_rows = [
+                    f"0|OBS-BASE-{account_index}-1|METRIC-BASE-{account_index}-1|included||10.0||{{}}|[]",
+                    f"1|OBS-BASE-{account_index}-2|METRIC-BASE-{account_index}-2|included||20.0||{{}}|[]",
+                ]
+                included_sha = hashlib.sha256(
+                    json.dumps(
+                        included_rows,
+                        ensure_ascii=False,
+                        sort_keys=True,
+                        separators=(",", ":"),
+                    ).encode()
+                ).hexdigest()
+                all_sha = hashlib.sha256(
+                    json.dumps(
+                        all_rows,
+                        ensure_ascii=False,
+                        sort_keys=True,
+                        separators=(",", ":"),
+                    ).encode()
+                ).hexdigest()
+                baseline_sha = hashlib.sha256(
+                    baseline_id.encode()
+                ).hexdigest()
+                con.execute(
+                    """
+                    INSERT INTO account_baseline_snapshots(
+                        baseline_snapshot_id,library_account_id,metric_name,
+                        sample_n,median_value,performance_definition_id,
+                        included_members_sha256,all_members_sha256,
+                        baseline_snapshot_sha256,source_run_id
+                    ) VALUES (?,?, 'engagement_proxy',2,15.0,'DEF-LAW',?,?,?,?)
+                    """,
+                    (
+                        baseline_id,
+                        account_id,
+                        included_sha,
+                        all_sha,
+                        baseline_sha,
+                        f"RUN-LAW-{account_index}",
+                    ),
+                )
+                for ordinal, value in ((1, 10.0), (2, 20.0)):
+                    observation_id = f"OBS-BASE-{account_index}-{ordinal}"
+                    metric_id = f"METRIC-BASE-{account_index}-{ordinal}"
+                    con.execute(
+                        """
+                        INSERT INTO style_post_observations(
+                            post_observation_id,library_post_id,
+                            library_account_id,run_id,run_post_id,
+                            source_csv_sha256,observation_state,
+                            performance_definition_id,target_metric_name
+                        ) VALUES (?,?,?,?,?,?,'building','DEF-LAW',
+                                  'engagement_proxy')
+                        """,
+                        (
+                            observation_id,
+                            f"BASEPOST-{account_index}-{ordinal}",
+                            account_id,
+                            f"RUN-LAW-{account_index}",
+                            f"LOCAL-BASE-{account_index}-{ordinal}",
+                            hashlib.sha256(observation_id.encode()).hexdigest(),
+                        ),
+                    )
+                    con.execute(
+                        """
+                        INSERT INTO post_metrics(
+                            post_metric_id,post_observation_id,metric_name,
+                            metric_value,visibility_scope,metric_sha256
+                        ) VALUES (?,?,'engagement_proxy',?,'public_proxy',?)
+                        """,
+                        (
+                            metric_id,
+                            observation_id,
+                            value,
+                            hashlib.sha256(metric_id.encode()).hexdigest(),
+                        ),
+                    )
+                    con.execute(
+                        "UPDATE style_post_observations SET "
+                        "observation_state='complete',target_post_metric_id=? "
+                        "WHERE post_observation_id=?",
+                        (metric_id, observation_id),
+                    )
+                    con.execute(
+                        """
+                        INSERT INTO account_baseline_members(
+                            baseline_snapshot_id,library_account_id,
+                            performance_definition_id,metric_name,
+                            member_post_observation_id,member_post_metric_id,
+                            inclusion_status,metric_value,member_ordinal
+                        ) VALUES (?,?,'DEF-LAW','engagement_proxy',?,?,'included',?,?)
+                        """,
+                        (
+                            baseline_id,
+                            account_id,
+                            observation_id,
+                            metric_id,
+                            value,
+                            ordinal - 1,
+                        ),
+                    )
+                con.execute(
+                    """
+                    INSERT INTO baseline_snapshot_publications(
+                        baseline_snapshot_id,library_account_id,
+                        performance_definition_id,metric_name,
+                        baseline_snapshot_sha256,included_members_sha256,
+                        all_members_sha256
+                    ) VALUES (?,?,'DEF-LAW','engagement_proxy',?,?,?)
+                    """,
+                    (
+                        baseline_id,
+                        account_id,
+                        baseline_sha,
+                        included_sha,
+                        all_sha,
+                    ),
+                )
+            for post_id, account_index, local_id, value in (
+                ("SUPPORT-1", 1, "LOCAL-SUPPORT-1", 40.0),
+                ("SUPPORT-2", 2, "LOCAL-SUPPORT-2", 45.0),
+                ("BOUNDARY", 1, "LOCAL-BOUNDARY", 5.0),
+            ):
+                observation_id = f"OBS-{post_id}"
+                metric_id = f"METRIC-{post_id}"
+                baseline_id = f"BASE-LAW-{account_index}"
+                baseline_sha = hashlib.sha256(baseline_id.encode()).hexdigest()
+                con.execute(
+                    """
+                    INSERT INTO style_post_observations(
+                        post_observation_id,library_post_id,library_account_id,
+                        run_id,run_post_id,source_csv_sha256,observation_state,
+                        performance_definition_id,target_metric_name,
+                        baseline_snapshot_id,baseline_snapshot_sha256
+                    ) VALUES (?,?,?,?,?,?,'building','DEF-LAW',
+                              'engagement_proxy',?,?)
+                    """,
+                    (
+                        observation_id,
+                        f"POST-{post_id}",
+                        f"ACC-LAW-{account_index}",
+                        f"RUN-LAW-{account_index}",
+                        local_id,
+                        hashlib.sha256(observation_id.encode()).hexdigest(),
+                        baseline_id,
+                        baseline_sha,
+                    ),
+                )
+                con.execute(
+                    """
+                    INSERT INTO post_metrics(
+                        post_metric_id,post_observation_id,metric_name,
+                        metric_value,visibility_scope,metric_sha256
+                    ) VALUES (?,?,'engagement_proxy',?,'public_proxy',?)
+                    """,
+                    (
+                        metric_id,
+                        observation_id,
+                        value,
+                        hashlib.sha256(metric_id.encode()).hexdigest(),
+                    ),
+                )
+                con.execute(
+                    "UPDATE style_post_observations SET "
+                    "observation_state='complete',target_post_metric_id=? "
+                    "WHERE post_observation_id=?",
+                    (metric_id, observation_id),
+                )
+            con.commit()
+        finally:
+            con.close()
+        module.derive_tier(self.db, "OBS-SUPPORT-1", "BASE-LAW-1")
+        module.derive_tier(self.db, "OBS-SUPPORT-2", "BASE-LAW-2")
+        module.derive_tier(self.db, "OBS-BOUNDARY", "BASE-LAW-1")
+
+    @staticmethod
+    def _candidate_record() -> dict[str, object]:
+        common_payload = {
+            "claim_kind": "contrastive_performance_hypothesis",
+            "performance_evidence_scope": "public_proxy_association",
+            "traffic_stage": "read_through",
+            "required_material_codes": ["text_only"],
+            "required_constraint_codes": [
+                "deterministic_chinese_typesetting",
+                "no_generated_evidence",
+            ],
+            "contraindication_codes": ["generated_person_as_evidence"],
+            "prohibited_claims": ["traffic_causality", "guaranteed_viral"],
+            "selection_requirement": "required",
+            "dependency_rule_ids": [],
+        }
+        return {
+            "archetype_id": "ARCH-LAW-NATIVE",
+            "name": "结论先行的原生法律清单",
+            "category": "法律科普",
+            "carrier": "checklist_steps",
+            "primary_job": "search_answer",
+            "audience_state": "带着具体问题寻找可执行答案",
+            "description": "用原生信息卡给结论、边界和下一步，不模仿原帖。",
+            "production_cost": "low",
+            "confidence": 0.72,
+            "archetype_version": 1,
+            "rules": [
+                {
+                    "rule_id": "RULE-LAW-VISUAL",
+                    "rule_type": "visual",
+                    "applicability_scope": "法律科普×checklist_steps×search_answer",
+                    "payload": {
+                        **common_payload,
+                        "instruction": "首屏先呈现问题与结论，再以边界分层。",
+                    },
+                    "evidence": [
+                        {
+                            "rule_evidence_id": "EVID-LAW-VIS-SUPPORT",
+                            "observation_type": "visual",
+                            "observation_id": "VIS-SUPPORT-1",
+                            "post_observation_id": "OBS-SUPPORT-1",
+                            "evidence_role": "support",
+                            "limitations": "公开互动代理高表现，不支持流量因果。",
+                        },
+                        {
+                            "rule_evidence_id": "EVID-LAW-VIS-SUPPORT-2",
+                            "observation_type": "visual",
+                            "observation_id": "VIS-SUPPORT-2",
+                            "post_observation_id": "OBS-SUPPORT-2",
+                            "evidence_role": "support",
+                            "limitations": "第二独立账号与内容簇的高表现样本。",
+                        },
+                        {
+                            "rule_evidence_id": "EVID-LAW-VIS-BOUNDARY",
+                            "observation_type": "visual",
+                            "observation_id": "VIS-BOUNDARY",
+                            "post_observation_id": "OBS-BOUNDARY",
+                            "evidence_role": "boundary",
+                            "limitations": "同类目边界样本。",
+                        },
+                    ],
+                },
+                {
+                    "rule_id": "RULE-LAW-COPY",
+                    "rule_type": "copy",
+                    "applicability_scope": "法律科普×checklist_steps×search_answer",
+                    "payload": {
+                        **common_payload,
+                        "instruction": "短句回答，明确适用边界，不写保证性结论。",
+                    },
+                    "evidence": [
+                        {
+                            "rule_evidence_id": "EVID-LAW-COPY-SUPPORT",
+                            "observation_type": "copy",
+                            "observation_id": "COPY-SUPPORT-1",
+                            "post_observation_id": "OBS-SUPPORT-1",
+                            "evidence_role": "support",
+                            "limitations": "不可复用原句。",
+                        },
+                        {
+                            "rule_evidence_id": "EVID-LAW-COPY-SUPPORT-2",
+                            "observation_type": "copy",
+                            "observation_id": "COPY-SUPPORT-2",
+                            "post_observation_id": "OBS-SUPPORT-2",
+                            "evidence_role": "support",
+                            "limitations": "第二独立账号与内容簇的高表现样本。",
+                        },
+                        {
+                            "rule_evidence_id": "EVID-LAW-COPY-BOUNDARY",
+                            "observation_type": "copy",
+                            "observation_id": "COPY-BOUNDARY",
+                            "post_observation_id": "OBS-BOUNDARY",
+                            "evidence_role": "boundary",
+                            "limitations": "只约束语域与节奏。",
+                        },
+                    ],
+                },
+            ],
+        }
+
+    @staticmethod
+    def _archetype_review() -> dict[str, object]:
+        return {
+            "archetype_id": "ARCH-LAW-NATIVE",
+            "archetype_version": 1,
+            "category": "法律科普",
+            "carrier": "checklist_steps",
+            "primary_job": "search_answer",
+            "selected_rule_ids": ["RULE-LAW-COPY", "RULE-LAW-VISUAL"],
+            "decision": "PASS",
+            "target_status": "supported",
+            "content_owner_id": "OWNER-1",
+            "reviewer_ids": ["REVIEWER-2"],
+            "reviewer_independence_status": "independent",
+            "reviewed_at": "2026-07-18",
+            "limitations": [
+                "public engagement proxy association only",
+                "not traffic causality or a virality guarantee",
+            ],
+        }
+
+    def test_cli_candidate_review_publish_query_bind_review_and_publish_e2e(self) -> None:
+        run_cli("init", self.db)
+        self._seed_structured_observations()
+        candidate_path = self._write_json("candidate.json", self._candidate_record())
+        review = self._archetype_review()
+        review_path = self._write_json("archetype-review.json", review)
+
+        created = run_cli("create-archetype", self.db, "--record", candidate_path)
+        self.assertEqual(created["status"], "candidate_created")
+        before_cli = subprocess.run(
+            [
+                sys.executable, str(STYLE_CLI), "query", str(self.db),
+                "--category", "法律科普",
+                "--carrier", "checklist_steps",
+                "--primary-job", "search_answer",
+                "--traffic-stage", "read_through",
+                "--materials", "text_only",
+                "--constraints", "deterministic_chinese_typesetting,no_generated_evidence",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(before_cli.returncode, 2)
+        self.assertEqual(json.loads(before_cli.stdout)["status"], "needs_style_research")
+
+        reviewed = run_cli("review-archetype", self.db, "--record", review_path)
+        self.assertEqual(reviewed["status"], "review_pass")
+        self.assertRegex(reviewed["review_receipt_sha256"], r"^[0-9a-f]{64}$")
+        published = run_cli("publish-archetype", self.db, "--record", review_path)
+        self.assertEqual(published["status"], "published")
+        self.assertEqual(published["published_rule_ids"], review["selected_rule_ids"])
+        readiness = run_cli("status", self.db)
+        self.assertEqual(readiness["counts"]["qualified_style_rules"], 2)
+        self.assertEqual(readiness["release_readiness"]["state"], "ready_to_bind")
+        self.assertEqual(
+            readiness["traffic_stage_qualified_counts"]["read_through"], 2
+        )
+
+        exact = run_cli(
+            "query", self.db,
+            "--category", "法律科普",
+            "--carrier", "checklist_steps",
+            "--primary-job", "search_answer",
+            "--traffic-stage", "read_through",
+            "--materials", "text_only",
+            "--constraints", "deterministic_chinese_typesetting,no_generated_evidence",
+        )
+        self.assertEqual(exact["status"], "ready_to_bind")
+        self.assertEqual(exact["eligible_count"], 1)
+        self.assertEqual(
+            exact["eligible_archetypes"][0]["performance_evidence_scope"],
+            "public_proxy_association",
+        )
+        self.assertEqual(len(exact["eligible_archetypes"][0]["selected_rules"]), 2)
+
+        wrong_category = subprocess.run(
+            [
+                sys.executable, str(STYLE_CLI), "query", str(self.db),
+                "--category", "职场",
+                "--carrier", "checklist_steps",
+                "--primary-job", "search_answer",
+                "--traffic-stage", "read_through",
+                "--materials", "text_only",
+                "--constraints", "deterministic_chinese_typesetting,no_generated_evidence",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(wrong_category.returncode, 2)
+        self.assertEqual(json.loads(wrong_category.stdout)["eligible_count"], 0)
+
+        bound = run_cli(
+            "bind", self.db,
+            "--draft-id", "DRAFT-LAW-1",
+            "--draft-binding-id", "BIND-LAW-1",
+            "--archetype-id", "ARCH-LAW-NATIVE",
+            "--category", "法律科普",
+            "--carrier", "checklist_steps",
+            "--primary-job", "search_answer",
+            "--business-objective", "engagement_proxy",
+            "--traffic-stage", "read_through",
+            "--materials", "text_only",
+            "--constraints", "deterministic_chinese_typesetting,no_generated_evidence",
+        )
+        self.assertEqual(bound["status"], "binding_created_pending_review")
+        self.assertEqual(
+            bound["material_plan"]["performance_evidence_scope"],
+            "public_proxy_association",
+        )
+        self.assertIn(
+            bound["material_plan"]["primary_performance_rule_id"],
+            bound["selected_rule_ids"],
+        )
+        self.assertEqual(
+            bound["material_plan"]["primary_performance_evidence_scope"],
+            bound["material_plan"]["performance_evidence_scope"],
+        )
+        with self.assertRaisesRegex(
+            subprocess.CalledProcessError, "returned non-zero exit status"
+        ):
+            run_cli(
+                "publish-binding", self.db,
+                "--draft-binding-id", "BIND-LAW-1",
+            )
+
+        binding_review = {
+            "draft_binding_id": "BIND-LAW-1",
+            "decision": "PASS",
+            "expected_pending_binding_sha256": bound["pending_binding_sha256"],
+            "content_owner_id": "OWNER-1",
+            "reviewer_ids": ["REVIEWER-2"],
+            "reviewer_independence_status": "independent",
+            "reviewed_at": "2026-07-18",
+        }
+        binding_review_path = self._write_json(
+            "binding-review.json", binding_review
+        )
+        binding_reviewed = run_cli(
+            "review-binding", self.db, "--record", binding_review_path
+        )
+        self.assertEqual(binding_reviewed["status"], "review_pass")
+        receipt = run_cli(
+            "publish-binding", self.db,
+            "--draft-binding-id", "BIND-LAW-1",
+        )
+        self.assertEqual(receipt["status"], "published")
+        self.assertRegex(receipt["binding_sha256"], r"^[0-9a-f]{64}$")
+
+        con = load_style_module().connect_db(self.db)
+        self.addCleanup(con.close)
+        self.assertEqual(
+            con.execute("SELECT status FROM style_archetypes").fetchone()[0],
+            "supported",
+        )
+        self.assertEqual(
+            con.execute("SELECT count(*) FROM archetype_rule_publications").fetchone()[0],
+            2,
+        )
+        self.assertEqual(
+            con.execute("SELECT count(*) FROM draft_binding_publications").fetchone()[0],
+            1,
+        )
+        self.assertEqual(
+            con.execute(
+                "SELECT count(*) FROM draft_binding_review_receipts"
+            ).fetchone()[0],
+            1,
+        )
+
+    def test_candidate_ingest_rejects_missing_typed_observation_atomically(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        self._seed_structured_observations()
+        record = self._candidate_record()
+        record["rules"][0]["evidence"][0]["observation_id"] = "VIS-FORGED"
+        with self.assertRaisesRegex(
+            module.StyleLibraryError, "candidate_evidence_observation_missing"
+        ):
+            module.create_archetype_candidate(self.db, record)
+        con = module.connect_db(self.db)
+        self.addCleanup(con.close)
+        self.assertEqual(con.execute("SELECT count(*) FROM style_archetypes").fetchone()[0], 0)
+        self.assertEqual(con.execute("SELECT count(*) FROM archetype_rules").fetchone()[0], 0)
+
+    def test_candidate_accepts_post_level_caption_copy_with_caption_asset(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        self._seed_structured_observations()
+        record = self._candidate_record()
+        copy_rule = record["rules"][1]
+        copy_rule["evidence"][0]["observation_id"] = "COPY-POST-SUPPORT-1"
+        copy_rule["evidence"][1]["observation_id"] = "COPY-POST-SUPPORT-2"
+        copy_rule["evidence"][2]["observation_id"] = "COPY-POST-BOUNDARY"
+        created = module.create_archetype_candidate(self.db, record)
+        self.assertEqual(created["status"], "candidate_created")
+        module.review_archetype(self.db, self._archetype_review())
+        published = module.publish_archetype(self.db, self._archetype_review())
+        self.assertEqual(published["status"], "published")
+
+    def test_candidate_requires_matching_type_support_and_counterevidence(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        self._seed_structured_observations()
+        record = self._candidate_record()
+        for index, observation_id in enumerate(
+            ("VIS-SUPPORT-1", "VIS-SUPPORT-2")
+        ):
+            copy_support = record["rules"][1]["evidence"][index]
+            copy_support["observation_type"] = "visual"
+            copy_support["observation_id"] = observation_id
+        with self.assertRaisesRegex(
+            module.StyleLibraryError,
+            "candidate_matching_type_contrast_missing",
+        ):
+            module.create_archetype_candidate(self.db, record)
+
+    def test_candidate_rejects_free_text_applicability_scope_drift(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        self._seed_structured_observations()
+        record = self._candidate_record()
+        record["rules"][0]["applicability_scope"] = "所有类目都适用"
+        with self.assertRaisesRegex(
+            module.StyleLibraryError, "candidate_rule_scope_mismatch"
+        ):
+            module.create_archetype_candidate(self.db, record)
+
+    def test_review_rejects_self_review_and_first_party_claim_without_rule_receipt(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        self._seed_structured_observations()
+        record = self._candidate_record()
+        record["rules"][0]["payload"][
+            "performance_evidence_scope"
+        ] = "first_party_traffic_validated"
+        with self.assertRaisesRegex(
+            module.StyleLibraryError, "performance_scope_unsupported_by_schema"
+        ):
+            module.create_archetype_candidate(self.db, record)
+
+        module.create_archetype_candidate(self.db, self._candidate_record())
+        review = self._archetype_review()
+        review["reviewer_ids"] = [review["content_owner_id"]]
+        with self.assertRaisesRegex(
+            module.StyleLibraryError, "reviewer_not_independent"
+        ):
+            module.publish_archetype(self.db, review)
+        con = module.connect_db(self.db)
+        self.addCleanup(con.close)
+        row = con.execute(
+            "SELECT status,snapshot_sha256 FROM style_archetypes"
+        ).fetchone()
+        self.assertEqual(row[0], "candidate")
+        self.assertEqual(con.execute("SELECT count(*) FROM archetype_publications").fetchone()[0], 0)
+        self.assertEqual(con.execute("SELECT count(*) FROM archetype_rule_publications").fetchone()[0], 0)
+
+    def test_query_and_binding_fail_closed_on_resource_or_review_hash_mismatch(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        self._seed_structured_observations()
+        module.create_archetype_candidate(self.db, self._candidate_record())
+        module.review_archetype(self.db, self._archetype_review())
+        module.publish_archetype(self.db, self._archetype_review())
+
+        result = module.query_library(
+            self.db,
+            category="法律科普",
+            carrier="checklist_steps",
+            primary_job="search_answer",
+            traffic_stage="read_through",
+            available_material_codes=["text_only"],
+            active_constraint_codes=["deterministic_chinese_typesetting"],
+            active_contraindication_codes=[],
+        )
+        self.assertEqual(result["status"], "needs_style_research")
+        self.assertTrue(
+            any(
+                reason.startswith("constraint_inactive:no_generated_evidence")
+                for reason in result["published_rejection_audit"][0]["reason_codes"]
+            ),
+            result["published_rejection_audit"],
+        )
+
+        bound = module.bind_draft(
+            self.db,
+            draft_id="DRAFT-REVIEW-HASH",
+            draft_binding_id="BIND-REVIEW-HASH",
+            archetype_id="ARCH-LAW-NATIVE",
+            category="法律科普",
+            carrier="checklist_steps",
+            primary_job="search_answer",
+            business_objective="engagement_proxy",
+            traffic_stage="read_through",
+            available_material_codes=["text_only"],
+            active_constraint_codes=[
+                "deterministic_chinese_typesetting",
+                "no_generated_evidence",
+            ],
+            active_contraindication_codes=[],
+        )
+        review = {
+            "draft_binding_id": "BIND-REVIEW-HASH",
+            "decision": "PASS",
+            "expected_pending_binding_sha256": "0" * 64,
+            "content_owner_id": "OWNER-1",
+            "reviewer_ids": ["REVIEWER-2"],
+            "reviewer_independence_status": "independent",
+            "reviewed_at": "2026-07-18",
+        }
+        with self.assertRaisesRegex(
+            module.StyleLibraryError, "binding_review_preimage_mismatch"
+        ):
+            module.review_draft_binding(self.db, review)
+        con = module.connect_db(self.db)
+        self.addCleanup(con.close)
+        self.assertEqual(
+            con.execute(
+                "SELECT review_status FROM draft_style_bindings "
+                "WHERE draft_binding_id='BIND-REVIEW-HASH'"
+            ).fetchone()[0],
+            "pending",
+        )
+        self.assertRegex(bound["pending_binding_sha256"], r"^[0-9a-f]{64}$")
+        self.assertEqual(
+            bound["material_plan"]["business_objective"], "engagement_proxy"
+        )
+
+    def test_published_archetype_review_receipt_is_immutable(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        self._seed_structured_observations()
+        module.create_archetype_candidate(self.db, self._candidate_record())
+        module.review_archetype(self.db, self._archetype_review())
+        module.publish_archetype(self.db, self._archetype_review())
+        con = module.connect_db(self.db)
+        with self.assertRaisesRegex(
+            sqlite3.IntegrityError, "immutable_archetype_review_receipts"
+        ):
+            con.execute("DELETE FROM archetype_review_receipts")
+        con.close()
+
+        self.assertEqual(
+            module.status_db(self.db)["counts"]["qualified_style_rules"], 2
+        )
+
+        result = module.query_library(
+            self.db,
+            category="法律科普",
+            carrier="checklist_steps",
+            primary_job="search_answer",
+            traffic_stage="read_through",
+            available_material_codes=["text_only"],
+            active_constraint_codes=[
+                "deterministic_chinese_typesetting",
+                "no_generated_evidence",
+            ],
+            active_contraindication_codes=[],
+        )
+        self.assertEqual(result["status"], "ready_to_bind")
+        self.assertEqual(result["eligible_count"], 1)
+
+    def test_binding_review_rechecks_archetype_review_receipt(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        self._seed_structured_observations()
+        module.create_archetype_candidate(self.db, self._candidate_record())
+        module.review_archetype(self.db, self._archetype_review())
+        module.publish_archetype(self.db, self._archetype_review())
+        bound = module.bind_draft(
+            self.db,
+            draft_id="DRAFT-LOST-REVIEW",
+            draft_binding_id="BIND-LOST-REVIEW",
+            archetype_id="ARCH-LAW-NATIVE",
+            category="法律科普",
+            carrier="checklist_steps",
+            primary_job="search_answer",
+            business_objective="engagement_proxy",
+            traffic_stage="read_through",
+            available_material_codes=["text_only"],
+            active_constraint_codes=[
+                "deterministic_chinese_typesetting",
+                "no_generated_evidence",
+            ],
+            active_contraindication_codes=[],
+        )
+        con = module.connect_db(self.db)
+        con.execute(
+            "UPDATE style_assets SET access_status='blocked' "
+            "WHERE asset_id='ASSET-SUPPORT-1'"
+        )
+        con.commit()
+        con.close()
+        review = {
+            "draft_binding_id": "BIND-LOST-REVIEW",
+            "decision": "PASS",
+            "expected_pending_binding_sha256": bound["pending_binding_sha256"],
+            "content_owner_id": "OWNER-1",
+            "reviewer_ids": ["REVIEWER-2"],
+            "reviewer_independence_status": "independent",
+            "reviewed_at": "2026-07-18",
+        }
+        with self.assertRaisesRegex(
+            module.StyleLibraryError, "qualified_rule_evidence_stale"
+        ):
+            module.review_draft_binding(self.db, review)
+
+    def test_query_excludes_optional_unavailable_rule_without_losing_usable_pair(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        self._seed_structured_observations()
+        record = self._candidate_record()
+        optional = json.loads(json.dumps(record["rules"][0]))
+        optional["rule_id"] = "RULE-LAW-OPTIONAL-PACKSHOT"
+        optional["payload"]["required_material_codes"] = ["product_packshot"]
+        optional["payload"]["selection_requirement"] = "optional"
+        for item in optional["evidence"]:
+            item["rule_evidence_id"] += "-OPTIONAL"
+        record["rules"].append(optional)
+        review = self._archetype_review()
+        review["selected_rule_ids"].append("RULE-LAW-OPTIONAL-PACKSHOT")
+        module.create_archetype_candidate(self.db, record)
+        module.review_archetype(self.db, review)
+        module.publish_archetype(self.db, review)
+
+        result = module.query_library(
+            self.db,
+            category="法律科普",
+            carrier="checklist_steps",
+            primary_job="search_answer",
+            traffic_stage="read_through",
+            available_material_codes=["text_only"],
+            active_constraint_codes=[
+                "deterministic_chinese_typesetting",
+                "no_generated_evidence",
+            ],
+            active_contraindication_codes=[],
+        )
+        self.assertEqual(result["status"], "ready_to_bind")
+        self.assertEqual(
+            result["eligible_archetypes"][0]["selected_rule_ids"],
+            ["RULE-LAW-COPY", "RULE-LAW-VISUAL"],
+        )
+        self.assertIn(
+            "material_unavailable:product_packshot@RULE-LAW-OPTIONAL-PACKSHOT",
+            result["eligible_archetypes"][0]["excluded_rule_reasons"],
+        )
+
+    def test_query_rechecks_backing_asset_after_publication(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        self._seed_structured_observations()
+        module.create_archetype_candidate(self.db, self._candidate_record())
+        module.review_archetype(self.db, self._archetype_review())
+        module.publish_archetype(self.db, self._archetype_review())
+        con = module.connect_db(self.db)
+        con.execute(
+            "UPDATE style_assets SET access_status='blocked' "
+            "WHERE asset_id='ASSET-SUPPORT-1'"
+        )
+        con.commit()
+        con.close()
+
+        result = module.query_library(
+            self.db,
+            category="法律科普",
+            carrier="checklist_steps",
+            primary_job="search_answer",
+            traffic_stage="read_through",
+            available_material_codes=["text_only"],
+            active_constraint_codes=[
+                "deterministic_chinese_typesetting",
+                "no_generated_evidence",
+            ],
+            active_contraindication_codes=[],
+        )
+        self.assertEqual(result["status"], "needs_style_research")
+        self.assertTrue(
+            any(
+                reason.startswith("qualified_bundle_unavailable:")
+                for reason in result["published_rejection_audit"][0]["reason_codes"]
+            ),
+            result["published_rejection_audit"],
+        )
+
+    def test_review_receipt_rejects_rule_toctou_mutation(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        self._seed_structured_observations()
+        module.create_archetype_candidate(self.db, self._candidate_record())
+        review = self._archetype_review()
+        module.review_archetype(self.db, review)
+        con = module.connect_db(self.db)
+        payload = json.loads(
+            con.execute(
+                "SELECT rule_payload_json FROM archetype_rules "
+                "WHERE rule_id='RULE-LAW-COPY'"
+            ).fetchone()[0]
+        )
+        payload["instruction"] = "复核后被偷偷替换的指令"
+        con.execute(
+            "UPDATE archetype_rules SET rule_payload_json=? "
+            "WHERE rule_id='RULE-LAW-COPY'",
+            (json.dumps(payload, ensure_ascii=False, sort_keys=True),),
+        )
+        con.commit()
+        con.close()
+        with self.assertRaisesRegex(
+            module.StyleLibraryError, "review_receipt_missing"
+        ):
+            module.publish_archetype(self.db, review)
+        con = module.connect_db(self.db)
+        try:
+            self.assertEqual(
+                con.execute(
+                    "SELECT count(*) FROM archetype_publications"
+                ).fetchone()[0],
+                0,
+            )
+        finally:
+            con.close()
+
+    def test_published_archetype_version_is_a_closed_rule_set(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        self._seed_structured_observations()
+        module.create_archetype_candidate(self.db, self._candidate_record())
+        module.review_archetype(self.db, self._archetype_review())
+        module.publish_archetype(self.db, self._archetype_review())
+        con = module.connect_db(self.db)
+        self.addCleanup(con.close)
+        with self.assertRaisesRegex(
+            sqlite3.IntegrityError, "published_archetype_rule_set_frozen"
+        ):
+            con.execute(
+                """
+                INSERT INTO archetype_rules(
+                    rule_id,archetype_id,archetype_version,rule_type,
+                    rule_payload_json,applicability_scope,status
+                ) VALUES (
+                    'RULE-LATE','ARCH-LAW-NATIVE',1,'copy','{}',
+                    '法律科普×checklist_steps×search_answer','active'
+                )
+                """
+            )
+
+    def test_candidate_requires_two_independent_support_clusters(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        self._seed_structured_observations()
+        con = module.connect_db(self.db)
+        con.execute(
+            "UPDATE style_posts SET cluster_id='CLUSTER-TOPIC-1' "
+            "WHERE library_post_id='POST-SUPPORT-2'"
+        )
+        con.commit()
+        con.close()
+        with self.assertRaisesRegex(
+            module.StyleLibraryError, "public_proxy_independent_cluster_missing"
+        ):
+            module.create_archetype_candidate(self.db, self._candidate_record())
+
+    def test_candidate_rejects_unspecified_traffic_stage(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        self._seed_structured_observations()
+        record = self._candidate_record()
+        record["rules"][0]["payload"]["traffic_stage"] = None
+        with self.assertRaisesRegex(
+            module.StyleLibraryError, "candidate_rule_payload_invalid"
+        ):
+            module.create_archetype_candidate(self.db, record)
+
+    def test_query_rejects_truncated_asset_even_if_image_header_survives(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        self._seed_structured_observations()
+        module.create_archetype_candidate(self.db, self._candidate_record())
+        module.review_archetype(self.db, self._archetype_review())
+        module.publish_archetype(self.db, self._archetype_review())
+        image_path = self.root / "raw" / "support-1.png"
+        image_path.write_bytes(image_path.read_bytes()[:24])
+        result = module.query_library(
+            self.db,
+            category="法律科普",
+            carrier="checklist_steps",
+            primary_job="search_answer",
+            traffic_stage="read_through",
+            available_material_codes=["text_only"],
+            active_constraint_codes=[
+                "deterministic_chinese_typesetting",
+                "no_generated_evidence",
+            ],
+        )
+        self.assertEqual(result["status"], "needs_style_research")
+        self.assertIn(
+            "qualified_rule_evidence_stale",
+            result["published_rejection_audit"][0]["reason_codes"][0],
+        )
+
+    def test_old_v2_revision_is_rejected_without_silent_migration(self) -> None:
+        module = load_style_module()
+        con = sqlite3.connect(self.db)
+        con.execute(
+            "CREATE TABLE style_schema_metadata("
+            "singleton INTEGER PRIMARY KEY,schema_version INTEGER,"
+            "schema_revision TEXT)"
+        )
+        con.execute(
+            "INSERT INTO style_schema_metadata VALUES "
+            "(1,2,'2.1-feature-links')"
+        )
+        con.execute("PRAGMA user_version=2")
+        con.commit()
+        con.close()
+        before = self.db.read_bytes()
+        with self.assertRaisesRegex(
+            module.StyleLibraryError, "schema_v2_revision_mismatch"
+        ):
+            module.init_db(self.db)
+        self.assertEqual(self.db.read_bytes(), before)
 
 
 if __name__ == "__main__":
