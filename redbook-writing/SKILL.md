@@ -5,7 +5,7 @@ description: Use when researching, planning, drafting, reviewing, or diagnosing 
 
 # 小红书研究与写作
 
-把“找爆款”改造成可复核的研究与生产闭环：先确认问题和规则，再采集近期高低基线，随后生成有证据的选题与成稿。不要承诺爆款，不要把行业口诀伪装成算法事实。
+把“找爆款”改造成可复核的跨类目流量研究与生产闭环：先确认问题和规则，再采集近期高低基线，提取候选流量机制，随后生成有证据的选题与成稿。核心资产是能连接高低对照、流量环节、反例和后续实测的候选流量密码库，不是某一类目的审美模板。不要承诺爆款，不要把行业口诀伪装成算法事实。
 
 ## 先加载正确的参考文件
 
@@ -116,6 +116,18 @@ description: Use when researching, planning, drafting, reviewing, or diagnosing 
 分别输出 `PASS/PARTIAL/FAIL` 及具体问题。任何致命 `FAIL` 或影响核心承诺的 `PARTIAL` 都必须修订并复检；没有具体问题时不要机械改稿。
 
 ## 风格库与视觉生产硬门
+
+风格只是流量机制的一部分。每个候选先标作用环节：`feed_stop`、`read_through`、`save_share`、`comment_cocreation` 或 `profile_follow`。再记录机制、category、carrier、primary job、audience state、高低 contrast、反例和混杂。不得因为某个视觉元素出现在高帖里，就跳过它作用于哪一环。
+
+候选流量密码按下列问题抽取：
+
+- 为什么会停下：身份冲突、结果反差、证据缺口或明确范围承诺？
+- 为什么会读完：是否持续加入新信息、升级冲突、延迟揭晓或形成进度？
+- 为什么会保存/分享：是否提供清单、比较、步骤、成本或可信压缩？
+- 为什么会评论：是否留下可站队矛盾、可续写语言或个人经验接口？
+- 为什么会进主页/关注：是否存在稳定代理 IP、系列承诺和主页一致性？
+
+只有可比高/低样本中真正不同的机制才可成为 `contrastive_performance_hypothesis`；其余保持系列常量、任务适配或反模式。该合同适用于家居、美妆、教程、知识、旅行、职场、关系等所有类目。
 
 风格研究必须同时保留目标帖、同账号 baseline、普通/低表现对照和逐页观察。目标帖必须从 baseline 排除；不同 `primary_job` 的同载体帖子只能称 boundary，不能冒充 matched control。
 
