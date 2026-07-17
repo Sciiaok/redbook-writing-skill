@@ -227,6 +227,96 @@
       "prohibited_use": "Do not infer visual or copywriting performance from a business-model case study.",
       "snapshot_sha256": "73987a1932dafea6546c9f127b67faab431e9b97f99c37395f1f6d7044932fa6",
       "verification_status": "verified"
+    },
+    {
+      "claim_id": "CLM-S22-01",
+      "source_id": "S22",
+      "source_url": "https://nielseniq.cn/global/zh/insights/report/2025/xiaohongshu-healthcare-whitepaper/",
+      "grade": "B",
+      "primary_or_secondary": "primary_joint_research_page",
+      "published_at": "2025-10-21",
+      "verified_at": "2026-07-17",
+      "page_or_section": "Public report page, audience segmentation and people-scene-motive sections",
+      "claim": "The joint study segments health audiences by label, scene, and motive, and distinguishes functional, efficiency, social, and meaning motives that translate product functions into perceivable outcomes.",
+      "allowed_use": "Require a brief to record functional need, lived scene, motive, and perceivable outcome as separate fields and generate different hypotheses for each motive.",
+      "prohibited_use": "Do not generalize the health segments to other categories, infer a visual style or traffic weight, or quote public-page figures without their survey context.",
+      "snapshot_sha256": "54c7261a397aab64d539c1c4c9f812f2d8c54bb43c3f43f05bf52d9ebb1b0e7c",
+      "verification_status": "verified_public_extract_full_report_unavailable"
+    },
+    {
+      "claim_id": "CLM-S23-01",
+      "source_id": "S23",
+      "source_url": "https://www.youzan.com/cms/article/76079.html",
+      "grade": "C/D",
+      "primary_or_secondary": "first_party_service_provider_editorial",
+      "published_at": "2026-03-19",
+      "verified_at": "2026-07-17",
+      "page_or_section": "Team structure, role collaboration, project board, and small-team review sections",
+      "claim": "The guide assigns business ownership to operations, separates content, delivery, supply, and support roles, and recommends tracking each SKU, content asset, and delivery plan with explicit owners and review responsibilities.",
+      "allowed_use": "Define project ownership, reviewer independence, SKU-content-delivery links, and problem localization fields.",
+      "prohibited_use": "Do not claim the proposed team structure causes traffic or treat unsourced editorial guidance as an industry benchmark.",
+      "snapshot_sha256": "bdb44c3763830650cd23707dc64724bef2b429d9baedec0f8adb1ed3d8bcf810",
+      "verification_status": "verified_editorial_no_effect_audit"
+    },
+    {
+      "claim_id": "CLM-S24-01",
+      "source_id": "S24",
+      "source_url": "https://www.kingsta.com/archives/11137",
+      "grade": "C/D",
+      "primary_or_secondary": "first_party_agency_editorial",
+      "published_at": "2026-04-03",
+      "verified_at": "2026-07-17",
+      "page_or_section": "Brief translation, creator selection, production response, monitoring, and retrospective sections",
+      "claim": "The agency describes translating brand language into audience pain, scene, and perceivable benefit, checking creator history and recent query context, assigning specialist roles, and returning communication, cost, and conversion data to a knowledge base.",
+      "allowed_use": "Require a brand-to-user translation trace, creator-history evidence, current query snapshot, specialist review, and separated outcome layers.",
+      "prohibited_use": "Do not accept the agency's self-reported hit rate, manufacture comments or testimonials, automate engagement, or infer causality from client promotional material.",
+      "snapshot_sha256": "bddef8f829908cc26507140c6a4e2979329a7631f4b33feaf2bb476375190f8c",
+      "verification_status": "verified_self_promotional_unlisted_identity"
+    },
+    {
+      "claim_id": "CLM-S25-01",
+      "source_id": "S25",
+      "source_url": "https://www.woshipm.com/share/6400380.html",
+      "grade": "D",
+      "primary_or_secondary": "practitioner_experience_post",
+      "published_at": "2026-06",
+      "verified_at": "2026-07-17",
+      "page_or_section": "Execution granularity, judgment externalization, and transfer sections",
+      "claim": "The practitioner argues that an operational SOP must externalize why a pattern works, what qualifies as acceptable, how it transfers across audience, scene, emotion, and product, and how failures are diagnosed instead of merely listing posting actions.",
+      "allowed_use": "Use as a schema and workflow prompt for mechanism, scope, contraindication, counterexample, acceptance criteria, and rejection reason.",
+      "prohibited_use": "Do not use the article as evidence that a content mechanism performs or interpret structural transfer as close copying of an original post.",
+      "snapshot_sha256": "ff82f60522580ed607dd464cd870e8f9bccdd4cb8cb99651f0b2410e468396c0",
+      "verification_status": "verified_experience_signal_only"
+    },
+    {
+      "claim_id": "CLM-S26-01",
+      "source_id": "S26",
+      "source_url": "https://www.woshipm.com/share/6399418.html",
+      "grade": "D",
+      "primary_or_secondary": "practitioner_team_experience_post",
+      "published_at": "2026-05-21",
+      "verified_at": "2026-07-17",
+      "page_or_section": "Creative-center and scale-distribution organization sections",
+      "claim": "The practitioner separates zero-to-one content-model exploration from one-to-many production, notes that content models expire, and varies account, scene, angle, material, and expression only after a model is tested.",
+      "allowed_use": "Define candidate, validated, reusable, expired, and downgraded lifecycle states and keep exploratory tests separate from production variants.",
+      "prohibited_use": "Do not treat the proposed organization as universal, count bulk generation as validation, or indefinitely replicate one high-performing model.",
+      "snapshot_sha256": "d7625d39cb3b3a7d66d0ddb06cbb88c0378f0bc723a556fca00555875d687956",
+      "verification_status": "verified_experience_signal_only"
+    },
+    {
+      "claim_id": "CLM-S27-01",
+      "source_id": "S27",
+      "source_url": "https://www.xiaoyuzhoufm.com/episode/6895a099638b015879970d8c",
+      "grade": "D",
+      "primary_or_secondary": "promotional_podcast_show_notes",
+      "published_at": "2025 approximate",
+      "verified_at": "2026-07-17",
+      "page_or_section": "Public show notes on content middle-platform exploration, production, data return, and replication",
+      "claim": "The show notes frame industrial content operations as direction exploration, stable material production, data return, and scale using variable audience, scene, pain, function, and emotion fields, while also promoting several unverified or risky tactics.",
+      "allowed_use": "Use only as a pressure test for workflow completeness and a source of explicit anti-patterns.",
+      "prohibited_use": "Do not use covert-camera framing, masked pseudo-user presentation, staged supplier comments, cheap mass posting, unverified ROI, or a fixed reading threshold as production rules.",
+      "snapshot_sha256": "55249d7dcecace4abcbd4496b1b6febfde19ae9617591c3b20afef3446637328",
+      "verification_status": "verified_low_support_and_risk_flagged"
     }
   ],
   "product_decisions": [
@@ -301,6 +391,30 @@
       "decision": "The system retains source, hypothesis, version, review, delivery conditions, outcome, counterevidence, and selection/rejection reason.",
       "basis": ["CLM-S17-01", "CLM-S21-01"],
       "status": "project_schema_policy"
+    },
+    {
+      "decision_id": "PD-BRIEF-MOTIVE",
+      "decision": "A production brief records functional need, lived scene, motive, and perceivable outcome separately before it selects a carrier or aesthetic direction.",
+      "basis": ["CLM-S22-01", "CLM-S24-01"],
+      "status": "project_brief_policy"
+    },
+    {
+      "decision_id": "PD-OWNER-REVIEWER",
+      "decision": "Each SKU-content-delivery unit has an explicit owner and an independent reviewer for material strategic or budget decisions.",
+      "basis": ["CLM-S23-01", "CLM-S24-01"],
+      "status": "project_governance_policy"
+    },
+    {
+      "decision_id": "PD-MODEL-LIFECYCLE",
+      "decision": "Exploratory content models and scaled production variants are separate objects; models can expire or be downgraded and bulk generation never counts as validation.",
+      "basis": ["CLM-S25-01", "CLM-S26-01"],
+      "status": "project_evidence_policy"
+    },
+    {
+      "decision_id": "PD-INDUSTRIALIZATION-BOUNDARY",
+      "decision": "Industrialization scales evidence capture, material versioning, review, and learning; it does not scale fabricated native identities, covert capture, staged comments, or pseudo-precise thresholds.",
+      "basis": ["CLM-S15-01", "CLM-S27-01"],
+      "status": "compliance_and_quality_gate"
     }
   ]
 }
