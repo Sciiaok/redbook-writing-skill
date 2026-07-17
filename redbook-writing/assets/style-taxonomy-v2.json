@@ -10,6 +10,13 @@
     "conversion",
     "authority_statement"
   ],
+  "traffic_stage": [
+    "feed_stop",
+    "read_through",
+    "save_share",
+    "comment_cocreation",
+    "profile_follow"
+  ],
   "material_code": [
     "real_person_authorized",
     "real_process_sequence",

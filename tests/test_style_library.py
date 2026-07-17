@@ -17,6 +17,9 @@ SCHEMA_PATH = ROOT / "redbook-writing" / "assets" / "style-library-schema.sql"
 SCHEMA_V2_PATH = ROOT / "redbook-writing" / "assets" / "style-library-schema-v2.sql"
 TAXONOMY_V1_PATH = ROOT / "redbook-writing" / "assets" / "style-taxonomy-v1.json"
 TAXONOMY_V2_PATH = ROOT / "redbook-writing" / "assets" / "style-taxonomy-v2.json"
+LIVE_LEDGER_PATH = (
+    ROOT / "docs" / "research" / "2026-07-17-live-xhs-style-observations.jsonl"
+)
 
 FROZEN_V1_SHA256 = {
     "style-library-schema.sql": "0264abffb60ef6e00b4ea64dbcfbd445c085df24bf24550c1021d0197d70d991",
@@ -43,6 +46,8 @@ EXPECTED_TABLES = {
     "draft_assets",
     "draft_outcomes",
     "ingest_receipts",
+    "sanitized_ledger_ingests",
+    "sanitized_style_ledger_entries",
     "performance_definitions",
     "account_baseline_members",
     "baseline_snapshot_publications",
@@ -2187,7 +2192,9 @@ class StyleLibraryV2CoreContractTests(unittest.TestCase):
             ) VALUES (
                 'DEF',1,'engagement_proxy','engagement_proxy','feed_stop',
                 'public visible engagement proxy only','account_baseline',2,
-                'exclude','exclude','{}','2026-07-18','2026-08-18','sha-def'
+                'exclude','exclude',
+                '{"high_min_multiple":2.0,"low_max_multiple":0.5}',
+                '2026-07-18','2026-08-18','sha-def'
             )
             """
         )
@@ -2479,6 +2486,16 @@ class StyleLibraryV2CoreContractTests(unittest.TestCase):
                 "authority_statement",
             }.issubset(taxonomy["primary_job"])
         )
+        self.assertEqual(
+            set(taxonomy["traffic_stage"]),
+            {
+                "feed_stop",
+                "read_through",
+                "save_share",
+                "comment_cocreation",
+                "profile_follow",
+            },
+        )
 
     def test_init_validates_taxonomy_before_creating_database(self) -> None:
         module = load_style_module()
@@ -2571,6 +2588,230 @@ class StyleLibraryV2CoreContractTests(unittest.TestCase):
                 ) VALUES ('OBS','POST-A','ACC-B','RUN','LOCAL','sha')
                 """
             )
+
+    def test_status_and_sanitized_ledger_ingest_are_honest_and_idempotent(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        before = module.status_db(self.db)
+        self.assertEqual(before["counts"]["sanitized_ledger_entries"], 0)
+        self.assertEqual(
+            before["release_readiness"]["state"], "needs_style_research"
+        )
+
+        imported = module.ingest_ledger(self.db, LIVE_LEDGER_PATH)
+        self.assertEqual(imported["status"], "imported")
+        self.assertEqual(imported["record_count"], 12)
+        repeated = module.ingest_ledger(self.db, LIVE_LEDGER_PATH)
+        self.assertEqual(repeated["status"], "idempotent")
+
+        after = module.status_db(self.db)
+        self.assertEqual(after["counts"]["sanitized_ledger_entries"], 12)
+        self.assertEqual(after["counts"]["qualified_style_rules"], 0)
+        con = module.connect_db(self.db)
+        self.addCleanup(con.close)
+        self.assertEqual(con.execute("SELECT count(*) FROM style_assets").fetchone()[0], 0)
+        self.assertEqual(con.execute("SELECT count(*) FROM style_posts").fetchone()[0], 0)
+
+    def test_ingest_ledger_rejects_fake_asset_or_performance_receipt_atomically(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        record = json.loads(LIVE_LEDGER_PATH.read_text(encoding="utf-8").splitlines()[0])
+        record["asset_sha256s"] = ["f" * 64]
+        record["performance_receipt"] = {"claimed": True}
+        bad = Path(self.temp_dir.name) / "bad-ledger.jsonl"
+        bad.write_text(json.dumps(record) + "\n", encoding="utf-8")
+        with self.assertRaisesRegex(
+            module.StyleLibraryError, "ledger_forbidden_evidence_claim"
+        ):
+            module.ingest_ledger(self.db, bad)
+        self.assertEqual(
+            module.status_db(self.db)["counts"]["sanitized_ledger_entries"], 0
+        )
+
+    def test_query_audits_every_candidate_and_cli_exits_needs_research(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        module.ingest_ledger(self.db, LIVE_LEDGER_PATH)
+        result = module.query_library(
+            self.db,
+            carrier="chat_dramatization",
+            primary_job="feed_stop",
+            traffic_stage="feed_stop",
+            available_material_codes=["unknown"],
+            active_constraint_codes=["no_generated_evidence"],
+        )
+        self.assertEqual(result["status"], "needs_style_research")
+        self.assertEqual(len(result["rejection_audit"]), 12)
+        self.assertEqual(
+            [row["observation_id"] for row in result["rejection_audit"]],
+            sorted(row["observation_id"] for row in result["rejection_audit"]),
+        )
+        first = next(
+            row for row in result["rejection_audit"]
+            if row["observation_id"] == "O-XHS-001"
+        )
+        self.assertIn("qualification_ineligible_unverified", first["reason_codes"])
+        self.assertIn("not_published_qualified_rule", first["reason_codes"])
+        self.assertIn("traffic_stage_unverified", first["reason_codes"])
+
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(STYLE_CLI),
+                "query",
+                str(self.db),
+                "--carrier",
+                "chat_dramatization",
+                "--primary-job",
+                "feed_stop",
+                "--traffic-stage",
+                "feed_stop",
+                "--materials",
+                "unknown",
+                "--constraints",
+                "no_generated_evidence",
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 2)
+        self.assertEqual(json.loads(completed.stdout)["status"], "needs_style_research")
+
+    def test_bind_fails_closed_without_published_qualified_rule(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        module.ingest_ledger(self.db, LIVE_LEDGER_PATH)
+        with self.assertRaisesRegex(
+            module.StyleLibraryError, "no_published_qualified_rule"
+        ):
+            module.bind_draft(
+                self.db,
+                draft_id="DRAFT-FAST-PATH",
+                carrier="chat_dramatization",
+                primary_job="feed_stop",
+                available_material_codes=["unknown"],
+                active_constraint_codes=["no_generated_evidence"],
+            )
+        con = module.connect_db(self.db)
+        self.addCleanup(con.close)
+        self.assertEqual(
+            con.execute("SELECT count(*) FROM draft_style_bindings").fetchone()[0],
+            0,
+        )
+
+    def test_derive_tier_uses_published_baseline_and_never_calls_proxy_traffic(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        con = module.connect_db(self.db)
+        included_hash, all_hash = self._seed_publishable_baseline(con)
+        con.execute(
+            """
+            INSERT INTO baseline_snapshot_publications(
+                baseline_snapshot_id,library_account_id,
+                performance_definition_id,metric_name,
+                baseline_snapshot_sha256,included_members_sha256,
+                all_members_sha256
+            ) VALUES ('BASE','ACC','DEF','engagement_proxy',
+                      'sha-baseline',?,?)
+            """,
+            (included_hash, all_hash),
+        )
+        con.execute(
+            """
+            INSERT INTO style_posts(library_post_id,platform,library_account_id,status)
+            VALUES ('POST-T','xiaohongshu','ACC','active')
+            """
+        )
+        con.execute(
+            "INSERT INTO run_post_refs VALUES ('RUN-T','LOCAL-T','POST-T')"
+        )
+        con.execute(
+            """
+            INSERT INTO style_post_observations(
+                post_observation_id,library_post_id,library_account_id,
+                run_id,run_post_id,source_csv_sha256,observation_state,
+                performance_definition_id,target_metric_name,
+                baseline_snapshot_id,baseline_snapshot_sha256
+            ) VALUES ('OBS-T','POST-T','ACC','RUN-T','LOCAL-T','sha-target',
+                      'building','DEF','engagement_proxy','BASE','sha-baseline')
+            """
+        )
+        con.execute(
+            """
+            INSERT INTO post_metrics(
+                post_metric_id,post_observation_id,metric_name,metric_value,
+                visibility_scope,metric_sha256
+            ) VALUES ('METRIC-T','OBS-T','engagement_proxy',40,
+                      'public_proxy','sha-target-metric')
+            """
+        )
+        con.execute(
+            """
+            UPDATE style_post_observations
+            SET observation_state='complete',target_post_metric_id='METRIC-T'
+            WHERE post_observation_id='OBS-T'
+            """
+        )
+        con.commit()
+        con.close()
+
+        result = module.derive_tier(self.db, "OBS-T", "BASE")
+        self.assertEqual(result["performance_tier"], "high")
+        self.assertEqual(result["traffic_verdict"], "not_applicable")
+        self.assertEqual(result["visibility_scope"], "public_proxy")
+
+    def test_derive_tier_rejects_parallel_observation_of_target_post_in_baseline(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        con = module.connect_db(self.db)
+        included_hash, all_hash = self._seed_publishable_baseline(con)
+        con.execute(
+            """
+            INSERT INTO baseline_snapshot_publications(
+                baseline_snapshot_id,library_account_id,
+                performance_definition_id,metric_name,
+                baseline_snapshot_sha256,included_members_sha256,
+                all_members_sha256
+            ) VALUES ('BASE','ACC','DEF','engagement_proxy',
+                      'sha-baseline',?,?)
+            """,
+            (included_hash, all_hash),
+        )
+        con.execute("INSERT INTO run_post_refs VALUES ('RUN-C','LOCAL-C','POST-1')")
+        con.execute(
+            """
+            INSERT INTO style_post_observations(
+                post_observation_id,library_post_id,library_account_id,
+                run_id,run_post_id,source_csv_sha256,observation_state,
+                performance_definition_id,target_metric_name,
+                baseline_snapshot_id,baseline_snapshot_sha256
+            ) VALUES ('OBS-C','POST-1','ACC','RUN-C','LOCAL-C','sha-c',
+                      'building','DEF','engagement_proxy','BASE','sha-baseline')
+            """
+        )
+        con.execute(
+            """
+            INSERT INTO post_metrics(
+                post_metric_id,post_observation_id,metric_name,metric_value,
+                visibility_scope,metric_sha256
+            ) VALUES ('METRIC-C','OBS-C','engagement_proxy',30,
+                      'public_proxy','sha-c-metric')
+            """
+        )
+        con.execute(
+            """
+            UPDATE style_post_observations
+            SET observation_state='complete',target_post_metric_id='METRIC-C'
+            WHERE post_observation_id='OBS-C'
+            """
+        )
+        con.commit()
+        con.close()
+        with self.assertRaisesRegex(
+            module.StyleLibraryError, "baseline_target_post_contamination"
+        ):
+            module.derive_tier(self.db, "OBS-C", "BASE")
 
     def test_v2_binding_is_exactly_one_primary_per_draft(self) -> None:
         run_cli("init", self.db)

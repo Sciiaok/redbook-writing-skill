@@ -131,6 +131,10 @@ CREATE TABLE IF NOT EXISTS performance_definitions (
             'decision_support', 'relationship_build', 'conversion',
             'authority_statement'
         )),
+    traffic_stage TEXT CHECK (traffic_stage IS NULL OR traffic_stage IN (
+        'feed_stop', 'read_through', 'save_share',
+        'comment_cocreation', 'profile_follow'
+    )),
     metric_selection_reason TEXT NOT NULL,
     cohort_scope_json TEXT NOT NULL DEFAULT '{}'
         CHECK (json_valid(cohort_scope_json) AND json_type(cohort_scope_json) = 'object'),
@@ -1517,6 +1521,102 @@ CREATE TABLE IF NOT EXISTS ingest_receipts (
     record_counts_json TEXT NOT NULL DEFAULT '{}',
     UNIQUE (run_id, input_bundle_sha256)
 ) STRICT;
+
+CREATE TABLE IF NOT EXISTS sanitized_ledger_ingests (
+    input_bundle_sha256 TEXT PRIMARY KEY NOT NULL,
+    source_file_sha256 TEXT NOT NULL,
+    record_count INTEGER NOT NULL CHECK (record_count > 0),
+    ingested_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+) STRICT;
+
+CREATE TABLE IF NOT EXISTS sanitized_style_ledger_entries (
+    observation_id TEXT PRIMARY KEY NOT NULL,
+    input_bundle_sha256 TEXT NOT NULL,
+    library_post_id TEXT NOT NULL,
+    library_account_id TEXT NOT NULL,
+    capture_date TEXT NOT NULL,
+    review_by TEXT NOT NULL,
+    query_fingerprint TEXT NOT NULL,
+    carrier TEXT NOT NULL CHECK (carrier IN (
+        'real_photo_diary', 'photo_annotation', 'screenshot_markup',
+        'chat_dramatization', 'text_card', 'checklist_steps',
+        'comparison_warning', 'collage_journal', 'single_image_reminder',
+        'unknown', 'other'
+    )),
+    primary_job TEXT NOT NULL CHECK (primary_job IN (
+        'feed_stop', 'search_answer', 'explain', 'trust_build',
+        'decision_support', 'relationship_build', 'conversion',
+        'authority_statement'
+    )),
+    traffic_stage TEXT CHECK (traffic_stage IS NULL OR traffic_stage IN (
+        'feed_stop', 'read_through', 'save_share',
+        'comment_cocreation', 'profile_follow'
+    )),
+    material_codes_json TEXT NOT NULL
+        CHECK (json_valid(material_codes_json)
+               AND json_type(material_codes_json) = 'array'),
+    production_constraint_codes_json TEXT NOT NULL
+        CHECK (json_valid(production_constraint_codes_json)
+               AND json_type(production_constraint_codes_json) = 'array'),
+    contraindication_codes_json TEXT NOT NULL
+        CHECK (json_valid(contraindication_codes_json)
+               AND json_type(contraindication_codes_json) = 'array'),
+    claim_kind TEXT NOT NULL CHECK (claim_kind IN ('task_fit', 'series_constant')),
+    performance_evidence_scope TEXT NOT NULL CHECK (
+        performance_evidence_scope IN (
+            'not_performance_evidence', 'public_proxy_association'
+        )
+    ),
+    evidence_role TEXT NOT NULL,
+    qualification_status TEXT NOT NULL
+        CHECK (qualification_status = 'ineligible_unverified'),
+    performance_recomputability TEXT NOT NULL
+        CHECK (performance_recomputability = 'unverified'),
+    derived_tier TEXT NOT NULL CHECK (derived_tier = 'unknown'),
+    starter_eligible INTEGER NOT NULL CHECK (starter_eligible = 0),
+    visibility_scope TEXT NOT NULL CHECK (visibility_scope = 'public_proxy'),
+    traffic_verdict TEXT NOT NULL
+        CHECK (traffic_verdict IN ('unavailable', 'not_applicable')),
+    record_sha256 TEXT NOT NULL UNIQUE,
+    record_json TEXT NOT NULL
+        CHECK (json_valid(record_json) AND json_type(record_json) = 'object'),
+    ingested_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (input_bundle_sha256)
+        REFERENCES sanitized_ledger_ingests(input_bundle_sha256),
+    CHECK (
+        length(observation_id) = 9
+        AND substr(observation_id, 1, 6) = 'O-XHS-'
+        AND substr(observation_id, 7, 3) GLOB '[0-9][0-9][0-9]'
+        AND CAST(substr(observation_id, 7, 3) AS INTEGER) BETWEEN 1 AND 12
+    )
+) STRICT;
+
+CREATE INDEX IF NOT EXISTS ix_sanitized_style_ledger_scope
+    ON sanitized_style_ledger_entries(carrier, primary_job, observation_id);
+
+CREATE TRIGGER IF NOT EXISTS immutable_sanitized_ledger_ingests_update
+BEFORE UPDATE ON sanitized_ledger_ingests
+BEGIN
+    SELECT RAISE(ABORT, 'immutable_sanitized_ledger_ingests');
+END;
+
+CREATE TRIGGER IF NOT EXISTS immutable_sanitized_ledger_ingests_delete
+BEFORE DELETE ON sanitized_ledger_ingests
+BEGIN
+    SELECT RAISE(ABORT, 'immutable_sanitized_ledger_ingests');
+END;
+
+CREATE TRIGGER IF NOT EXISTS immutable_sanitized_style_ledger_entries_update
+BEFORE UPDATE ON sanitized_style_ledger_entries
+BEGIN
+    SELECT RAISE(ABORT, 'immutable_sanitized_style_ledger_entries');
+END;
+
+CREATE TRIGGER IF NOT EXISTS immutable_sanitized_style_ledger_entries_delete
+BEFORE DELETE ON sanitized_style_ledger_entries
+BEGIN
+    SELECT RAISE(ABORT, 'immutable_sanitized_style_ledger_entries');
+END;
 
 -- Outcome-learning foundation. Exact assignment/outcome publication commands are
 -- deliberately separate from capture so public proxy data cannot become a
