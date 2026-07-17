@@ -1,0 +1,1315 @@
+{
+  "schema_version": 1,
+  "research_id": "hidden-production-artifacts-2026-07-18",
+  "snapshot_date": "2026-07-18",
+  "language": "zh-CN",
+  "purpose": "从公开且授权可读的采购、Brief、JD、官方培训、研究、奖项、年报和生产工具手册中，提取小红书内容的隐藏生产闭环；不把商业结果或组织意图误写成自然推荐规律。",
+  "scope": {
+    "platform": "Xiaohongshu",
+    "preferred_period": "2024-2026",
+    "older_material_policy": "Only retained when it contains a still-useful production-risk observation and is explicitly dated.",
+    "artifact_types": [
+      "official_procurement",
+      "public_creative_brief",
+      "job_description",
+      "official_commercial_training",
+      "peer_reviewed_or_original_research",
+      "industry_award_case",
+      "listed_company_annual_report",
+      "production_system_help_document"
+    ],
+    "excluded_access": [
+      "pirated_paid_course",
+      "cloud_drive_course_dump",
+      "leaked_internal_document",
+      "access_control_bypass",
+      "unverified_ai_transcript"
+    ]
+  },
+  "method": {
+    "research_question": "Which public artifacts reveal executable production contracts, handoffs, versioning, supply provenance, measurement, and service loops that are absent from ordinary traffic playbooks?",
+    "inclusion_gate": [
+      "The source is publicly accessible or an authorized public copy.",
+      "The artifact exposes at least one production object: inputs, roles, brief fields, approval, version, payment, disclosure, metric definition, data provenance, business handoff, or failure condition.",
+      "The useful claim can be separated from traffic or sales causality.",
+      "The source adds something beyond generic authenticity, utility, scene, search, comments, or first-screen consistency advice."
+    ],
+    "claim_status_values": {
+      "observed_artifact": "The field, workflow, or limitation is explicitly visible in the cited artifact.",
+      "supported_workflow": "More than one bounded artifact or a transparent study supports the workflow in its own scope.",
+      "hypothesis": "A production control inferred from source observations and requiring a local test."
+    },
+    "evidence_grades": {
+      "A": "Current official rule/help/job/procurement page or first-party product fact; supports only the visible scope.",
+      "B": "Official filing, original research, or transparent named material; supports bounded organizational or sample observations.",
+      "C": "Public live brief, recruitment-platform JD, award/agency self-report, or single-project requirement; useful as a workflow clue, not causal proof.",
+      "D": "Aggregator, summary, or incomplete context; discovery lead only."
+    },
+    "dedupe_against": [
+      {
+        "artifact": "docs/research/2026-07-18-operator-course-playbooks.md",
+        "already_covered": [
+          "identity tension and better-life framing",
+          "constraint and visible transformation",
+          "comparison protocol",
+          "search-intent ladder",
+          "category education",
+          "comment semantic validation",
+          "transfer the decision logic rather than surface form",
+          "brand language to user scene"
+        ],
+        "exclusion_action": "No mechanism in this asset merely restates these content formulas."
+      },
+      {
+        "artifact": "docs/research/2026-07-18-brand-operator-case-playbooks.md",
+        "already_covered": [
+          "user-language translation",
+          "audience-state-product-carrier matrix",
+          "first-screen contract",
+          "candidate testing and amplification",
+          "effective-traffic gate",
+          "search clusters",
+          "topic-meeting evidence",
+          "narrative axis"
+        ],
+        "exclusion_action": "This asset adds variable contracts, supply provenance, labor records, version lineage, attribution, and service handoffs."
+      }
+    ]
+  },
+  "hard_boundaries": [
+    {
+      "boundary_id": "HB01",
+      "rule": "Never infer organic recommendation causality from paid-delivery, award-case, annual-report, or mixed campaign outcomes."
+    },
+    {
+      "boundary_id": "HB02",
+      "rule": "Never hide commercial relationships, compensation, platform programs, or creator labor to manufacture the appearance of spontaneous recommendation."
+    },
+    {
+      "boundary_id": "HB03",
+      "rule": "Never fabricate first-person experience, customer quotes, tests, data, comments, screenshots, author identity, or product access."
+    },
+    {
+      "boundary_id": "HB04",
+      "rule": "Contract cadence, staffing, budget, attribution window, and paid-product thresholds remain source-specific; they are not platform constants."
+    },
+    {
+      "boundary_id": "HB05",
+      "rule": "Identity joins, CRM matching, private-message collection, and offline attribution require a lawful purpose, minimum data, authorization, security, and an opt-out path."
+    },
+    {
+      "boundary_id": "HB06",
+      "rule": "Tool tracking windows and refresh schedules describe that tool's observation capability, not the platform content lifecycle or algorithm."
+    },
+    {
+      "boundary_id": "HB07",
+      "rule": "AI drafts cannot supply unverified facts, first-person experience, customer speech, or image evidence; human confirmation and applicable disclosure remain mandatory."
+    }
+  ],
+  "source_records": [
+    {
+      "source_id": "HPS01",
+      "title": "新媒体运营服务采购项目",
+      "url": "https://www.nudt.edu.cn/cgxx/84b0b7e67e794a10b89b4d4cdf77a660.htm",
+      "author_org": "国防科技大学",
+      "published_at": "2026-04-08",
+      "captured_at": "2026-07-18",
+      "artifact_type": "official_procurement",
+      "sample_or_scope": "One six-month Xiaohongshu operations procurement requirement.",
+      "distribution_context": "mixed_or_unspecified",
+      "conflict_or_confounding": "A procurement scope, not an execution report; promotion is included but paid media is not separately described.",
+      "evidence_grade": "A",
+      "direct_observations": [
+        "The requirement separates account planning, content planning, original production, publishing/promotion, interaction, and data review."
+      ],
+      "cannot_support": [
+        "that the supplier executed each item",
+        "that the workflow improved traffic",
+        "an organic recommendation mechanism"
+      ],
+      "used_by": ["HP01"]
+    },
+    {
+      "source_id": "HPS02",
+      "title": "2025年新媒体运营服务采购需求",
+      "url": "https://www.ccgp-shaanxi.gov.cn/gpx-bid-file/ZF_JGBM_000003/zone/2025/1/12/project/gpx-template/8a69c4e298b3927e0199801fe3e36786.pdf?accessCode=acfa30d839c7a295ef075f1f0149844d",
+      "author_org": "陕西政府采购公开文件",
+      "published_at": "2025",
+      "captured_at": "2026-07-18",
+      "artifact_type": "official_procurement_pdf",
+      "sample_or_scope": "One public new-media operations procurement document.",
+      "distribution_context": "mixed_or_unspecified",
+      "conflict_or_confounding": "Staffing and publishing cadence are buyer capacity requirements.",
+      "evidence_grade": "A",
+      "direct_observations": [
+        "Planning, editing/publishing, material capture/organization, production equipment/software, onsite roles, interaction, and data review are distinct requirements."
+      ],
+      "cannot_support": [
+        "a universal team size",
+        "a universal posting frequency",
+        "delivery effectiveness"
+      ],
+      "used_by": ["HP01"]
+    },
+    {
+      "source_id": "HPS03",
+      "title": "连锁餐饮抖音与小红书运营 Brief",
+      "url": "https://ibrief.cn/m/bidding_detail/1709",
+      "author_org": "iBrief anonymous buyer",
+      "published_at": null,
+      "artifact_period": "deadline 2025-06-25",
+      "captured_at": "2026-07-18",
+      "artifact_type": "public_creative_brief",
+      "sample_or_scope": "One buyer request covering Douyin and Xiaohongshu.",
+      "distribution_context": "mixed; paid service requested as a separate quote",
+      "conflict_or_confounding": "Anonymous buyer and no delivery or outcome record.",
+      "evidence_grade": "C",
+      "direct_observations": [
+        "The request uses a shared shoot and allows store staff to capture under remote guidance.",
+        "Platform-specific captions, tags, and phrasing are required after editing.",
+        "Paid services are quoted separately and a one-month trial is requested."
+      ],
+      "cannot_support": [
+        "that shared capture is always more efficient",
+        "that the requested cadence is optimal",
+        "platform performance"
+      ],
+      "used_by": ["HP02"]
+    },
+    {
+      "source_id": "HPS04",
+      "title": "美瞳品牌小红书官方账号 Brief",
+      "url": "https://ibrief.cn/m/bidding_detail/559",
+      "author_org": "川扬商贸（上海）有限公司",
+      "published_at": null,
+      "artifact_period": "deadline 2024-05-10",
+      "captured_at": "2026-07-18",
+      "artifact_type": "public_creative_brief",
+      "sample_or_scope": "One new-account operations request.",
+      "distribution_context": "commercial_brand_account; paid media unclear",
+      "conflict_or_confounding": "A requirement, not an execution or outcome report.",
+      "evidence_grade": "C",
+      "direct_observations": [
+        "The brief explicitly inventories available brand book, VI, product imagery, and assets that still require video production."
+      ],
+      "cannot_support": [
+        "the optimal media mix",
+        "the optimal posting cadence",
+        "natural traffic causality"
+      ],
+      "used_by": ["HP01"]
+    },
+    {
+      "source_id": "HPS05",
+      "title": "海外高校小红书独立运营 Brief",
+      "url": "https://ibrief.cn/m/bidding/1437",
+      "author_org": "iBrief anonymous buyer",
+      "published_at": null,
+      "artifact_period": "deadline 2025-04-11",
+      "captured_at": "2026-07-18",
+      "artifact_type": "public_creative_brief",
+      "sample_or_scope": "One completed buyer request.",
+      "distribution_context": "commercial_or_institutional; paid media unclear",
+      "conflict_or_confounding": "The brief combines engagement and follower growth without a clear primary job or paid flag.",
+      "evidence_grade": "C",
+      "direct_observations": [
+        "Positioning, monthly output, design/cover, interaction, trend adjustment, reporting, and review are separate deliverables.",
+        "The buyer asks whether content is original and requests relevant portfolios."
+      ],
+      "cannot_support": [
+        "that composite engagement is an adequate KPI",
+        "that the requested monthly volume is optimal",
+        "execution quality"
+      ],
+      "used_by": ["HP01"]
+    },
+    {
+      "source_id": "HPS06",
+      "title": "999感冒灵2024—2025社交运营招标",
+      "url": "https://www.adquan.com/article/346389",
+      "author_org": "华润三九 / 广告门公开招标页",
+      "published_at": "2024",
+      "captured_at": "2026-07-18",
+      "artifact_type": "public_brand_tender",
+      "sample_or_scope": "One named brand social operations tender across platforms.",
+      "distribution_context": "commercial_mixed",
+      "conflict_or_confounding": "Annual operations, campaigns, creators, and channels are mixed commercial interventions.",
+      "evidence_grade": "C",
+      "direct_observations": [
+        "Always-on brand-account content/user operations and annual planning are separated from campaign/event and creator strategy execution."
+      ],
+      "cannot_support": [
+        "any campaign outcome",
+        "an organic Xiaohongshu mechanism"
+      ],
+      "used_by": ["HP01"]
+    },
+    {
+      "source_id": "HPS07",
+      "title": "去哪儿2025届内容运营岗位",
+      "url": "https://www.nowcoder.com/jobs/detail/349715",
+      "author_org": "去哪儿 / 牛客",
+      "published_at": "2024-08-24",
+      "captured_at": "2026-07-18",
+      "artifact_type": "job_description",
+      "sample_or_scope": "One multi-platform content-operations role.",
+      "distribution_context": "owned_content_and_business_conversion",
+      "conflict_or_confounding": "A recruitment requirement, not proof of current execution; multi-platform scope.",
+      "evidence_grade": "C",
+      "direct_observations": [
+        "The role covers matrix accounts, member training/rules/incentives, content monitoring, iterative analysis, and an ultimate in-app order metric."
+      ],
+      "cannot_support": [
+        "that exposure causes orders",
+        "a Xiaohongshu-only workflow",
+        "actual team performance"
+      ],
+      "used_by": ["HP01"]
+    },
+    {
+      "source_id": "HPS08",
+      "title": "小红书创作者策略运营岗位",
+      "url": "https://job.xiaohongshu.com/campus/position/17100",
+      "author_org": "小红书",
+      "published_at": null,
+      "artifact_period": "current vacancy captured 2026-07-18",
+      "captured_at": "2026-07-18",
+      "artifact_type": "official_job_description",
+      "sample_or_scope": "One official creator-strategy operations vacancy.",
+      "distribution_context": "platform_operations",
+      "conflict_or_confounding": "A role description is not an algorithm specification.",
+      "evidence_grade": "A",
+      "direct_observations": [
+        "The role links data mining and business insight to product/algorithm strategy and creator/post growth, and requests A/B experiment design and analysis skills."
+      ],
+      "cannot_support": [
+        "the current recommendation algorithm",
+        "that every platform decision is A/B tested",
+        "any creative threshold"
+      ],
+      "used_by": ["HP05"]
+    },
+    {
+      "source_id": "HPS09",
+      "title": "小红书热点创作者社区运营岗位",
+      "url": "https://job.xiaohongshu.com/social/position/18320",
+      "author_org": "小红书",
+      "published_at": null,
+      "artifact_period": "current vacancy captured 2026-07-18",
+      "captured_at": "2026-07-18",
+      "artifact_type": "official_job_description",
+      "sample_or_scope": "One official hot-topic creator-community vacancy.",
+      "distribution_context": "platform_organized_supply",
+      "conflict_or_confounding": "The role proves capability and intent, not that a specific topic was organized.",
+      "evidence_grade": "A",
+      "direct_observations": [
+        "The role describes content production through creator communities, activities, and directed invitations, and supports creators around topic events."
+      ],
+      "cannot_support": [
+        "that any named trend is platform-created",
+        "that invited content receives guaranteed traffic",
+        "an algorithm rule"
+      ],
+      "used_by": ["HP04"]
+    },
+    {
+      "source_id": "HPS10",
+      "title": "笔记营销操作说明",
+      "url": "https://school.xiaohongshu.com/helper/detail/1907?jumpFrom=school&jumpfrom=cn",
+      "author_org": "小红书电商学习中心",
+      "published_at": null,
+      "artifact_period": "current page captured 2026-07-18",
+      "captured_at": "2026-07-18",
+      "artifact_type": "official_paid_product_manual",
+      "sample_or_scope": "Xiaohongshu paid note-marketing product.",
+      "distribution_context": "paid",
+      "conflict_or_confounding": "All creative advice is tied to a paid ad product and its delivery surfaces.",
+      "evidence_grade": "A",
+      "direct_observations": [
+        "Multiple video creatives can be placed in one paid plan for selection.",
+        "The page discusses the first five seconds for paid video and lists feed, search, and video-stream placements."
+      ],
+      "cannot_support": [
+        "an organic feed formula",
+        "that paid winners will win organically",
+        "a universal number of variants"
+      ],
+      "used_by": ["HP05"]
+    },
+    {
+      "source_id": "HPS11",
+      "title": "直播间成交推广说明",
+      "url": "https://school.xiaohongshu.com/helper/detail/1951?jumpFrom=school",
+      "author_org": "小红书电商学习中心",
+      "published_at": null,
+      "artifact_period": "current page captured 2026-07-18",
+      "captured_at": "2026-07-18",
+      "artifact_type": "official_paid_product_manual",
+      "sample_or_scope": "Xiaohongshu paid live-room promotion product.",
+      "distribution_context": "paid",
+      "conflict_or_confounding": "The event definitions and optimization guidance are product-specific.",
+      "evidence_grade": "A",
+      "direct_observations": [
+        "The page distinguishes promotion objectives and describes holding budget, targeting, and note variables while comparing plans.",
+        "It defines event deduplication, 24-hour and 7-day attribution contexts, GMV including refunds, and ROI."
+      ],
+      "cannot_support": [
+        "organic distribution behavior",
+        "net revenue when refunds are not removed",
+        "universal attribution windows or thresholds"
+      ],
+      "used_by": ["HP05"]
+    },
+    {
+      "source_id": "HPS12",
+      "title": "成本保障说明",
+      "url": "https://school.xiaohongshu.com/helper/detail/1950",
+      "author_org": "小红书电商学习中心",
+      "published_at": null,
+      "artifact_period": "current page captured 2026-07-18",
+      "captured_at": "2026-07-18",
+      "artifact_type": "official_paid_product_disclaimer",
+      "sample_or_scope": "One paid-product guarantee/disclaimer page.",
+      "distribution_context": "paid",
+      "conflict_or_confounding": "The disclaimer addresses paid live commerce, not organic content.",
+      "evidence_grade": "A",
+      "direct_observations": [
+        "The page states that effects are also influenced by live-room operations and external competition, and does not guarantee sales or ROI."
+      ],
+      "cannot_support": [
+        "that paid delivery has no effect",
+        "a quantified confounder contribution"
+      ],
+      "used_by": ["HP05"],
+      "role": "counterevidence_against_single_factor_causality"
+    },
+    {
+      "source_id": "HPS13",
+      "title": "The Informal Labor of Content Creators: Situating Xiaohongshu’s Key Opinion Consumers in the Creator Economy",
+      "url": "https://arxiv.org/html/2409.08360v1",
+      "canonical_publication_url": "https://doi.org/10.1145/3711086",
+      "author_org": "Huiran Yi and Lu Xian, University of Michigan",
+      "published_at": "2024-09 preprint; 2025-05 formal publication",
+      "captured_at": "2026-07-18",
+      "artifact_type": "original_ethnographic_research",
+      "sample_or_scope": "Digital ethnography 2021-12 to 2023-09; 16 creators and 8 industry informants; coding May-December 2023.",
+      "distribution_context": "commercial_advertorial_and_creator_labor",
+      "conflict_or_confounding": "Small, anonymized, historical sample; participant statements are not official platform rules.",
+      "evidence_grade": "B",
+      "direct_observations": [
+        "The study describes KOC pools, spreadsheet/account review, subjective screening, word-level review, revisions, procurement bids, compensation after approval, and CPE/CPRE budgeting.",
+        "It analyzes how commercial labor can be obscured to appear spontaneous."
+      ],
+      "cannot_support": [
+        "that every brand or agency follows this workflow",
+        "current platform enforcement rules",
+        "concealing sponsorship as an acceptable practice"
+      ],
+      "used_by": ["HP03"]
+    },
+    {
+      "source_id": "HPS14",
+      "title": "顾家家居高客单线下归因奖项案例",
+      "url": "https://winner.roifestival.com/cn/winners/detail/c98a5nlh?year=2025",
+      "author_org": "顾家家居 / ROI Festival entry",
+      "published_at": "2025",
+      "artifact_period": "project released 2024-08",
+      "captured_at": "2026-07-18",
+      "artifact_type": "industry_award_case",
+      "sample_or_scope": "One self-submitted, paid/mixed high-ticket furniture case.",
+      "distribution_context": "paid_and_mixed",
+      "conflict_or_confounding": "Entrant-selected story and outcomes; content, media, KOS, product, stores, and first-party data are mixed; privacy implementation is not disclosed.",
+      "evidence_grade": "C",
+      "direct_observations": [
+        "The entry says it used intermediate metrics, multi-round paid testing, KOS co-creation, and a connection to first-party offline transaction data."
+      ],
+      "cannot_support": [
+        "the reported causal effect or ROI",
+        "natural recommendation behavior",
+        "that the identity-join method is legally sufficient or transferable"
+      ],
+      "used_by": ["HP07"]
+    },
+    {
+      "source_id": "HPS15",
+      "title": "爱慕股份2025年年度报告",
+      "url": "https://big5.sse.com.cn/site/cht/www.sse.com.cn/disclosure/listedinfo/announcement/c/new/2026-04-25/603511_20260425_RW7E.pdf",
+      "author_org": "爱慕股份 / 上海证券交易所",
+      "published_at": "2026-04-25",
+      "captured_at": "2026-07-18",
+      "artifact_type": "listed_company_annual_report",
+      "sample_or_scope": "One listed company's 2025 annual self-report.",
+      "distribution_context": "owned_commercial_operations",
+      "conflict_or_confounding": "Company self-report; content, retail, membership, stores, and channels are mixed interventions.",
+      "evidence_grade": "B",
+      "direct_observations": [
+        "The report defines KOS around sales capability, vertical and brand knowledge, and sharing real experience/insight.",
+        "It describes a self-operated KOS model connected with platform data, store acquisition, and off-store service."
+      ],
+      "cannot_support": [
+        "that KOS content caused acquisition or sales",
+        "a universal KOS structure",
+        "organic recommendation behavior"
+      ],
+      "used_by": ["HP06", "HP07"]
+    },
+    {
+      "source_id": "HPS16",
+      "title": "欣贺股份2025年年度报告",
+      "url": "https://pdf.dfcfw.com/pdf/H2_AN202604271821638664_1.pdf",
+      "author_org": "欣贺股份; public annual-report mirror",
+      "published_at": "2026-04",
+      "captured_at": "2026-07-18",
+      "artifact_type": "listed_company_annual_report_mirror",
+      "sample_or_scope": "One listed company's 2025 annual report including a 2026 operating plan.",
+      "distribution_context": "owned_and_paid_commercial_operations",
+      "conflict_or_confounding": "The most useful statements are future plans, not achieved outcomes.",
+      "evidence_grade": "B",
+      "direct_observations": [
+        "The report's 2026 plan describes a Xiaohongshu seed-search-convert path, membership/inventory integration, online order and store fulfillment, and turning capable store guides into content creators."
+      ],
+      "cannot_support": [
+        "that the plan was implemented",
+        "that the plan improved traffic or sales",
+        "a platform mechanism"
+      ],
+      "used_by": ["HP06", "HP07"]
+    },
+    {
+      "source_id": "HPS17",
+      "title": "Clustered governance: how Chinese social media platforms curate and control influencers' content creation",
+      "url": "https://doi.org/10.1080/1369118X.2026.2670738",
+      "full_text_url": "https://www.researchgate.net/publication/404794306_Clustered_governance_how_Chinese_social_media_platforms_curate_and_control_influencers%27_content_creation",
+      "author_org": "Rendan Liu, King's College London",
+      "published_at": "2026-05-12",
+      "captured_at": "2026-07-18",
+      "artifact_type": "peer_reviewed_ethnographic_research",
+      "sample_or_scope": "Ethnographic study of invite-only thematic creator groups and platform operations.",
+      "distribution_context": "platform_organized_supply_with_traffic_incentives",
+      "conflict_or_confounding": "Some numeric proportions and thresholds are former-employee or participant estimates, not official constants.",
+      "evidence_grade": "A/B",
+      "direct_observations": [
+        "Within the study sample, operators issued campaign briefs with theme, tags, timing, style, and angle; creators reported posts back; operators manually selected some content for additional distribution.",
+        "Participation did not guarantee traffic and group retention could depend on activity completion and operator judgment."
+      ],
+      "cannot_support": [
+        "that all creator groups work this way",
+        "that any specific trend was platform-organized",
+        "a universal completion threshold or manual-selection proportion",
+        "the recommendation algorithm"
+      ],
+      "used_by": ["HP04"]
+    },
+    {
+      "source_id": "HPS18",
+      "title": "AI passing and invisible authenticity labor",
+      "url": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2026.1800866/full",
+      "author_org": "Xiaolong Su et al., Communication University of China and collaborators",
+      "published_at": "2026-04-28",
+      "captured_at": "2026-07-18",
+      "artifact_type": "original_interview_research",
+      "sample_or_scope": "16 content creators; 10 primarily operated on Xiaohongshu.",
+      "distribution_context": "mixed_natural_and_commercial_creation",
+      "conflict_or_confounding": "Interview self-report; individual time estimates are not industry averages; the sample is not all Xiaohongshu.",
+      "evidence_grade": "B",
+      "direct_observations": [
+        "Creators described using AI for topics, scripts, titles, and optimization, then performing fact/trend verification, colloquial rewriting, narrative reconstruction, and camera-performance repair.",
+        "Reported failure modes include fabricated sources, stale trends, formal template voice, formulaic brand voice, and teleprompter-like delivery."
+      ],
+      "cannot_support": [
+        "a universal AI editing time",
+        "that hiding AI use is desirable",
+        "a fixed checklist that detects all AI-generated content"
+      ],
+      "used_by": ["HP08"]
+    },
+    {
+      "source_id": "HPS19",
+      "title": "KAWO: Creating Xiaohongshu Notes",
+      "url": "https://kawo.com/en/help-center/creating-content/creating-xiaohongshu-notes-in-kawo",
+      "author_org": "KAWO",
+      "published_at": null,
+      "artifact_period": "current help page captured 2026-07-18",
+      "captured_at": "2026-07-18",
+      "artifact_type": "production_system_help_document",
+      "sample_or_scope": "First-party documentation for one paid social-media management SaaS.",
+      "distribution_context": "owned_content_in_paid_saas",
+      "conflict_or_confounding": "Product capability does not prove adoption or effectiveness.",
+      "evidence_grade": "A",
+      "direct_observations": [
+        "The workflow exposes content calendar, image/video type, asset library, image order and first-image cover, video cover, title, body, tags, location, schedule, preview, and archive fields."
+      ],
+      "cannot_support": [
+        "that most brands use this sequence",
+        "that any field improves traffic",
+        "a platform-native publishing rule"
+      ],
+      "used_by": ["HP01", "HP09"]
+    },
+    {
+      "source_id": "HPS20",
+      "title": "KAWO: Creating and Setting up the Approval Process",
+      "url": "https://kawo.com/en/help-center/getting-started/configuring-post-approval-faq/creating-setting-up-the-approval-process",
+      "author_org": "KAWO",
+      "published_at": null,
+      "artifact_period": "current help page captured 2026-07-18",
+      "captured_at": "2026-07-18",
+      "artifact_type": "production_system_help_document",
+      "sample_or_scope": "First-party documentation for approval workflow features.",
+      "distribution_context": "owned_and_commercial_content_governance",
+      "conflict_or_confounding": "A configurable workflow, not a prescribed universal process.",
+      "evidence_grade": "A",
+      "direct_observations": [
+        "Approval can vary by platform/content type and include multiple nodes, one-person or all-person approval, and external reviewers.",
+        "A rejected revision can return to the rejecting node or restart the full workflow."
+      ],
+      "cannot_support": [
+        "that more approval nodes are better",
+        "that the workflow reduces errors or increases traffic"
+      ],
+      "used_by": ["HP01"]
+    },
+    {
+      "source_id": "HPS21",
+      "title": "KAWO Data Tracking",
+      "url": "https://kawo.com/en/help-center/reporting-analysis/kawo-data-tracking",
+      "author_org": "KAWO",
+      "published_at": null,
+      "artifact_period": "current help page captured 2026-07-18",
+      "captured_at": "2026-07-18",
+      "artifact_type": "data_system_help_document",
+      "sample_or_scope": "First-party documentation for one analytics product's tracking window.",
+      "distribution_context": "analytics_infrastructure",
+      "conflict_or_confounding": "Tracking duration is a tool limit and can depend on paid/custom capabilities.",
+      "evidence_grade": "A",
+      "direct_observations": [
+        "The system says it automatically tracks daily; Xiaohongshu owned-account posts are tracked for 30 days and competitor posts for 10 days; longer history is a custom capability."
+      ],
+      "cannot_support": [
+        "that Xiaohongshu posts stop growing after 10 or 30 days",
+        "a platform API universal limit",
+        "content lifespan"
+      ],
+      "used_by": ["HP09"]
+    },
+    {
+      "source_id": "HPS22",
+      "title": "KAWO: Account vs. Post Metrics",
+      "url": "https://kawo.com/en/help-center/reporting-analysis/account-vs-post-metrics",
+      "author_org": "KAWO",
+      "published_at": null,
+      "artifact_period": "current help page captured 2026-07-18",
+      "captured_at": "2026-07-18",
+      "artifact_type": "data_system_help_document",
+      "sample_or_scope": "First-party documentation for data provenance in one analytics product.",
+      "distribution_context": "analytics_infrastructure",
+      "conflict_or_confounding": "The described sources and refresh rates are product-specific.",
+      "evidence_grade": "A",
+      "direct_observations": [
+        "The documentation says owned-account reporting and public competitor Xiaohongshu data use different sources, while metric refresh schedules also differ, producing discrepancies."
+      ],
+      "cannot_support": [
+        "a universal platform refresh schedule",
+        "that one source is always more accurate",
+        "direct comparability without reconciliation"
+      ],
+      "used_by": ["HP09"]
+    },
+    {
+      "source_id": "HPS23",
+      "title": "iKF招聘编制",
+      "url": "https://gzdxhrrjxy.bibibi.net/detail/jobfair_apply?apply_id=1618375&company_id=613069",
+      "author_org": "东莞市啊呜科技 / 广州软件学院就业平台",
+      "published_at": "2025-09-18",
+      "captured_at": "2026-07-18",
+      "artifact_type": "job_description_portfolio",
+      "sample_or_scope": "One company's recruitment demand across KOC content, scripts, capture, editing, media, promotion, private-domain, and operations-assistant roles.",
+      "distribution_context": "mixed_owned_creator_paid_and_private_domain",
+      "conflict_or_confounding": "Recruitment headcount is planned demand, not actual staffing; duties do not prove every project follows the topology.",
+      "evidence_grade": "B",
+      "direct_observations": [
+        "The recruitment page separates product-selling-point interpretation, content creation, script/quality control, photography/editing, creator/media budget, promotion, review, and private-domain feedback into distinct roles."
+      ],
+      "cannot_support": [
+        "actual employee counts",
+        "team efficiency or content effectiveness",
+        "a universal organization design"
+      ],
+      "used_by": ["HP01", "HP06"]
+    }
+  ],
+  "mechanisms": [
+    {
+      "mechanism_id": "HP01",
+      "name": "开写前生产合同",
+      "claim_status": "supported_workflow",
+      "evidence_grade": "A/B/C",
+      "novelty_vs_existing_assets": "Adds asset readiness, rights, deliverable variants, role ownership, approval topology, paid flags, and acceptance before content formulas are applied.",
+      "applies_when": ["project_intake", "briefing", "account_operations", "campaign_planning"],
+      "stage": ["preproduction", "approval", "handoff", "review"],
+      "input_materials": [
+        "one primary business/content job",
+        "audience and service scope",
+        "available and missing evidence assets",
+        "capture conditions and rights",
+        "product facts, limitations, and compliance boundaries",
+        "channel and rendition requirements",
+        "natural/platform-program/brand/paid context",
+        "owners, approval nodes, revision cap, deadline",
+        "measurement dictionary and review date"
+      ],
+      "actions": {
+        "title": [
+          "Map every promise to an authorized evidence asset.",
+          "If evidence is unavailable, downgrade a result claim to a question, process, or clearly qualified statement."
+        ],
+        "cover": [
+          "Pass person, product, scene, before/after, trademark, and reuse rights through the asset gate.",
+          "Do not publish placeholders or unapproved assets."
+        ],
+        "body": [
+          "Separate verified fact, human experience, inference, and brand requirement.",
+          "Mark missing proof as blocked instead of completing it with invented details."
+        ],
+        "workflow": [
+          "Separate always-on account work, campaign work, creator collaboration, interaction/DM, paid delivery, analytics, and service handoff.",
+          "Define who approves what and whether a rejected revision returns to one node or restarts approval."
+        ]
+      },
+      "metrics": [
+        {"name": "intake_field_completeness", "definition": "required brief fields completed before drafting"},
+        {"name": "asset_blocker_count", "definition": "missing or unauthorized assets blocking a claim"},
+        {"name": "first_pass_approval_rate", "definition": "deliverables accepted without material revision"},
+        {"name": "mean_revision_rounds", "definition": "revision rounds per approved rendition"},
+        {"name": "scope_change_count", "definition": "new requests outside the accepted brief"},
+        {"name": "on_time_delivery_rate", "definition": "accepted deliverables completed by contract deadline"}
+      ],
+      "failure_conditions": [
+        "The brief specifies only output count and composite engagement.",
+        "Assets will be supplied later but result claims are already written.",
+        "No owner, acceptance node, revision limit, paid flag, or review time exists.",
+        "Procurement cadence or staffing is treated as a platform best practice.",
+        "One vague all-in operator role hides production, approval, media, analytics, and business handoffs."
+      ],
+      "case_examples": [
+        {"source_ids": ["HPS01", "HPS02"], "observation": "Official procurement scopes split planning, production, publishing, interaction, equipment/roles, and review.", "confounders": "requirements only"},
+        {"source_ids": ["HPS04", "HPS05"], "observation": "Live briefs reveal asset inventories and separate deliverables; one also illustrates ambiguous composite KPI design.", "confounders": "single buyer requests"},
+        {"source_ids": ["HPS20", "HPS23"], "observation": "Approval-system documentation and recruitment design reveal explicit nodes and cross-role handoffs.", "confounders": "tool capability and planned roles do not prove adoption"}
+      ],
+      "source_ids": ["HPS01", "HPS02", "HPS04", "HPS05", "HPS06", "HPS07", "HPS19", "HPS20", "HPS23"],
+      "paid_causality_guard": "The contract must record paid context, but its completion cannot be claimed to improve organic traffic.",
+      "next_test": {
+        "design": "For 20 consecutive tasks, score brief completeness before drafting and record blockers and revision rounds.",
+        "primary_outcome": "revision rounds and preventable rework, not traffic",
+        "stop_condition": "Stop if tracking would expose personal or client-confidential data."
+      }
+    },
+    {
+      "mechanism_id": "HP02",
+      "name": "母素材—渠道成品分离",
+      "claim_status": "hypothesis",
+      "evidence_grade": "C",
+      "novelty_vs_existing_assets": "Separates shared capture evidence from platform-specific published artifacts and measurement.",
+      "applies_when": ["multi_platform_capture", "store_generated_footage", "remote_capture", "batch_production"],
+      "stage": ["capture", "editing", "channel_rendition", "publishing"],
+      "input_materials": [
+        "shot list and must-have proof",
+        "raw files and capture ID",
+        "person/product/music/location rights",
+        "platform job and account voice",
+        "aspect ratio, safe area, cover requirements",
+        "paid versus organic rendition flag"
+      ],
+      "actions": {
+        "title": [
+          "Rewrite for the Xiaohongshu audience, scene, and search/save job rather than copying another platform title."
+        ],
+        "cover": [
+          "Select a frame that independently proves the promise and rebuild Xiaohongshu-specific information hierarchy."
+        ],
+        "body": [
+          "Reorder evidence around a user decision question and add conditions, tradeoffs, and reusable details.",
+          "Use only tags that describe the actual artifact."
+        ],
+        "workflow": [
+          "Maintain capture_id to rendition_id to publish_id lineage.",
+          "Approve remote raw footage before editing and keep paid quotations/results separate."
+        ]
+      },
+      "metrics": [
+        {"name": "must_have_shot_completion", "definition": "required proof shots captured and usable"},
+        {"name": "raw_asset_usability", "definition": "captured assets accepted for at least one rendition"},
+        {"name": "channel_first_pass_approval", "definition": "renditions accepted for their target channel"},
+        {"name": "cross_channel_text_duplication", "definition": "unmodified copy reused across channels"},
+        {"name": "paid_organic_ledger_completeness", "definition": "cost and outcome records separated by delivery context"}
+      ],
+      "failure_conditions": [
+        "Remote staff cannot execute the shot list.",
+        "Raw footage lacks the evidence needed for the claim.",
+        "All platforms use identical title, cover, body, and tags.",
+        "Paid media cost is merged into content production.",
+        "The published artifact cannot be traced back to raw material."
+      ],
+      "case_examples": [
+        {"source_ids": ["HPS03"], "observation": "A live restaurant-chain brief asks for shared capture, remote store guidance, platform-specific copy/tags/phrasing, separate paid quotation, and a trial.", "confounders": "single anonymous brief; no outcome"}
+      ],
+      "source_ids": ["HPS03"],
+      "paid_causality_guard": "Paid and organic renditions must have separate IDs, costs, and outcomes.",
+      "next_test": {
+        "design": "Use one authorized raw-asset set to create independently briefed renditions for two channels while holding paid media at zero.",
+        "primary_outcome": "first-pass approval, target-semantic comments, and production hours",
+        "stop_condition": "Stop if the raw set cannot support both channel jobs without misleading claims."
+      }
+    },
+    {
+      "mechanism_id": "HP03",
+      "name": "创作者协作留痕",
+      "claim_status": "hypothesis",
+      "evidence_grade": "B",
+      "novelty_vs_existing_assets": "Turns native-feeling creator collaboration into an auditable labor, rights, disclosure, and revision process rather than a surface style.",
+      "applies_when": ["KOC_collaboration", "KOL_collaboration", "KOS_collaboration", "seeding", "content_reuse"],
+      "stage": ["creator_selection", "briefing", "review", "payment", "reuse"],
+      "input_materials": [
+        "creator fit evidence and historical content",
+        "commercial and non-commercial content samples",
+        "actual product access and use conditions",
+        "immutable facts and prohibited claims",
+        "creator autonomy zone",
+        "price, payment date, revision cap",
+        "disclosure and reuse rights"
+      ],
+      "actions": {
+        "title": [
+          "Review factual risk without forcing every creator into the same brand slogan.",
+          "Preserve an entry point consistent with the creator's historical voice."
+        ],
+        "cover": [
+          "Do not impose identical staged photography across all creators.",
+          "Require truthful product/person/scene relationships and separate authorization for paid reuse."
+        ],
+        "body": [
+          "Separate immutable facts, mandatory disclosure, and creator-controlled expression.",
+          "Allow real tradeoffs and non-fit conditions; never require pretending to be an unprompted buyer."
+        ],
+        "workflow": [
+          "Record requester, reason, affected field, and cost/schedule impact for each revision.",
+          "Reconfirm compensation and timeline after the agreed revision cap."
+        ]
+      },
+      "metrics": [
+        {"name": "qualified_creator_rate", "definition": "selected creators with documented fit and authentic product access"},
+        {"name": "mean_revision_rounds", "definition": "revision rounds before approval"},
+        {"name": "factual_revision_share", "definition": "revisions tied to verifiable facts or compliance rather than style homogenization"},
+        {"name": "on_time_payment_rate", "definition": "approved work paid by the agreed date"},
+        {"name": "disclosure_completeness", "definition": "commercial/platform relationship correctly disclosed"},
+        {"name": "reuse_rights_completeness", "definition": "paid amplification and derivative use covered by authorization"},
+        {"name": "creator_withdrawal_or_complaint", "definition": "withdrawals, disputes, or complaints tied to collaboration process"}
+      ],
+      "failure_conditions": [
+        "Volume substitutes for creator fit.",
+        "Requirements are opaque while every word is reviewed.",
+        "Commercial labor is intentionally hidden to appear spontaneous.",
+        "Unlimited unpaid revisions erase creator voice.",
+        "Content is amplified or repurposed without authorization."
+      ],
+      "case_examples": [
+        {"source_ids": ["HPS13"], "observation": "The study records large creator pools, spreadsheet screening, word-level review, repeated revision, approval-linked compensation, and under-recorded commercial labor.", "confounders": "2021-2023 small anonymized sample"}
+      ],
+      "source_ids": ["HPS13"],
+      "counter_source_ids": [],
+      "paid_causality_guard": "Compensation and paid amplification must remain visible; traffic outcomes cannot be labeled organic without source-level evidence.",
+      "next_test": {
+        "design": "For the next authorized creator cohort, log fit evidence, revision reason, payment, disclosure, and reuse rights.",
+        "primary_outcome": "revision burden, disputes, disclosure, and on-time delivery",
+        "stop_condition": "Do not collect unnecessary creator personal data."
+      }
+    },
+    {
+      "mechanism_id": "HP04",
+      "name": "话题供给来源标签",
+      "claim_status": "hypothesis",
+      "evidence_grade": "A/B",
+      "novelty_vs_existing_assets": "Adds supply-generation provenance before interpreting content density as durable user demand.",
+      "applies_when": ["trend_research", "topic_selection", "competitor_sampling", "demand_inference"],
+      "stage": ["research", "sampling", "topic_approval"],
+      "input_materials": [
+        "sample publication time and author",
+        "campaign/topic page",
+        "commercial disclosure",
+        "platform invitation or program evidence",
+        "paid-delivery evidence",
+        "search suggestions and independent user questions",
+        "post-program persistence"
+      ],
+      "actions": {
+        "title": [
+          "When samples cluster around a program, transfer only a real user job, not the common campaign slogan.",
+          "Disclose the applicable relationship."
+        ],
+        "cover": [
+          "Treat repeated templates, assets, and program marks as supply clues, not sufficient proof of user preference."
+        ],
+        "body": [
+          "Tag each sample as spontaneous, brand_campaign, platform_program, paid_distribution, or unknown.",
+          "Promote a problem into the demand pool only when it appears across independent sources and persists beyond the incentive window."
+        ],
+        "workflow": [
+          "Keep evidence URL and confidence for every supply-source tag.",
+          "Never infer that a specific trend was manipulated without direct evidence."
+        ]
+      },
+      "metrics": [
+        {"name": "independent_source_count", "definition": "unique, non-duplicative sources for the same user problem"},
+        {"name": "outside_program_share", "definition": "samples not tied to the same brand/platform activity"},
+        {"name": "post_incentive_persistence", "definition": "duration of independent questions after the program window"},
+        {"name": "common_brief_trace_share", "definition": "samples with shared slogan/template/asset traces"},
+        {"name": "unknown_supply_share", "definition": "samples whose production source cannot be determined"}
+      ],
+      "failure_conditions": [
+        "One activity's 100 posts are counted as 100 independent needs.",
+        "Content volume is used without source audit.",
+        "An official job or research finding is used to accuse a specific topic or creator.",
+        "Paid impressions are treated as search demand.",
+        "Numeric group thresholds from participant reports are generalized."
+      ],
+      "case_examples": [
+        {"source_ids": ["HPS09"], "observation": "An official vacancy describes organizing hot-topic supply through communities, activities, and directed invitations.", "confounders": "capability/intent only"},
+        {"source_ids": ["HPS17"], "observation": "A peer-reviewed ethnographic sample records brief-to-group-production-to-reporting-to-manual-selection and retention/incentive flow.", "confounders": "bounded sample; participant estimates are not constants"}
+      ],
+      "source_ids": ["HPS09", "HPS17"],
+      "paid_causality_guard": "Paid distribution and platform programs remain distinct supply labels and cannot be merged into spontaneous demand.",
+      "next_test": {
+        "design": "Sample one trend daily for 14 days and code supply source, independent user question, and persistence after visible activity ends.",
+        "primary_outcome": "independent problem persistence",
+        "stop_condition": "Do not identify or accuse individual creators when provenance remains unknown."
+      }
+    },
+    {
+      "mechanism_id": "HP05",
+      "name": "付费实验指标合同",
+      "claim_status": "observed_artifact",
+      "evidence_grade": "A",
+      "novelty_vs_existing_assets": "Adds event dictionaries, attribution/dedup/refund rules, controlled variables, and explicit paid-only scope to creative tests.",
+      "applies_when": ["paid_note_marketing", "paid_live_promotion", "creative_version_test", "amplification"],
+      "stage": ["experiment_design", "paid_delivery", "measurement", "decision"],
+      "input_materials": [
+        "one paid objective",
+        "budget and audience",
+        "creative version and note/live room",
+        "event dictionary",
+        "attribution window",
+        "deduplication rule",
+        "refund/cancellation treatment",
+        "natural baseline",
+        "inventory and external-event log"
+      ],
+      "actions": {
+        "title": [
+          "Change only the declared variable for a comparison and keep the promise consistent with the landing/live experience."
+        ],
+        "cover": [
+          "Treat cover or paid-video opening as versioned variables; do not change cover, title, audience, and budget together then attribute the result to one field."
+        ],
+        "body": [
+          "Record exact version differences, time, delivery surface, and edits.",
+          "The paid-video first-five-seconds guidance remains limited to the cited paid product."
+        ],
+        "workflow": [
+          "Separate organic baseline and paid ledger.",
+          "Show raw events, deduplicated events, attributed events, gross including refunds, net after refunds, and final business result when available.",
+          "Use a predeclared stop/change condition."
+        ]
+      },
+      "metrics": [
+        {"name": "version_spend", "definition": "paid spend by version and plan"},
+        {"name": "raw_target_events", "definition": "observed product-defined events before deduplication"},
+        {"name": "deduplicated_events", "definition": "events after the documented deduplication rule"},
+        {"name": "attributed_orders", "definition": "orders assigned within the documented window"},
+        {"name": "net_after_refund", "definition": "orders or GMV after refunds/cancellations when data exists"},
+        {"name": "paid_roi", "definition": "return under a stated numerator, denominator, and window"},
+        {"name": "handoff_conversion", "definition": "live room or page ability to convert the paid event"}
+      ],
+      "failure_conditions": [
+        "The attribution window is selected after results are known.",
+        "Gross GMV including refunds is treated as net revenue.",
+        "Multiple variables change simultaneously.",
+        "Plans are edited frequently without recording model/learning impact.",
+        "Only the best version is reported.",
+        "A paid creative winner is presented as an organic recommendation rule."
+      ],
+      "case_examples": [
+        {"source_ids": ["HPS08"], "observation": "An official creator-strategy vacancy asks for A/B experiment design and analysis skills.", "confounders": "role competency only; no experiment threshold, method, or effect"},
+        {"source_ids": ["HPS10"], "observation": "The official paid-note manual supports multiple creatives within a paid plan and paid-video opening optimization.", "confounders": "paid product only"},
+        {"source_ids": ["HPS11"], "observation": "The official paid-live manual exposes objective, controlled-variable, deduplication, attribution-window, gross-GMV, and ROI definitions.", "confounders": "paid product only"},
+        {"source_ids": ["HPS12"], "observation": "The official disclaimer names live-room operations and external competition and does not guarantee sales/ROI.", "confounders": "counterevidence, not an effect estimate"}
+      ],
+      "source_ids": ["HPS08", "HPS10", "HPS11", "HPS12"],
+      "counter_source_ids": ["HPS12"],
+      "paid_causality_guard": "All source-derived numeric/creative guidance in this card is limited to the cited paid products; no organic conclusion is allowed.",
+      "next_test": {
+        "design": "Pre-register objective, event, window, dedup/refund treatment, stable variables, one creative variable, and stop condition for an authorized paid experiment.",
+        "primary_outcome": "predeclared paid objective and net business result",
+        "stop_condition": "Stop or revise when inventory, landing/live-room operations, or compliance changes invalidate comparability."
+      }
+    },
+    {
+      "mechanism_id": "HP06",
+      "name": "一线专家采集—服务交接",
+      "claim_status": "supported_workflow",
+      "evidence_grade": "B",
+      "novelty_vs_existing_assets": "Connects frontline product knowledge, truthful identity, content evidence, inventory/service handoff, and user-question feedback.",
+      "applies_when": ["retail", "high_consideration", "fit_or_size_complexity", "consultative_sale", "repeat_purchase"],
+      "stage": ["question_capture", "content_production", "official_inquiry", "store_or_service_handoff", "feedback"],
+      "input_materials": [
+        "frontline recurring questions",
+        "verified product and brand knowledge",
+        "actual try-on/use/demo assets",
+        "fit, size, price, inventory, region",
+        "staff identity and authorization",
+        "official service path",
+        "membership/privacy rules",
+        "return/refund and non-purchase reasons"
+      ],
+      "actions": {
+        "title": [
+          "Lead with a real service task or judgment for a specific body, need, or scene.",
+          "Do not fabricate customer quotations or disguise staff as ordinary consumers."
+        ],
+        "cover": [
+          "Use actual products and visible fit/use differences with a truthful professional identity.",
+          "State regional, price, or inventory conditions where relevant."
+        ],
+        "body": [
+          "Question, decision rule, demonstration, tradeoff, fit/non-fit, and official next step.",
+          "Do not solicit personal data outside approved channels."
+        ],
+        "workflow": [
+          "Send comment/inquiry questions to frontline owners.",
+          "Return inventory, size, service, order/non-order, and complaint causes to the next topic cycle."
+        ]
+      },
+      "metrics": [
+        {"name": "qualified_product_questions", "definition": "questions matching supported products, regions, and service scope"},
+        {"name": "official_inquiries", "definition": "inquiries through approved channels"},
+        {"name": "appointment_or_store_visit", "definition": "qualified appointments or visits under a defined source rule"},
+        {"name": "attributed_net_orders", "definition": "orders after refund under a documented attribution method"},
+        {"name": "inventory_mismatch", "definition": "content promise not available in the relevant store/region/time"},
+        {"name": "return_or_service_complaint", "definition": "downstream fit, product, privacy, or service failures"},
+        {"name": "question_feedback_cycle_time", "definition": "time from user question to verified content update"}
+      ],
+      "failure_conditions": [
+        "Frontline experts receive no content or compliance training.",
+        "Product knowledge is unverified or inventory/pricing is stale.",
+        "Public engagement is treated as store outcome.",
+        "Staff are pressured to impersonate buyers.",
+        "Personal data is collected outside authorization.",
+        "No one owns inquiry/service handoff."
+      ],
+      "case_examples": [
+        {"source_ids": ["HPS15"], "observation": "Aimer's filing describes KOS around sales, vertical/brand knowledge, real experience, platform data, store acquisition, and off-store service.", "confounders": "company self-report; mixed operations"},
+        {"source_ids": ["HPS16"], "observation": "Xinhe's report states a 2026 plan for creator store guides, membership/inventory integration, and store fulfillment.", "confounders": "future plan, not outcome"},
+        {"source_ids": ["HPS23"], "observation": "A recruitment portfolio separates product interpretation, content, quality, media, promotion, and private-domain feedback roles.", "confounders": "planned roles, not actual execution"}
+      ],
+      "source_ids": ["HPS15", "HPS16", "HPS23"],
+      "paid_causality_guard": "Content, KOS, media, stores, membership, and service are mixed; no traffic or sales result is attributed to content alone.",
+      "next_test": {
+        "design": "Pilot with one authorized expert, one product family, one region, and an approved inquiry path; log questions, inventory mismatch, service outcomes, and returns.",
+        "primary_outcome": "qualified service resolution and mismatch reduction",
+        "stop_condition": "Stop on privacy, identity, inventory, or regulated-claim risk."
+      }
+    },
+    {
+      "mechanism_id": "HP07",
+      "name": "线下归因与同意闸门",
+      "claim_status": "hypothesis",
+      "evidence_grade": "B/C",
+      "novelty_vs_existing_assets": "Defines lawful connection and final business outcomes before content launches in high-ticket/offline contexts.",
+      "applies_when": ["high_ticket", "offline_sale", "long_decision_cycle", "store_fulfillment", "official_lead_generation"],
+      "stage": ["measurement_design", "content_and_media", "lead_handoff", "offline_event", "reconciliation"],
+      "input_materials": [
+        "lawful purpose and user notice/consent",
+        "minimum platform and first-party data scope",
+        "store/dealer identifier",
+        "official appointment or campaign-code path",
+        "order and refund records",
+        "inventory and region",
+        "natural versus paid source",
+        "baseline and unknown-attribution bucket"
+      ],
+      "actions": {
+        "title": [
+          "Promise only products, regions, and services the store can deliver.",
+          "Avoid unverifiable universal stock or lowest-price claims."
+        ],
+        "cover": [
+          "Make price, store, model, region, and event-period conditions visible when material."
+        ],
+        "body": [
+          "State service scope, official appointment path, data use, and limitations.",
+          "Never label a like or save as purchase intent without a defined downstream event."
+        ],
+        "workflow": [
+          "Require content, media, store, CRM/data, and legal approval before launch.",
+          "Report public engagement, official leads, valid visits, orders, refund-adjusted orders, and unknown-attribution sales separately."
+        ]
+      },
+      "metrics": [
+        {"name": "qualified_leads", "definition": "authorized leads matching service scope"},
+        {"name": "valid_appointments", "definition": "confirmed appointments under a documented source rule"},
+        {"name": "store_visit_rate", "definition": "valid visits divided by eligible appointments"},
+        {"name": "net_order_rate", "definition": "refund-adjusted orders divided by the declared base"},
+        {"name": "unknown_attribution_share", "definition": "offline outcomes not safely linkable to a source"},
+        {"name": "match_failure_rate", "definition": "authorized joins that fail reconciliation"},
+        {"name": "consent_withdrawal_or_complaint", "definition": "privacy opt-outs, withdrawals, or complaints"}
+      ],
+      "failure_conditions": [
+        "Metrics are selected after launch or after results are visible.",
+        "Identity is joined without a lawful basis and explicit process.",
+        "Intermediate metrics replace final business outcomes.",
+        "Paid and natural sources are merged.",
+        "Award-entry numbers are accepted without independent audit.",
+        "Online attention substitutes for offline order evidence."
+      ],
+      "case_examples": [
+        {"source_ids": ["HPS14"], "observation": "A paid award entry describes intermediate metrics, multi-round testing, KOS, and first-party offline transaction connection.", "confounders": "self-submitted; paid/mixed; privacy detail undisclosed"},
+        {"source_ids": ["HPS15", "HPS16"], "observation": "Company filings connect or plan to connect platform, store, membership, inventory, fulfillment, and service operations.", "confounders": "self-report and future plan"}
+      ],
+      "source_ids": ["HPS14", "HPS15", "HPS16"],
+      "paid_causality_guard": "The cited award case is paid/mixed and self-reported. Only the pre-launch measurement architecture is retained; no result or causal claim is imported.",
+      "next_test": {
+        "design": "Use one approved appointment path and one store/region; pre-register events, window, refund, unknown bucket, natural/paid labels, and privacy controls.",
+        "primary_outcome": "refund-adjusted outcome plus unknown-attribution and privacy error rates",
+        "stop_condition": "Stop immediately if consent, minimization, security, or downstream service cannot be maintained."
+      }
+    },
+    {
+      "mechanism_id": "HP08",
+      "name": "AI初稿下游修复",
+      "claim_status": "supported_workflow",
+      "evidence_grade": "B",
+      "novelty_vs_existing_assets": "Adds fact/time/source, human experience, narrative, and camera-performance QA after AI generation rather than generic anti-template editing.",
+      "applies_when": ["AI_topic_assistance", "AI_title_draft", "AI_script_draft", "AI_body_draft", "AI_optimization"],
+      "stage": ["draft", "fact_check", "human_confirmation", "narrative_edit", "camera_rehearsal", "approval"],
+      "input_materials": [
+        "original sources",
+        "current trend/search evidence",
+        "real human experience and assets",
+        "verified product facts and limitations",
+        "account historical voice",
+        "commercial relationship",
+        "camera or voice rehearsal"
+      ],
+      "actions": {
+        "title": [
+          "Verify every number, date, source, and current-trend claim.",
+          "Remove invented experience and quotations; rewrite template language into a concrete job the account can truthfully own."
+        ],
+        "cover": [
+          "Confirm image, person, scene, and result are from the same truthful evidence chain.",
+          "Apply current disclosure/label requirements to generated or edited media; never use an irreproducible image as product proof."
+        ],
+        "body": [
+          "Label source_fact, human_experience, brand_requirement, and model_suggestion during review.",
+          "Trace facts to sources, require human confirmation for first-person experience, repair causal structure, and add real tradeoffs/failure conditions."
+        ],
+        "workflow": [
+          "Keep draft-to-human-edit-to-final diff and count verification labor in scheduling.",
+          "For video, test sentence rhythm, executable actions, proof shots, and natural delivery rather than editing text alone."
+        ]
+      },
+      "metrics": [
+        {"name": "source_completeness", "definition": "verifiable claims with traceable original sources"},
+        {"name": "fact_or_time_error", "definition": "incorrect, stale, or unsupported factual claims found before/after release"},
+        {"name": "invented_experience_blocked", "definition": "first-person or customer claims removed because no human source confirmed them"},
+        {"name": "human_rewrite_share", "definition": "material draft segments restructured or rewritten by a responsible human"},
+        {"name": "rehearsal_or_retake_count", "definition": "video/voice repetitions caused by unnatural or unprovable script"},
+        {"name": "approval_reject_reason", "definition": "fact, rights, disclosure, narrative, brand, or performance cause"},
+        {"name": "post_release_correction_or_complaint", "definition": "correction, takedown, or complaint tied to draft quality"}
+      ],
+      "failure_conditions": [
+        "Editing is limited to synonym substitution.",
+        "The goal is to hide AI involvement rather than make claims truthful.",
+        "Human-sounding text masks fabricated experience.",
+        "Stale trends or invented sources survive review.",
+        "The named creator never confirms first-person content.",
+        "Text reads naturally but on-camera performance remains scripted and evidence-free."
+      ],
+      "case_examples": [
+        {"source_ids": ["HPS18"], "observation": "Sixteen interviewed creators, ten mainly on Xiaohongshu, describe fact/trend verification, colloquial rewrite, narrative reconstruction, and camera-performance repair after AI use.", "confounders": "interview self-report; individual time claims are not industry averages"}
+      ],
+      "source_ids": ["HPS18"],
+      "paid_causality_guard": "The QA applies to truthful production in both natural and commercial content, but no traffic effect is claimed.",
+      "next_test": {
+        "design": "For 20 AI-assisted drafts, classify every material human edit and every caught error before publication.",
+        "primary_outcome": "fact/time/source error prevention and review burden",
+        "stop_condition": "Do not publish any draft with unconfirmed first-person experience, rights, or commercial disclosure."
+      }
+    },
+    {
+      "mechanism_id": "HP09",
+      "name": "数据血缘与观察窗",
+      "claim_status": "hypothesis",
+      "evidence_grade": "A",
+      "novelty_vs_existing_assets": "Adds source, capture time, refresh rate, tracking window, version, and reconciliation before comparing owned and competitor metrics.",
+      "applies_when": ["post_monitoring", "competitor_analysis", "weekly_review", "monthly_review", "tool_to_backend_reconciliation"],
+      "stage": ["instrumentation", "collection", "versioning", "comparison", "reporting"],
+      "input_materials": [
+        "publish and version ID",
+        "owned versus competitor object",
+        "platform backend versus third-party source",
+        "capture time and refresh schedule",
+        "tracking window and history backfill",
+        "metric definition and deduplication",
+        "natural versus paid flag"
+      ],
+      "actions": {
+        "title": [
+          "Timestamp every title version; without version time, a curve cannot be attributed to a title change."
+        ],
+        "cover": [
+          "Create a new version event when replacing a cover; screenshots are point-in-time evidence, not a live data source."
+        ],
+        "body": [
+          "Version body, tag, location, and commercial-label changes and cite the effective version in review."
+        ],
+        "workflow": [
+          "Compare only within aligned sources and observation windows.",
+          "Keep owned backend and competitor public data separate.",
+          "After a tool stops tracking, mark not_observed rather than zero or end-of-life."
+        ]
+      },
+      "metrics": [
+        {"name": "unknown_data_source_share", "definition": "reported metrics without a traceable source"},
+        {"name": "refresh_latency", "definition": "time between platform event and tool observation when measurable"},
+        {"name": "same_metric_discrepancy", "definition": "difference for nominally similar metrics after definition/time alignment"},
+        {"name": "missing_version_share", "definition": "published or edited objects without version metadata"},
+        {"name": "out_of_window_sample_count", "definition": "objects no longer observed by the selected tool"},
+        {"name": "unresolved_reconciliation_count", "definition": "material metric differences without a documented explanation"},
+        {"name": "history_backfill_coverage", "definition": "period for which comparable source-aligned data is available"}
+      ],
+      "failure_conditions": [
+        "Platform backend and third-party metrics are compared directly.",
+        "Different capture times are treated as the same point.",
+        "A tool's 10/30-day tracking window is called content lifespan.",
+        "Competitor public interaction and owned backend exposure are mixed.",
+        "Edits overwrite prior title, cover, body, or metric records."
+      ],
+      "case_examples": [
+        {"source_ids": ["HPS21"], "observation": "KAWO documents different owned and competitor tracking periods for Xiaohongshu posts.", "confounders": "tool-specific capability"},
+        {"source_ids": ["HPS22"], "observation": "KAWO documents different owned/competitor data sources and refresh schedules that can produce mismatches.", "confounders": "tool-specific data lineage"},
+        {"source_ids": ["HPS19"], "observation": "The product's create/preview/schedule/archive fields provide a publish-object model to which version metadata can be attached.", "confounders": "product capability, not adoption"}
+      ],
+      "source_ids": ["HPS19", "HPS21", "HPS22"],
+      "paid_causality_guard": "Natural and paid results require separate source fields even when the same tool displays them; no tool window supports an algorithm inference.",
+      "next_test": {
+        "design": "For ten owned posts and ten competitor posts, capture source, time, refresh, window, and version, then reconcile nominally similar metrics without forcing equality.",
+        "primary_outcome": "unknown provenance, unexplained discrepancy, and not-observed classification",
+        "stop_condition": "Stop any comparison when definitions or time windows cannot be aligned."
+      }
+    }
+  ],
+  "production_checkers": {
+    "pre_publish_gates": [
+      "one_primary_job",
+      "evidence_for_each_material_claim",
+      "person_product_location_music_and_reuse_rights",
+      "commercial_platform_program_and_paid_context_recorded",
+      "publish_artifact_traceable_to_brief_and_raw_assets",
+      "channel_specific_rendition",
+      "creator_autonomy_and_immutable_fact_zones",
+      "event_window_dedup_refund_and_baseline_locked",
+      "declared_experiment_variable_only",
+      "trend_supply_provenance_coded",
+      "interaction_service_store_and_inventory_owner",
+      "stop_correction_takedown_and_review_condition",
+      "AI_fact_time_source_and_human_experience_repair_complete",
+      "metric_source_capture_time_refresh_and_observation_window_present"
+    ],
+    "review_layers": [
+      {
+        "layer": "public",
+        "metrics": ["impression", "click", "dwell", "interaction"]
+      },
+      {
+        "layer": "semantic",
+        "metrics": ["target-problem comments", "qualified follow-up", "attention leakage"]
+      },
+      {
+        "layer": "business",
+        "metrics": ["qualified lead", "visit", "order", "refund-adjusted net result"]
+      },
+      {
+        "layer": "audit",
+        "metrics": ["natural versus paid", "supply source", "version", "attribution window", "unknown share"]
+      }
+    ]
+  },
+  "rejected_or_downgraded_candidates": [
+    {
+      "category": "pirated_or_unclear_rights_training",
+      "decision": "excluded",
+      "reason": "Paid-course dumps, cloud-drive copies, and reuploaded decks were not used even when they appeared operationally detailed."
+    },
+    {
+      "category": "podcast_without_authorized_transcript",
+      "decision": "excluded_from_mechanisms",
+      "reason": "Show notes can establish episode topics but cannot support untranscribed operational claims."
+    },
+    {
+      "category": "award_case_result_claims",
+      "decision": "downgraded",
+      "reason": "Only visible budget/workflow/measurement architecture is retained; self-reported traffic, search, GMV, ROI, and causality are not imported."
+    },
+    {
+      "category": "job_description_headcount",
+      "decision": "downgraded",
+      "reason": "Headcount is recruitment demand, not actual staffing or proof of execution."
+    },
+    {
+      "category": "annual_report_future_plan",
+      "decision": "downgraded",
+      "reason": "A plan supports organizational intent only, not implementation or effect."
+    },
+    {
+      "category": "paid_product_numeric_threshold",
+      "decision": "excluded_from_general_rules",
+      "reason": "Paid-product thresholds and optimization advice remain product-, objective-, account-, and time-specific."
+    },
+    {
+      "category": "tool_tracking_window_as_content_lifespan",
+      "decision": "rejected",
+      "reason": "The window is an instrumentation limit and says nothing about how long a post can continue receiving activity."
+    }
+  ],
+  "limitations": [
+    "Public briefs show requested work, not actual delivery or effect.",
+    "Job descriptions show organizational intent, not actual capability or compliance.",
+    "The KOC labor study covers a small historical 2021-2023 sample.",
+    "The creator-group governance study supports bounded sample observations and not any accusation about a specific trend.",
+    "The AI study is interview-based and does not supply a universal labor-time benchmark.",
+    "The award case is self-submitted, paid/mixed, and lacks independent outcome and privacy-process audit.",
+    "Company filings mix content, media, retail, membership, product, inventory, and service operations.",
+    "KAWO documents one SaaS product's fields and observation limits, not Xiaohongshu's universal API, algorithm, or content lifecycle.",
+    "No authorized full 2024-2026 podcast transcript with sufficient operational detail met the evidence gate."
+  ],
+  "verification": {
+    "json_parse": "passed with jq",
+    "source_id_uniqueness": "passed: 23 of 23 unique",
+    "mechanism_id_uniqueness": "passed: 9 of 9 unique",
+    "mechanism_source_references": "passed",
+    "source_used_by_references": "passed",
+    "url_presence": "passed: every source record has an HTTP(S) primary URL",
+    "url_reachability": {
+      "checked_at": "2026-07-18",
+      "method": "parallel curl GET with redirects, browser user-agent, 5-second connect timeout, 20-second maximum",
+      "primary_urls_http_200": 20,
+      "cli_exceptions": [
+        "HPS02 and HPS07 returned curl code 000 in the batch check but had been readable through browser/web retrieval during research.",
+        "HPS17 DOI returned 403 to the command-line request; the DOI metadata and the author-uploaded full-text link were inspected during research."
+      ]
+    },
+    "markdown_json_mechanism_count_match": "passed: 9 and 9",
+    "git_diff_check": "passed",
+    "checked_at": "2026-07-18"
+  }
+}
