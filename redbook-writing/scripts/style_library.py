@@ -16,6 +16,75 @@ ASSETS_DIR = Path(__file__).resolve().parents[1] / "assets"
 SCHEMA_PATH = ASSETS_DIR / "style-library-schema.sql"
 TAXONOMY_PATH = ASSETS_DIR / "style-taxonomy-v1.json"
 
+TAXONOMY_KEYS = frozenset(
+    {
+        "taxonomy_version",
+        "carrier",
+        "slide_role",
+        "composition",
+        "dominant_material",
+        "background_type",
+        "subject_presence",
+        "layout_structure",
+        "text_density",
+        "hierarchy_levels",
+        "alignment",
+        "spacing_pattern",
+        "font_feel",
+        "decoration_types",
+        "annotation_style",
+        "imperfection_signals",
+        "image_text_relationship",
+        "text_surface",
+        "point_of_view",
+        "audience_address",
+        "register",
+        "sentence_length_pattern",
+        "line_break_pattern",
+        "punctuation_pattern",
+        "emoji_pattern",
+        "hook_move",
+        "narrative_moves",
+        "evidence_move",
+        "payoff_move",
+        "cta_move",
+        "image_caption_division",
+        "rule_type",
+    }
+)
+
+OPEN_ENDED_TAXONOMY_KEYS = frozenset(
+    {
+        "carrier",
+        "composition",
+        "dominant_material",
+        "background_type",
+        "subject_presence",
+        "layout_structure",
+        "alignment",
+        "spacing_pattern",
+        "font_feel",
+        "decoration_types",
+        "annotation_style",
+        "imperfection_signals",
+        "image_text_relationship",
+        "text_surface",
+        "point_of_view",
+        "audience_address",
+        "register",
+        "sentence_length_pattern",
+        "line_break_pattern",
+        "punctuation_pattern",
+        "emoji_pattern",
+        "hook_move",
+        "narrative_moves",
+        "evidence_move",
+        "payoff_move",
+        "cta_move",
+        "image_caption_division",
+    }
+)
+
 
 class StyleLibraryError(RuntimeError):
     """Raised when the local style library contract cannot be satisfied."""
@@ -30,22 +99,87 @@ def connect_db(db_path: Path) -> sqlite3.Connection:
     return con
 
 
+def _normalized_schema_objects(
+    con: sqlite3.Connection,
+) -> dict[str, tuple[str, str, str]]:
+    objects: dict[str, tuple[str, str, str]] = {}
+    rows = con.execute(
+        """
+        SELECT type, name, tbl_name, sql
+        FROM sqlite_master
+        WHERE name NOT LIKE 'sqlite_%'
+          AND type IN ('table', 'index', 'trigger', 'view')
+        """
+    )
+    for object_type, name, table_name, sql in rows:
+        normalized_sql = " ".join((sql or "").split())
+        objects[name] = (object_type, table_name, normalized_sql)
+    return objects
+
+
+def _validate_v1_schema(con: sqlite3.Connection, schema_sql: str) -> None:
+    expected = connect_db(Path(":memory:"))
+    try:
+        expected.executescript(schema_sql)
+        expected_objects = _normalized_schema_objects(expected)
+    finally:
+        expected.close()
+
+    actual_objects = _normalized_schema_objects(con)
+    if any(
+        actual_objects.get(name) != definition
+        for name, definition in expected_objects.items()
+    ):
+        raise StyleLibraryError("schema_v1_invalid")
+
+
 def init_db(db_path: Path) -> dict[str, object]:
-    """Create or idempotently upgrade a database to the v1 schema."""
+    """Create v1 only in an empty database, or validate an existing v1."""
 
     db_path = Path(db_path)
+    con: sqlite3.Connection | None = None
     try:
-        schema_sql = SCHEMA_PATH.read_text(encoding="utf-8")
         db_path.parent.mkdir(parents=True, exist_ok=True)
         con = connect_db(db_path)
-        try:
-            with con:
-                con.executescript(schema_sql)
-                version = con.execute("PRAGMA user_version").fetchone()[0]
-        finally:
-            con.close()
+        version = con.execute("PRAGMA user_version").fetchone()[0]
+
+        if version > SCHEMA_VERSION:
+            raise StyleLibraryError("schema_version_unsupported")
+        if version == 0:
+            has_user_objects = con.execute(
+                """
+                SELECT 1 FROM sqlite_master
+                WHERE name NOT LIKE 'sqlite_%'
+                LIMIT 1
+                """
+            ).fetchone()
+            if has_user_objects is not None:
+                raise StyleLibraryError("unversioned_database_not_empty")
+
+        schema_sql = SCHEMA_PATH.read_text(encoding="utf-8")
+        if version == SCHEMA_VERSION:
+            _validate_v1_schema(con, schema_sql)
+        elif version == 0:
+            con.executescript(
+                "BEGIN IMMEDIATE;\n"
+                + schema_sql
+                + "\nPRAGMA user_version = 1;\nCOMMIT;"
+            )
+            version = con.execute("PRAGMA user_version").fetchone()[0]
+            _validate_v1_schema(con, schema_sql)
+        else:
+            raise StyleLibraryError("schema_version_unsupported")
+    except StyleLibraryError:
+        if con is not None and con.in_transaction:
+            con.rollback()
+        raise
     except (OSError, sqlite3.Error) as exc:
+        if con is not None and con.in_transaction:
+            con.rollback()
         raise StyleLibraryError("schema_initialization_failed") from exc
+    finally:
+        if con is not None:
+            con.close()
 
     if version != SCHEMA_VERSION:
         raise StyleLibraryError("schema_version_mismatch")
@@ -62,14 +196,30 @@ def load_taxonomy() -> dict[str, object]:
 
     if not isinstance(data, dict):
         raise StyleLibraryError("taxonomy_invalid")
-    if data.get("taxonomy_version") != SCHEMA_VERSION:
-        raise StyleLibraryError("taxonomy_version_mismatch")
-    if any(
-        not isinstance(key, str)
-        or (key != "taxonomy_version" and not isinstance(value, list))
-        for key, value in data.items()
-    ):
+    if set(data) != TAXONOMY_KEYS:
         raise StyleLibraryError("taxonomy_invalid")
+    version = data.get("taxonomy_version")
+    if type(version) is not int or version != SCHEMA_VERSION:
+        raise StyleLibraryError("taxonomy_version_mismatch")
+
+    for key in TAXONOMY_KEYS - {"taxonomy_version"}:
+        values = data[key]
+        if not isinstance(values, list) or not values:
+            raise StyleLibraryError("taxonomy_invalid")
+        if any(type(value) is not str or not value.strip() for value in values):
+            raise StyleLibraryError("taxonomy_invalid")
+        if len(values) != len(set(values)):
+            raise StyleLibraryError("taxonomy_invalid")
+
+    for key in OPEN_ENDED_TAXONOMY_KEYS:
+        values = data[key]
+        if "unknown" not in values or "other" not in values:
+            raise StyleLibraryError("taxonomy_invalid")
+    if "other" not in data["slide_role"]:
+        raise StyleLibraryError("taxonomy_invalid")
+    for key in ("text_density", "hierarchy_levels"):
+        if "unknown" not in data[key]:
+            raise StyleLibraryError("taxonomy_invalid")
     return data
 
 
