@@ -133,6 +133,14 @@
       "inputs": ["topic", "title", "cover", "publish time", "account stage", "paid/collab state", "funnel metrics", "comment semantics"],
       "actions": ["use a consistent configurable window", "change one main variable when feasible", "locate the leaking funnel stage before editing"],
       "metrics": ["same-account same-stage comparable outcomes"],
+      "default_observation_window": null,
+      "historical_course_examples": [
+        {
+          "observation_window": "7d",
+          "status": "historical_course_example",
+          "instruction": "Do not use as a Skill default; declare a run-specific window from account, task, reporting latency and business-cycle constraints."
+        }
+      ],
       "failure_conditions": ["tiny sample certainty", "post-age mismatch", "paid-organic mixing", "likes-only evaluation", "freezing one winner"],
       "source_lesson_ids": ["5929f2ca1d2947949de1fdb8e62287be"]
     }

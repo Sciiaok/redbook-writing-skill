@@ -124,7 +124,7 @@
 - **阶段**：`publish → diagnose → next_test`
 - **输入**：每篇的选题、标题、封面、发布时间、账号阶段、合作/投放状态、后台漏斗和评论语义。
 - **动作**：用一致观察窗记录；一次尽量只改一个主要变量；先找首屏、读完、收藏/分享、主页/成交中哪一环漏，再决定改题、改承诺、改证据还是改承接。
-- **指标**：同账号、同阶段、同任务的可比结果；课程示例使用发布后 7 天，Skill 将 7 天作为可配置默认而非平台规律。
+- **指标**：同账号、同阶段、同任务的可比结果；课程曾以发布后 7 天举例，本资产只将其记录为 `historical_course_example`，Skill 不设置 7 天默认窗口。每次运行必须按账号、任务、数据回传延迟和业务周期显式声明观察窗。
 - **失效条件**：样本太少就下结论；不同年龄帖子直接比；把投放帖与自然帖混合；只看点赞；爆一篇就冻结模板。
 - **证据**：官方课程第 2 节末段；`course_instruction`，B-source / D-effect。
 
@@ -158,7 +158,8 @@ fulfillment_map:
   middle: evidence + action
   final: decision / next step
 metric_contract:
-  observation_window: configurable, default 7d
+  observation_window: explicit_per_run
+  historical_course_example: 7d  # example only; never a default
   primary_metric: one funnel metric
   confounds: paid / collaboration / external_seed / hotspot / post_age
 ```
@@ -172,4 +173,3 @@ metric_contract:
 - 已知误差：品牌名、后台产品名和口语重复可能识别错误；因此不把单个专有名词作为机制依据。
 - 未保存：完整逐字稿、课程画面、讲师示例图片、原视频副本。
 - 可复现范围：lesson ID、公开页面、采集日期、时长、页面播放量与本文件的派生机制。
-

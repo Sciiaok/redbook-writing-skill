@@ -9,7 +9,8 @@
     "required_filters": [
       "traffic_stage",
       "primary_job",
-      "carrier_or_task_fit"
+      "carrier_or_task_fit",
+      "available_real_materials"
     ],
     "filter_order": [
       "exact traffic_stage + exact primary_job + compatible carrier + available real materials",
@@ -18,11 +19,27 @@
     ],
     "selection_rules": [
       "每篇只能有一个 primary_job；secondary traffic stages 只用于诊断。",
-      "先检查真实素材、来源、授权和合规，再调用机制。",
-      "优先选一条内容机制和一条生产/复盘机制；不要把多个钩子叠成一张封面。",
+      "必须显式传入 available materials；缺素材时返回 needs_materials，不用泛用治理卡填满结果。",
+      "每次恰选 1 条 content、1 条 carrier_router/truth_gate、1 条 feedback/measurement/governance；同槽不堆卡。",
+      "先检查 carrier truth condition、真实素材、来源、授权和合规，再排序机制。",
+      "TM01 只负责入口承诺与第一证据；TM02 负责全文兑现，二者不能同时占 content 槽。",
       "carrier 是完成任务的工具，不是表现标签；同一形式同时出现在高低样本时只能视为 task_fit 或 series_constant。",
       "自然发布只能称准实验；付费素材赛马必须分账并锁定变量、预算、受众和归因口径。"
-    ]
+    ],
+    "selection_slots": {
+      "content": [
+        "content"
+      ],
+      "carrier_or_truth": [
+        "carrier_router",
+        "truth_gate"
+      ],
+      "learning_or_governance": [
+        "feedback",
+        "measurement",
+        "governance"
+      ]
+    }
   },
   "evidence_layers": [
     {
@@ -123,6 +140,9 @@
     "comparison_warning",
     "collage_journal",
     "single_image_reminder",
+    "process_video",
+    "screen_recording",
+    "talking_head_or_field_video",
     "unknown",
     "other"
   ],
@@ -161,7 +181,10 @@
         ],
         "compatible": [
           "single_image_reminder",
-          "other"
+          "other",
+          "process_video",
+          "screen_recording",
+          "talking_head_or_field_video"
         ],
         "fit_test": "封面/第一页是否展示可授权的证据、对象范围、结果差或明确答案地图，而不只是报题。",
         "avoid_when": [
@@ -178,8 +201,9 @@
       ],
       "actions": {
         "title": [
-          "只写正文能完整证明的一个结果、问题或范围。",
-          "数字、身份、期限和限制逐项绑定证据。"
+          "先写不带修辞的事实标题，逐项核对对象、场景、数字、期限与结果证据。",
+          "再且只再选一种入口压缩：信息差、具体痛点、有边界情绪或直接答案；数字/符号只在降低歧义时使用。",
+          "标题只承诺正文能完整证明的一个结果、问题或范围。"
         ],
         "cover": [
           "能给证据就给证据；不能立即给时，用范围、对象或答案地图限定缺口。",
@@ -272,30 +296,92 @@
       "source_refs": [
         {
           "ref": "live-public-proxy-contrast:LP01",
-          "role": "承诺—证据距离候选"
+          "role": "承诺—证据距离候选",
+          "evidence_layer": "live_public_proxy",
+          "scope": "采集日公开互动与可见首屏的研究线索",
+          "limitation": "无曝光/入口分母，未控制账号体量、帖龄、投放和外部分发。"
         },
         {
           "ref": "brand-operator-case-playbooks:P03",
-          "role": "首屏承诺一致性"
+          "role": "首屏承诺一致性",
+          "evidence_layer": "brand_or_paid_case",
+          "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
         },
         {
           "ref": "operator-course-playbooks:P13",
-          "role": "钩子兑现契约"
+          "role": "钩子兑现契约",
+          "evidence_layer": "operator_course_experience",
+          "scope": "操盘者教学中的生产字段和待测假设",
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
         },
         {
-          "ref": "official-xhs-merchant-course:OX03/OX07",
-          "role": "官方商家课的一篇一承诺与承诺—证据—答案闭环；仅支持生产教学，不支持流量因果"
+          "ref": "official-xhs-merchant-course:OX03",
+          "role": "官方商家课的一篇一承诺与承诺—证据—答案闭环；仅支持生产教学，不支持流量因果",
+          "evidence_layer": "first_party_course_instruction",
+          "scope": "2024 年小红书电商学习中心公开商家生产教学",
+          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。"
+        },
+        {
+          "ref": "official-xhs-merchant-course:OX07",
+          "role": "官方商家课的一篇一承诺与承诺—证据—答案闭环；仅支持生产教学，不支持流量因果",
+          "evidence_layer": "first_party_course_instruction",
+          "scope": "2024 年小红书电商学习中心公开商家生产教学",
+          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。"
         },
         {
           "ref": "production-grade-evidence:S7",
-          "role": "误导点击边界；机器正文证据仍待完善"
+          "role": "误导点击边界；机器正文证据仍待完善",
+          "evidence_layer": "mixed_secondary_evidence",
+          "scope": "聚合审计文件中对应条目的限定作用域",
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+        },
+        {
+          "ref": "official-xhs-merchant-course:OX06",
+          "role": "标题事实底稿后的单一修辞压缩子配方",
+          "evidence_layer": "first_party_course_instruction",
+          "scope": "2024 年小红书电商学习中心公开商家生产教学",
+          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。"
         }
+      ],
+      "mechanism_kind": "content",
+      "required_material_codes": [
+        "promise",
+        "real_proof"
+      ],
+      "forbidden_material_codes": [
+        "fabricated_evidence",
+        "unverifiable_claim"
+      ],
+      "requires": [],
+      "conflicts_with": [],
+      "activation": {
+        "phase": "entry",
+        "eligible_traffic_stages": [
+          "feed_stop",
+          "read_through"
+        ],
+        "eligible_primary_jobs": [
+          "feed_stop",
+          "search_answer",
+          "explain",
+          "trust_build",
+          "decision_support",
+          "authority_statement",
+          "conversion"
+        ],
+        "material_match": "all_required_and_no_forbidden",
+        "note": "仅在任务、载体和素材门同时满足时激活；公开代理不能替代素材或一方指标。"
+      },
+      "priority": 100,
+      "subrecipe_refs": [
+        "official-xhs-merchant-course:OX06"
       ]
     },
     {
       "mechanism_id": "TM02",
       "name": "钩子兑现契约",
-      "one_line_formula": "把标题和封面的每个承诺映射到正文/逐页的明确兑现位置，开头确认任务，中段给过程，结尾给边界。",
+      "one_line_formula": "入口承诺 → 全文逐页兑现位置：promise → proof → payoff → boundary；它是全文真实性门，不是第二条主内容钩子。",
       "categories": [
         "all_categories_conditional"
       ],
@@ -307,6 +393,7 @@
         ]
       },
       "primary_jobs": [
+        "feed_stop",
         "search_answer",
         "explain",
         "trust_build",
@@ -328,7 +415,10 @@
         ],
         "compatible": [
           "single_image_reminder",
-          "chat_dramatization"
+          "chat_dramatization",
+          "process_video",
+          "screen_recording",
+          "talking_head_or_field_video"
         ],
         "fit_test": "能否给每个承诺建立 proof_id、兑现页/段和边界说明。",
         "avoid_when": [
@@ -429,21 +519,65 @@
       "source_refs": [
         {
           "ref": "operator-course-playbooks:P13",
-          "role": "钩子兑现契约主来源"
+          "role": "钩子兑现契约主来源",
+          "evidence_layer": "operator_course_experience",
+          "scope": "操盘者教学中的生产字段和待测假设",
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
         },
         {
           "ref": "official-xhs-merchant-course:OX07",
-          "role": "官方商家课的承诺—证据—答案闭环；历史生产指导"
+          "role": "官方商家课的承诺—证据—答案闭环；历史生产指导",
+          "evidence_layer": "first_party_course_instruction",
+          "scope": "2024 年小红书电商学习中心公开商家生产教学",
+          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。"
         },
         {
           "ref": "brand-operator-case-playbooks:P03",
-          "role": "首屏—正文一致性"
+          "role": "首屏—正文一致性",
+          "evidence_layer": "brand_or_paid_case",
+          "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
         },
         {
           "ref": "live-public-proxy-contrast:LP01",
-          "role": "公开代理边界观察"
+          "role": "公开代理边界观察",
+          "evidence_layer": "live_public_proxy",
+          "scope": "采集日公开互动与可见首屏的研究线索",
+          "limitation": "无曝光/入口分母，未控制账号体量、帖龄、投放和外部分发。"
         }
-      ]
+      ],
+      "mechanism_kind": "truth_gate",
+      "required_material_codes": [
+        "promise",
+        "real_proof"
+      ],
+      "forbidden_material_codes": [
+        "fabricated_evidence",
+        "unverifiable_claim"
+      ],
+      "requires": [],
+      "conflicts_with": [],
+      "activation": {
+        "phase": "full_text_fulfillment",
+        "eligible_traffic_stages": [
+          "read_through",
+          "feed_stop",
+          "save_share"
+        ],
+        "eligible_primary_jobs": [
+          "feed_stop",
+          "search_answer",
+          "explain",
+          "trust_build",
+          "decision_support",
+          "relationship_build",
+          "conversion",
+          "authority_statement"
+        ],
+        "material_match": "all_required_and_no_forbidden",
+        "note": "仅在任务、载体和素材门同时满足时激活；公开代理不能替代素材或一方指标。"
+      },
+      "priority": 98
     },
     {
       "mechanism_id": "TM03",
@@ -475,11 +609,14 @@
           "checklist_steps",
           "comparison_warning",
           "single_image_reminder",
-          "other"
+          "other",
+          "talking_head_or_field_video"
         ],
         "compatible": [
           "text_card",
-          "collage_journal"
+          "collage_journal",
+          "process_video",
+          "screen_recording"
         ],
         "fit_test": "载体能否让用户一眼认出‘这是我的处境’，并承载对应证据。",
         "avoid_when": [
@@ -587,29 +724,83 @@
       "source_refs": [
         {
           "ref": "brand-operator-case-playbooks:P01",
-          "role": "用户语言翻译器"
+          "role": "用户语言翻译器",
+          "evidence_layer": "brand_or_paid_case",
+          "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
         },
         {
           "ref": "brand-operator-case-playbooks:P02",
-          "role": "人群状态产品载体矩阵"
+          "role": "人群状态产品载体矩阵",
+          "evidence_layer": "brand_or_paid_case",
+          "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
         },
         {
           "ref": "operator-course-playbooks:P03",
-          "role": "人群场景单一理由证据"
+          "role": "人群场景单一理由证据",
+          "evidence_layer": "operator_course_experience",
+          "scope": "操盘者教学中的生产字段和待测假设",
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
         },
         {
-          "ref": "official-xhs-merchant-course:OX01/OX03",
-          "role": "官方商家课的角色—对象—价值与单一主承诺"
+          "ref": "official-xhs-merchant-course:OX01",
+          "role": "官方商家课的角色—对象—价值与单一主承诺",
+          "evidence_layer": "first_party_course_instruction",
+          "scope": "2024 年小红书电商学习中心公开商家生产教学",
+          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。"
+        },
+        {
+          "ref": "official-xhs-merchant-course:OX03",
+          "role": "官方商家课的角色—对象—价值与单一主承诺",
+          "evidence_layer": "first_party_course_instruction",
+          "scope": "2024 年小红书电商学习中心公开商家生产教学",
+          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。"
         },
         {
           "ref": "operator-course-playbooks:P10",
-          "role": "品牌话语到具体场景"
+          "role": "品牌话语到具体场景",
+          "evidence_layer": "operator_course_experience",
+          "scope": "操盘者教学中的生产字段和待测假设",
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
         },
         {
           "ref": "production-grade-evidence:S1",
-          "role": "产品×买点×人群方法"
+          "role": "产品×买点×人群方法",
+          "evidence_layer": "mixed_secondary_evidence",
+          "scope": "聚合审计文件中对应条目的限定作用域",
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
         }
-      ]
+      ],
+      "mechanism_kind": "content",
+      "required_material_codes": [
+        "user_language",
+        "scene_observation"
+      ],
+      "forbidden_material_codes": [
+        "fabricated_comment"
+      ],
+      "requires": [],
+      "conflicts_with": [],
+      "activation": {
+        "phase": "topic_and_copy",
+        "eligible_traffic_stages": [
+          "feed_stop",
+          "read_through",
+          "save_share"
+        ],
+        "eligible_primary_jobs": [
+          "feed_stop",
+          "search_answer",
+          "explain",
+          "trust_build",
+          "decision_support",
+          "conversion"
+        ],
+        "material_match": "all_required_and_no_forbidden",
+        "note": "仅在任务、载体和素材门同时满足时激活；公开代理不能替代素材或一方指标。"
+      },
+      "priority": 91
     },
     {
       "mechanism_id": "TM04",
@@ -637,12 +828,14 @@
         "preferred": [
           "real_photo_diary",
           "photo_annotation",
-          "collage_journal"
+          "collage_journal",
+          "process_video"
         ],
         "compatible": [
           "checklist_steps",
           "screenshot_markup",
-          "other"
+          "other",
+          "talking_head_or_field_video"
         ],
         "fit_test": "载体能否同时证明起点、过程、结果和成本/摩擦。",
         "avoid_when": [
@@ -752,17 +945,55 @@
       "source_refs": [
         {
           "ref": "live-public-proxy-contrast:LP04",
-          "role": "变化合同公开代理候选"
+          "role": "变化合同公开代理候选",
+          "evidence_layer": "live_public_proxy",
+          "scope": "采集日公开互动与可见首屏的研究线索",
+          "limitation": "无曝光/入口分母，未控制账号体量、帖龄、投放和外部分发。"
         },
         {
           "ref": "native-traffic-utility:O-XHS-008",
-          "role": "过程与具体代价研究线索"
+          "role": "过程与具体代价研究线索",
+          "evidence_layer": "live_public_proxy_audit",
+          "scope": "公开样本审计得到的任务适配或补采线索",
+          "limitation": "未形成同账号同窗口的一方流量实验，只能作为候选。"
         },
         {
           "ref": "operator-course-playbooks:P02",
-          "role": "限制条件到可见改造"
+          "role": "限制条件到可见改造",
+          "evidence_layer": "operator_course_experience",
+          "scope": "操盘者教学中的生产字段和待测假设",
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
         }
-      ]
+      ],
+      "mechanism_kind": "content",
+      "required_material_codes": [
+        "before_after_sequence",
+        "constraint_cost"
+      ],
+      "forbidden_material_codes": [
+        "fabricated_evidence"
+      ],
+      "requires": [],
+      "conflicts_with": [],
+      "activation": {
+        "phase": "transformation_body",
+        "eligible_traffic_stages": [
+          "read_through",
+          "feed_stop",
+          "save_share",
+          "profile_follow"
+        ],
+        "eligible_primary_jobs": [
+          "trust_build",
+          "explain",
+          "relationship_build",
+          "decision_support",
+          "search_answer"
+        ],
+        "material_match": "all_required_and_no_forbidden",
+        "note": "仅在任务、载体和素材门同时满足时激活；公开代理不能替代素材或一方指标。"
+      },
+      "priority": 90
     },
     {
       "mechanism_id": "TM05",
@@ -789,12 +1020,15 @@
           "screenshot_markup",
           "checklist_steps",
           "photo_annotation",
-          "comparison_warning"
+          "comparison_warning",
+          "screen_recording",
+          "process_video"
         ],
         "compatible": [
           "text_card",
           "real_photo_diary",
-          "other"
+          "other",
+          "talking_head_or_field_video"
         ],
         "fit_test": "画面对象是否真能被用户拿来完成任务，而非只做‘专业感’背景。",
         "avoid_when": [
@@ -896,21 +1130,63 @@
       "source_refs": [
         {
           "ref": "live-public-proxy-contrast:LP03",
-          "role": "工作物首屏 task_fit"
+          "role": "工作物首屏 task_fit",
+          "evidence_layer": "live_public_proxy",
+          "scope": "采集日公开互动与可见首屏的研究线索",
+          "limitation": "无曝光/入口分母，未控制账号体量、帖龄、投放和外部分发。"
         },
         {
           "ref": "native-traffic-utility:O-XHS-005",
-          "role": "现场工作表研究线索"
+          "role": "现场工作表研究线索",
+          "evidence_layer": "live_public_proxy_audit",
+          "scope": "公开样本审计得到的任务适配或补采线索",
+          "limitation": "未形成同账号同窗口的一方流量实验，只能作为候选。"
         },
         {
           "ref": "native-traffic-utility:O-XHS-006",
-          "role": "一步一定位截图教程线索"
+          "role": "一步一定位截图教程线索",
+          "evidence_layer": "live_public_proxy_audit",
+          "scope": "公开样本审计得到的任务适配或补采线索",
+          "limitation": "未形成同账号同窗口的一方流量实验，只能作为候选。"
         },
         {
           "ref": "production-grade-evidence:starter-real-process-evidence",
-          "role": "真实过程证据候选"
+          "role": "真实过程证据候选",
+          "evidence_layer": "mixed_secondary_evidence",
+          "scope": "聚合审计文件中对应条目的限定作用域",
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
         }
-      ]
+      ],
+      "mechanism_kind": "content",
+      "required_material_codes": [
+        "work_object",
+        "current_source"
+      ],
+      "forbidden_material_codes": [
+        "fabricated_evidence",
+        "unlicensed_material"
+      ],
+      "requires": [],
+      "conflicts_with": [
+        "TM10"
+      ],
+      "activation": {
+        "phase": "first_screen_work_object",
+        "eligible_traffic_stages": [
+          "save_share",
+          "feed_stop",
+          "read_through"
+        ],
+        "eligible_primary_jobs": [
+          "search_answer",
+          "authority_statement",
+          "decision_support",
+          "explain"
+        ],
+        "material_match": "all_required_and_no_forbidden",
+        "note": "仅在任务、载体和素材门同时满足时激活；公开代理不能替代素材或一方指标。"
+      },
+      "priority": 94
     },
     {
       "mechanism_id": "TM06",
@@ -943,7 +1219,10 @@
           "screenshot_markup",
           "text_card",
           "collage_journal",
-          "other"
+          "other",
+          "process_video",
+          "screen_recording",
+          "talking_head_or_field_video"
         ],
         "fit_test": "候选、比较轴、测试条件和取舍能否在同一载体中被核对。",
         "avoid_when": [
@@ -1046,21 +1325,62 @@
       "source_refs": [
         {
           "ref": "operator-course-playbooks:P04",
-          "role": "统一测试协议比较矩阵"
+          "role": "统一测试协议比较矩阵",
+          "evidence_layer": "operator_course_experience",
+          "scope": "操盘者教学中的生产字段和待测假设",
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
         },
         {
           "ref": "native-traffic-utility:O-XHS-004",
-          "role": "比较轴研究线索"
+          "role": "比较轴研究线索",
+          "evidence_layer": "live_public_proxy_audit",
+          "scope": "公开样本审计得到的任务适配或补采线索",
+          "limitation": "未形成同账号同窗口的一方流量实验，只能作为候选。"
         },
         {
           "ref": "live-public-proxy-contrast:BEAUTY-COMPARISON",
-          "role": "样本范围公开代理边界"
+          "role": "样本范围公开代理边界",
+          "evidence_layer": "live_public_proxy",
+          "scope": "采集日公开互动与可见首屏的研究线索",
+          "limitation": "无曝光/入口分母，未控制账号体量、帖龄、投放和外部分发。"
         },
         {
           "ref": "brand-operator-case-playbooks:P07",
-          "role": "载体按任务选择"
+          "role": "载体按任务选择",
+          "evidence_layer": "brand_or_paid_case",
+          "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
         }
-      ]
+      ],
+      "mechanism_kind": "content",
+      "required_material_codes": [
+        "comparison_candidates",
+        "uniform_protocol"
+      ],
+      "forbidden_material_codes": [
+        "fabricated_evidence",
+        "unverifiable_claim"
+      ],
+      "requires": [],
+      "conflicts_with": [],
+      "activation": {
+        "phase": "comparison_body",
+        "eligible_traffic_stages": [
+          "save_share",
+          "feed_stop",
+          "read_through",
+          "comment_cocreation"
+        ],
+        "eligible_primary_jobs": [
+          "decision_support",
+          "search_answer",
+          "explain",
+          "trust_build"
+        ],
+        "material_match": "all_required_and_no_forbidden",
+        "note": "仅在任务、载体和素材门同时满足时激活；公开代理不能替代素材或一方指标。"
+      },
+      "priority": 96
     },
     {
       "mechanism_id": "TM07",
@@ -1090,12 +1410,15 @@
           "checklist_steps",
           "comparison_warning",
           "photo_annotation",
-          "text_card"
+          "text_card",
+          "screen_recording"
         ],
         "compatible": [
           "real_photo_diary",
           "collage_journal",
-          "other"
+          "other",
+          "process_video",
+          "talking_head_or_field_video"
         ],
         "fit_test": "载体是否呈现与查询一致的答案形态：步骤、比较、结果、路线、对象或解释。",
         "avoid_when": [
@@ -1206,29 +1529,76 @@
       "source_refs": [
         {
           "ref": "operator-course-playbooks:P05",
-          "role": "搜索意图阶梯"
+          "role": "搜索意图阶梯",
+          "evidence_layer": "operator_course_experience",
+          "scope": "操盘者教学中的生产字段和待测假设",
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
         },
         {
           "ref": "official-xhs-merchant-course:OX04",
-          "role": "官方商家课的推荐流/搜索流任务区分；固定时长主张已排除"
+          "role": "官方商家课的推荐流/搜索流任务区分；固定时长主张已排除",
+          "evidence_layer": "first_party_course_instruction",
+          "scope": "2024 年小红书电商学习中心公开商家生产教学",
+          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。"
         },
         {
           "ref": "brand-operator-case-playbooks:P08",
-          "role": "搜索意图簇"
+          "role": "搜索意图簇",
+          "evidence_layer": "brand_or_paid_case",
+          "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
         },
         {
           "ref": "production-grade-evidence:S1",
-          "role": "推荐与搜索任务差异"
+          "role": "推荐与搜索任务差异",
+          "evidence_layer": "mixed_secondary_evidence",
+          "scope": "聚合审计文件中对应条目的限定作用域",
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
         },
         {
           "ref": "production-grade-evidence:S19",
-          "role": "信搜分工的付费案例"
+          "role": "信搜分工的付费案例",
+          "evidence_layer": "mixed_secondary_evidence",
+          "scope": "聚合审计文件中对应条目的限定作用域",
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
         },
         {
           "ref": "production-grade-evidence:S31",
-          "role": "人×场景×趋势查询矩阵"
+          "role": "人×场景×趋势查询矩阵",
+          "evidence_layer": "mixed_secondary_evidence",
+          "scope": "聚合审计文件中对应条目的限定作用域",
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
         }
-      ]
+      ],
+      "mechanism_kind": "content",
+      "required_material_codes": [
+        "search_intent_sample",
+        "current_source"
+      ],
+      "forbidden_material_codes": [
+        "unverifiable_claim"
+      ],
+      "requires": [],
+      "conflicts_with": [],
+      "activation": {
+        "phase": "search_answer_map",
+        "eligible_traffic_stages": [
+          "save_share",
+          "feed_stop",
+          "read_through",
+          "profile_follow"
+        ],
+        "eligible_primary_jobs": [
+          "search_answer",
+          "explain",
+          "decision_support",
+          "conversion",
+          "authority_statement"
+        ],
+        "material_match": "all_required_and_no_forbidden",
+        "note": "仅在任务、载体和素材门同时满足时激活；公开代理不能替代素材或一方指标。"
+      },
+      "priority": 93
     },
     {
       "mechanism_id": "TM08",
@@ -1265,7 +1635,10 @@
           "comparison_warning",
           "collage_journal",
           "single_image_reminder",
-          "other"
+          "other",
+          "process_video",
+          "screen_recording",
+          "talking_head_or_field_video"
         ],
         "compatible": [
           "unknown"
@@ -1374,25 +1747,93 @@
       "source_refs": [
         {
           "ref": "brand-operator-case-playbooks:P07",
-          "role": "载体按任务选择"
+          "role": "载体按任务选择",
+          "evidence_layer": "brand_or_paid_case",
+          "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
         },
         {
           "ref": "official-xhs-merchant-course:OX05",
-          "role": "官方商家课的常见封面载体族；只作任务适配，不作爆款版式"
+          "role": "官方商家课的常见封面载体族；只作任务适配，不作爆款版式",
+          "evidence_layer": "first_party_course_instruction",
+          "scope": "2024 年小红书电商学习中心公开商家生产教学",
+          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。"
         },
         {
-          "ref": "production-grade-evidence:rules-1-to-4",
-          "role": "机制沉淀与概念原型生产门"
+          "ref": "production-grade-evidence:rule-1",
+          "role": "机制沉淀与概念原型生产门",
+          "evidence_layer": "mixed_secondary_evidence",
+          "scope": "聚合审计文件中对应条目的限定作用域",
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+        },
+        {
+          "ref": "production-grade-evidence:rule-2",
+          "role": "机制沉淀与概念原型生产门",
+          "evidence_layer": "mixed_secondary_evidence",
+          "scope": "聚合审计文件中对应条目的限定作用域",
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+        },
+        {
+          "ref": "production-grade-evidence:rule-3",
+          "role": "机制沉淀与概念原型生产门",
+          "evidence_layer": "mixed_secondary_evidence",
+          "scope": "聚合审计文件中对应条目的限定作用域",
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+        },
+        {
+          "ref": "production-grade-evidence:rule-4",
+          "role": "机制沉淀与概念原型生产门",
+          "evidence_layer": "mixed_secondary_evidence",
+          "scope": "聚合审计文件中对应条目的限定作用域",
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
         },
         {
           "ref": "native-traffic-utility:cross-sample-hypotheses",
-          "role": "任务先于装饰、页面单一认知动作"
+          "role": "任务先于装饰、页面单一认知动作",
+          "evidence_layer": "live_public_proxy_audit",
+          "scope": "公开样本审计得到的任务适配或补采线索",
+          "limitation": "未形成同账号同窗口的一方流量实验，只能作为候选。"
         },
         {
           "ref": "live-public-proxy-contrast:conclusion",
-          "role": "形式不是充分条件"
+          "role": "形式不是充分条件",
+          "evidence_layer": "live_public_proxy",
+          "scope": "采集日公开互动与可见首屏的研究线索",
+          "limitation": "无曝光/入口分母，未控制账号体量、帖龄、投放和外部分发。"
         }
-      ]
+      ],
+      "mechanism_kind": "carrier_router",
+      "required_material_codes": [
+        "proof_inventory"
+      ],
+      "forbidden_material_codes": [
+        "fabricated_evidence",
+        "unlicensed_material"
+      ],
+      "requires": [],
+      "conflicts_with": [],
+      "activation": {
+        "phase": "carrier_routing",
+        "eligible_traffic_stages": [
+          "read_through",
+          "feed_stop",
+          "save_share",
+          "profile_follow"
+        ],
+        "eligible_primary_jobs": [
+          "feed_stop",
+          "search_answer",
+          "explain",
+          "trust_build",
+          "decision_support",
+          "relationship_build",
+          "conversion",
+          "authority_statement"
+        ],
+        "material_match": "all_required_and_no_forbidden",
+        "note": "仅在任务、载体和素材门同时满足时激活；公开代理不能替代素材或一方指标。"
+      },
+      "priority": 96
     },
     {
       "mechanism_id": "TM09",
@@ -1421,11 +1862,14 @@
           "real_photo_diary",
           "photo_annotation",
           "collage_journal",
-          "other"
+          "other",
+          "process_video",
+          "talking_head_or_field_video"
         ],
         "compatible": [
           "comparison_warning",
-          "checklist_steps"
+          "checklist_steps",
+          "screen_recording"
         ],
         "fit_test": "画面中的痕迹、环境、动作和不一致是否真实证明使用关系，而非模拟‘素人感’。",
         "avoid_when": [
@@ -1536,26 +1980,68 @@
       "source_refs": [
         {
           "ref": "brand-operator-case-playbooks:P06",
-          "role": "真实使用证据与有边界不完美"
+          "role": "真实使用证据与有边界不完美",
+          "evidence_layer": "brand_or_paid_case",
+          "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
         },
         {
           "ref": "production-grade-evidence:S15",
-          "role": "KOC 原生劳动研究"
+          "role": "KOC 原生劳动研究",
+          "evidence_layer": "mixed_secondary_evidence",
+          "scope": "聚合审计文件中对应条目的限定作用域",
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
         },
         {
           "ref": "production-grade-evidence:S32",
-          "role": "内容资产来源与人感边界"
+          "role": "内容资产来源与人感边界",
+          "evidence_layer": "mixed_secondary_evidence",
+          "scope": "聚合审计文件中对应条目的限定作用域",
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
         },
         {
           "ref": "live-public-proxy-contrast:BEAUTY-COMPARISON",
-          "role": "产品实拍高低共存边界"
+          "role": "产品实拍高低共存边界",
+          "evidence_layer": "live_public_proxy",
+          "scope": "采集日公开互动与可见首屏的研究线索",
+          "limitation": "无曝光/入口分母，未控制账号体量、帖龄、投放和外部分发。"
         }
-      ]
+      ],
+      "mechanism_kind": "truth_gate",
+      "required_material_codes": [
+        "human_use_record",
+        "rights_clearance"
+      ],
+      "forbidden_material_codes": [
+        "ai_output_as_real_experience",
+        "unlicensed_material"
+      ],
+      "requires": [],
+      "conflicts_with": [],
+      "activation": {
+        "phase": "use_proof",
+        "eligible_traffic_stages": [
+          "read_through",
+          "save_share",
+          "comment_cocreation",
+          "profile_follow"
+        ],
+        "eligible_primary_jobs": [
+          "trust_build",
+          "decision_support",
+          "conversion",
+          "relationship_build",
+          "explain"
+        ],
+        "material_match": "all_required_and_no_forbidden",
+        "note": "仅在任务、载体和素材门同时满足时激活；公开代理不能替代素材或一方指标。"
+      },
+      "priority": 94
     },
     {
       "mechanism_id": "TM10",
-      "name": "身份张力 × 系列签名 × 新鲜负载",
-      "one_line_formula": "可信身份或稳定代理视角 + 有边界的反常问题 + 可识别系列常量 + 每篇新的事实/情节/工具价值。",
+      "name": "角色/系列承诺 × 稳定签名 × 新鲜负载",
+      "one_line_formula": "可信角色或稳定代理视角 + 明确系列承诺 + 可识别签名 + 每篇新事实/情节/工具；身份张力仅在真实且有用时可选，不是必填钩子。",
       "categories": [
         "all_categories_with_truthful_identity_or_explicit_fiction"
       ],
@@ -1580,10 +2066,12 @@
           "single_image_reminder",
           "real_photo_diary",
           "collage_journal",
-          "other"
+          "other",
+          "talking_head_or_field_video"
         ],
         "compatible": [
-          "chat_dramatization"
+          "chat_dramatization",
+          "process_video"
         ],
         "fit_test": "系列常量是否帮助识别，且每篇仍提供新的处境、证据和 payoff。",
         "avoid_when": [
@@ -1593,19 +2081,20 @@
         ]
       },
       "inputs": [
-        "可证明身份、真实视角或显著虚构代理",
-        "具体阶段/冲突/风险与边界",
-        "系列地图和稳定识别资产",
-        "每篇独立的新事实、故事推进或实用负载"
+        "可验证角色或显著披露的虚构代理",
+        "读者可以持续期待的系列承诺",
+        "少量稳定签名元素",
+        "本篇独有的新事实、新情节、新工具或新选择",
+        "可选：有证据且不制造恐慌的身份/情境张力"
       ],
       "actions": {
         "title": [
-          "身份负责建立解释权，张力提出有边界的问题；不冒充资历或制造恐慌。",
-          "保留系列签名但更换具体任务和新信息。"
+          "先兑现本篇新负载；系列名和角色只提供识别，不替代题目。",
+          "只有真实反常问题能帮助理解时才使用张力；无张力也可成立。"
         ],
         "cover": [
-          "保持少量可识别常量，首屏仍突出本篇独特矛盾或证据。",
-          "不把固定大字卡、身体代理或配色当表现因子。"
+          "保留少量稳定签名，让本篇独特证据、对象或矛盾成为第一注意点。",
+          "不复制他人的身体部位、拟人代理、口头禅、角色名或独特构图。"
         ],
         "body": [
           "事件/判断 → 依据 → 后果/反例 → 本篇 payoff → 下一问题。",
@@ -1692,25 +2181,72 @@
       "source_refs": [
         {
           "ref": "operator-course-playbooks:P12",
-          "role": "身份张力和系列延展"
+          "role": "身份张力和系列延展",
+          "evidence_layer": "operator_course_experience",
+          "scope": "操盘者教学中的生产字段和待测假设",
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
         },
         {
           "ref": "brand-operator-case-playbooks:P10",
-          "role": "长期叙事轴心"
+          "role": "长期叙事轴心",
+          "evidence_layer": "brand_or_paid_case",
+          "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
         },
         {
           "ref": "live-public-proxy-contrast:DOG-SERIES",
-          "role": "同模板系列边界与视觉反证候选"
+          "role": "同模板系列边界与视觉反证候选",
+          "evidence_layer": "live_public_proxy",
+          "scope": "采集日公开互动与可见首屏的研究线索",
+          "limitation": "无曝光/入口分母，未控制账号体量、帖龄、投放和外部分发。"
         },
         {
           "ref": "production-grade-evidence:S16",
-          "role": "长期叙事轴心生产方法"
+          "role": "长期叙事轴心生产方法",
+          "evidence_layer": "mixed_secondary_evidence",
+          "scope": "聚合审计文件中对应条目的限定作用域",
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
         },
         {
           "ref": "academic-multimodal-evidence:S1",
-          "role": "账号历史表达可作候选上下文，但相似度/ROUGE 不得当流量分；每篇保留新信息负载"
+          "role": "账号历史表达可作候选上下文，但相似度/ROUGE 不得当流量分；每篇保留新信息负载",
+          "evidence_layer": "academic_study",
+          "scope": "论文研究设计所定义的平台、样本与任务",
+          "limitation": "平台、时期、抽样和代理标签限制迁移，不证明当前推荐因果。"
         }
-      ]
+      ],
+      "mechanism_kind": "content",
+      "required_material_codes": [
+        "series_promise",
+        "fresh_payload"
+      ],
+      "forbidden_material_codes": [
+        "fabricated_credential",
+        "copied_signature"
+      ],
+      "requires": [],
+      "conflicts_with": [
+        "TM05"
+      ],
+      "activation": {
+        "phase": "series_contract",
+        "eligible_traffic_stages": [
+          "profile_follow",
+          "feed_stop",
+          "comment_cocreation",
+          "read_through"
+        ],
+        "eligible_primary_jobs": [
+          "relationship_build",
+          "feed_stop",
+          "explain",
+          "authority_statement",
+          "trust_build"
+        ],
+        "material_match": "all_required_and_no_forbidden",
+        "note": "仅在任务、载体和素材门同时满足时激活；公开代理不能替代素材或一方指标。"
+      },
+      "priority": 88
     },
     {
       "mechanism_id": "TM11",
@@ -1738,12 +2274,15 @@
         "preferred": [
           "real_photo_diary",
           "collage_journal",
-          "other"
+          "other",
+          "talking_head_or_field_video",
+          "process_video"
         ],
         "compatible": [
           "text_card",
           "chat_dramatization",
-          "single_image_reminder"
+          "single_image_reminder",
+          "screen_recording"
         ],
         "fit_test": "载体能否证明冲突、转折和结果，而不是只有总结性鸡汤。",
         "avoid_when": [
@@ -1846,17 +2385,56 @@
       "source_refs": [
         {
           "ref": "operator-course-playbooks:P01",
-          "role": "共同阻力到更好生活"
+          "role": "共同阻力到更好生活",
+          "evidence_layer": "operator_course_experience",
+          "scope": "操盘者教学中的生产字段和待测假设",
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
         },
         {
           "ref": "operator-course-playbooks:P07",
-          "role": "场景情绪入口与实用出口"
+          "role": "场景情绪入口与实用出口",
+          "evidence_layer": "operator_course_experience",
+          "scope": "操盘者教学中的生产字段和待测假设",
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
         },
         {
           "ref": "production-grade-evidence:S4",
-          "role": "兴趣、生活融入和利他公开表述"
+          "role": "兴趣、生活融入和利他公开表述",
+          "evidence_layer": "mixed_secondary_evidence",
+          "scope": "聚合审计文件中对应条目的限定作用域",
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
         }
-      ]
+      ],
+      "mechanism_kind": "content",
+      "required_material_codes": [
+        "authorized_experience",
+        "actionable_method"
+      ],
+      "forbidden_material_codes": [
+        "fabricated_chat_presented_as_real",
+        "unverifiable_claim"
+      ],
+      "requires": [],
+      "conflicts_with": [],
+      "activation": {
+        "phase": "narrative_body",
+        "eligible_traffic_stages": [
+          "read_through",
+          "feed_stop",
+          "save_share",
+          "profile_follow",
+          "comment_cocreation"
+        ],
+        "eligible_primary_jobs": [
+          "relationship_build",
+          "trust_build",
+          "explain",
+          "search_answer"
+        ],
+        "material_match": "all_required_and_no_forbidden",
+        "note": "仅在任务、载体和素材门同时满足时激活；公开代理不能替代素材或一方指标。"
+      },
+      "priority": 87
     },
     {
       "mechanism_id": "TM12",
@@ -1886,10 +2464,13 @@
           "photo_annotation",
           "comparison_warning",
           "text_card",
-          "other"
+          "other",
+          "screen_recording",
+          "talking_head_or_field_video"
         ],
         "compatible": [
-          "real_photo_diary"
+          "real_photo_diary",
+          "process_video"
         ],
         "fit_test": "载体能否解释问题、机制和选择标准，而不是只露出品牌。",
         "avoid_when": [
@@ -1990,17 +2571,54 @@
       "source_refs": [
         {
           "ref": "operator-course-playbooks:P06",
-          "role": "陌生类目先问题教育"
+          "role": "陌生类目先问题教育",
+          "evidence_layer": "operator_course_experience",
+          "scope": "操盘者教学中的生产字段和待测假设",
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
         },
         {
           "ref": "brand-operator-case-playbooks:P01",
-          "role": "用户语言翻译输入"
+          "role": "用户语言翻译输入",
+          "evidence_layer": "brand_or_paid_case",
+          "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
         },
         {
           "ref": "production-grade-evidence:S22",
-          "role": "功能、动机、场景和可感知结果分层"
+          "role": "功能、动机、场景和可感知结果分层",
+          "evidence_layer": "mixed_secondary_evidence",
+          "scope": "聚合审计文件中对应条目的限定作用域",
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
         }
-      ]
+      ],
+      "mechanism_kind": "content",
+      "required_material_codes": [
+        "problem_evidence",
+        "category_facts"
+      ],
+      "forbidden_material_codes": [
+        "unverifiable_claim"
+      ],
+      "requires": [],
+      "conflicts_with": [],
+      "activation": {
+        "phase": "category_education",
+        "eligible_traffic_stages": [
+          "read_through",
+          "feed_stop",
+          "save_share"
+        ],
+        "eligible_primary_jobs": [
+          "explain",
+          "search_answer",
+          "decision_support",
+          "conversion",
+          "authority_statement"
+        ],
+        "material_match": "all_required_and_no_forbidden",
+        "note": "仅在任务、载体和素材门同时满足时激活；公开代理不能替代素材或一方指标。"
+      },
+      "priority": 92
     },
     {
       "mechanism_id": "TM13",
@@ -2037,7 +2655,10 @@
           "other"
         ],
         "compatible": [
-          "chat_dramatization"
+          "chat_dramatization",
+          "process_video",
+          "screen_recording",
+          "talking_head_or_field_video"
         ],
         "fit_test": "读者是否能基于正文证据提出条件、反例、下一步或纠错，而非只能刷情绪词。",
         "avoid_when": [
@@ -2144,25 +2765,69 @@
       "source_refs": [
         {
           "ref": "operator-course-playbooks:P08",
-          "role": "评论语义校验"
+          "role": "评论语义校验",
+          "evidence_layer": "operator_course_experience",
+          "scope": "操盘者教学中的生产字段和待测假设",
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
         },
         {
           "ref": "official-xhs-merchant-course:OX08",
-          "role": "官方商家课的真实答疑、异议回收与下一题闭环"
+          "role": "官方商家课的真实答疑、异议回收与下一题闭环",
+          "evidence_layer": "first_party_course_instruction",
+          "scope": "2024 年小红书电商学习中心公开商家生产教学",
+          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。"
         },
         {
           "ref": "brand-operator-case-playbooks:P11",
-          "role": "真问题反馈闭环"
+          "role": "真问题反馈闭环",
+          "evidence_layer": "brand_or_paid_case",
+          "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
         },
         {
           "ref": "live-public-proxy-contrast:DOG-SERIES",
-          "role": "语义回声候选"
+          "role": "语义回声候选",
+          "evidence_layer": "live_public_proxy",
+          "scope": "采集日公开互动与可见首屏的研究线索",
+          "limitation": "无曝光/入口分母，未控制账号体量、帖龄、投放和外部分发。"
         },
         {
           "ref": "brand-operator-case-playbooks:C07",
-          "role": "伪评论危险反例"
+          "role": "伪评论危险反例",
+          "evidence_layer": "brand_or_paid_case",
+          "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
         }
-      ]
+      ],
+      "mechanism_kind": "feedback",
+      "required_material_codes": [
+        "real_comments"
+      ],
+      "forbidden_material_codes": [
+        "fabricated_comment",
+        "coordinated_engagement"
+      ],
+      "requires": [],
+      "conflicts_with": [],
+      "activation": {
+        "phase": "post_publish_feedback",
+        "eligible_traffic_stages": [
+          "comment_cocreation",
+          "profile_follow",
+          "read_through"
+        ],
+        "eligible_primary_jobs": [
+          "relationship_build",
+          "trust_build",
+          "explain",
+          "decision_support",
+          "conversion",
+          "authority_statement"
+        ],
+        "material_match": "all_required_and_no_forbidden",
+        "note": "仅在任务、载体和素材门同时满足时激活；公开代理不能替代素材或一方指标。"
+      },
+      "priority": 93
     },
     {
       "mechanism_id": "TM14",
@@ -2204,7 +2869,10 @@
         ],
         "compatible": [
           "chat_dramatization",
-          "unknown"
+          "unknown",
+          "process_video",
+          "screen_recording",
+          "talking_head_or_field_video"
         ],
         "fit_test": "评估对象必须与同一 primary_job、carrier、账号阶段和观察窗比较。",
         "avoid_when": [
@@ -2313,21 +2981,67 @@
       "source_refs": [
         {
           "ref": "brand-operator-case-playbooks:P05",
-          "role": "有效爆文门"
+          "role": "有效爆文门",
+          "evidence_layer": "brand_or_paid_case",
+          "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
         },
         {
           "ref": "brand-operator-case-playbooks:C05",
-          "role": "高互动注意力泄漏反例"
+          "role": "高互动注意力泄漏反例",
+          "evidence_layer": "brand_or_paid_case",
+          "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
         },
         {
           "ref": "operator-course-playbooks:P08",
-          "role": "评论语义校验"
+          "role": "评论语义校验",
+          "evidence_layer": "operator_course_experience",
+          "scope": "操盘者教学中的生产字段和待测假设",
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
         },
         {
           "ref": "production-grade-evidence:rule-10",
-          "role": "按任务选指标"
+          "role": "按任务选指标",
+          "evidence_layer": "mixed_secondary_evidence",
+          "scope": "聚合审计文件中对应条目的限定作用域",
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
         }
-      ]
+      ],
+      "mechanism_kind": "measurement",
+      "required_material_codes": [
+        "first_party_metrics",
+        "comment_semantics"
+      ],
+      "forbidden_material_codes": [
+        "paid_organic_mixed",
+        "coordinated_engagement"
+      ],
+      "requires": [],
+      "conflicts_with": [],
+      "activation": {
+        "phase": "diagnosis",
+        "eligible_traffic_stages": [
+          "comment_cocreation",
+          "feed_stop",
+          "read_through",
+          "save_share",
+          "profile_follow"
+        ],
+        "eligible_primary_jobs": [
+          "feed_stop",
+          "search_answer",
+          "explain",
+          "trust_build",
+          "decision_support",
+          "relationship_build",
+          "conversion",
+          "authority_statement"
+        ],
+        "material_match": "all_required_and_no_forbidden",
+        "note": "仅在任务、载体和素材门同时满足时激活；公开代理不能替代素材或一方指标。"
+      },
+      "priority": 98
     },
     {
       "mechanism_id": "TM15",
@@ -2368,7 +3082,10 @@
           "other"
         ],
         "compatible": [
-          "unknown"
+          "unknown",
+          "process_video",
+          "screen_recording",
+          "talking_head_or_field_video"
         ],
         "fit_test": "候选是否保持任务、答案、素材权利和核心事实稳定，只改变预注册变量。",
         "avoid_when": [
@@ -2481,29 +3198,80 @@
       "source_refs": [
         {
           "ref": "brand-operator-case-playbooks:P04",
-          "role": "多候选筛选与分面放大"
+          "role": "多候选筛选与分面放大",
+          "evidence_layer": "brand_or_paid_case",
+          "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
         },
         {
           "ref": "brand-operator-case-playbooks:P09",
-          "role": "证据驱动选题会"
+          "role": "证据驱动选题会",
+          "evidence_layer": "brand_or_paid_case",
+          "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
         },
         {
           "ref": "operator-course-playbooks:P11",
-          "role": "漏斗诊断与资产循环"
+          "role": "漏斗诊断与资产循环",
+          "evidence_layer": "operator_course_experience",
+          "scope": "操盘者教学中的生产字段和待测假设",
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
         },
         {
           "ref": "official-xhs-merchant-course:OX09",
-          "role": "官方商家课的固定观察窗与自账号样本库；七天仅为可配置示例"
+          "role": "官方商家课的固定观察窗与自账号样本库；七天仅为可配置示例",
+          "evidence_layer": "first_party_course_instruction",
+          "scope": "2024 年小红书电商学习中心公开商家生产教学",
+          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。"
         },
         {
           "ref": "hidden-production-artifacts:HP05",
-          "role": "付费实验指标合同"
+          "role": "付费实验指标合同",
+          "evidence_layer": "production_artifact",
+          "scope": "公开岗位、流程、研究或生产文档中的组织做法",
+          "limitation": "支持生产流程设计，不支持流量效果。"
         },
         {
           "ref": "production-grade-evidence:closed-loop",
-          "role": "生产级闭环"
+          "role": "生产级闭环",
+          "evidence_layer": "mixed_secondary_evidence",
+          "scope": "聚合审计文件中对应条目的限定作用域",
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
         }
-      ]
+      ],
+      "mechanism_kind": "measurement",
+      "required_material_codes": [
+        "first_party_metrics",
+        "variant_log"
+      ],
+      "forbidden_material_codes": [
+        "paid_organic_mixed"
+      ],
+      "requires": [],
+      "conflicts_with": [],
+      "activation": {
+        "phase": "experiment",
+        "eligible_traffic_stages": [
+          "feed_stop",
+          "read_through",
+          "save_share",
+          "comment_cocreation",
+          "profile_follow"
+        ],
+        "eligible_primary_jobs": [
+          "feed_stop",
+          "search_answer",
+          "explain",
+          "trust_build",
+          "decision_support",
+          "relationship_build",
+          "conversion",
+          "authority_statement"
+        ],
+        "material_match": "all_required_and_no_forbidden",
+        "note": "仅在任务、载体和素材门同时满足时激活；公开代理不能替代素材或一方指标。"
+      },
+      "priority": 96
     },
     {
       "mechanism_id": "TM16",
@@ -2543,7 +3311,10 @@
           "other"
         ],
         "compatible": [
-          "chat_dramatization"
+          "chat_dramatization",
+          "process_video",
+          "screen_recording",
+          "talking_head_or_field_video"
         ],
         "fit_test": "最终文字、画面和口播能否由真实创作者用现有素材完成并逐项回源。",
         "avoid_when": [
@@ -2649,25 +3420,81 @@
       "source_refs": [
         {
           "ref": "hidden-production-artifacts:HP08",
-          "role": "AI 初稿下游修复"
+          "role": "AI 初稿下游修复",
+          "evidence_layer": "production_artifact",
+          "scope": "公开岗位、流程、研究或生产文档中的组织做法",
+          "limitation": "支持生产流程设计，不支持流量效果。"
         },
         {
           "ref": "hidden-production-artifacts:HPS18",
-          "role": "16 位创作者访谈研究"
+          "role": "16 位创作者访谈研究",
+          "evidence_layer": "production_artifact",
+          "scope": "公开岗位、流程、研究或生产文档中的组织做法",
+          "limitation": "支持生产流程设计，不支持流量效果。"
         },
         {
           "ref": "production-grade-evidence:S15",
-          "role": "原生劳动与真实性边界"
+          "role": "原生劳动与真实性边界",
+          "evidence_layer": "mixed_secondary_evidence",
+          "scope": "聚合审计文件中对应条目的限定作用域",
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
         },
         {
           "ref": "brand-operator-case-playbooks:C07",
-          "role": "AI 批量同质化失败观察"
+          "role": "AI 批量同质化失败观察",
+          "evidence_layer": "brand_or_paid_case",
+          "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
         },
         {
-          "ref": "academic-multimodal-evidence:S3/S5",
-          "role": "原生感背后的生产劳动与 AI 草稿的来源/声音/事实 QA；不支持纯人或混合必胜"
+          "ref": "academic-multimodal-evidence:S3",
+          "role": "原生感背后的生产劳动与 AI 草稿的来源/声音/事实 QA；不支持纯人或混合必胜",
+          "evidence_layer": "academic_study",
+          "scope": "论文研究设计所定义的平台、样本与任务",
+          "limitation": "平台、时期、抽样和代理标签限制迁移，不证明当前推荐因果。"
+        },
+        {
+          "ref": "academic-multimodal-evidence:S5",
+          "role": "原生感背后的生产劳动与 AI 草稿的来源/声音/事实 QA；不支持纯人或混合必胜",
+          "evidence_layer": "academic_study",
+          "scope": "论文研究设计所定义的平台、样本与任务",
+          "limitation": "平台、时期、抽样和代理标签限制迁移，不证明当前推荐因果。"
         }
-      ]
+      ],
+      "mechanism_kind": "truth_gate",
+      "required_material_codes": [
+        "ai_draft",
+        "human_review"
+      ],
+      "forbidden_material_codes": [
+        "ai_output_as_real_experience"
+      ],
+      "requires": [
+        "TM17"
+      ],
+      "conflicts_with": [],
+      "activation": {
+        "phase": "pre_publish_qa",
+        "eligible_traffic_stages": [
+          "read_through",
+          "feed_stop",
+          "profile_follow",
+          "comment_cocreation"
+        ],
+        "eligible_primary_jobs": [
+          "feed_stop",
+          "search_answer",
+          "explain",
+          "trust_build",
+          "decision_support",
+          "relationship_build",
+          "conversion",
+          "authority_statement"
+        ],
+        "material_match": "all_required_and_no_forbidden",
+        "note": "仅在任务、载体和素材门同时满足时激活；公开代理不能替代素材或一方指标。"
+      },
+      "priority": 95
     },
     {
       "mechanism_id": "TM17",
@@ -2709,7 +3536,10 @@
           "unknown"
         ],
         "compatible": [
-          "chat_dramatization"
+          "chat_dramatization",
+          "process_video",
+          "screen_recording",
+          "talking_head_or_field_video"
         ],
         "fit_test": "无论载体为何，能否从成品回链到 brief、真实素材、权利、供给来源、版本和同口径指标。",
         "avoid_when": [
@@ -2819,29 +3649,236 @@
       "source_refs": [
         {
           "ref": "hidden-production-artifacts:HP01",
-          "role": "开写前生产合同"
+          "role": "开写前生产合同",
+          "evidence_layer": "production_artifact",
+          "scope": "公开岗位、流程、研究或生产文档中的组织做法",
+          "limitation": "支持生产流程设计，不支持流量效果。"
         },
         {
           "ref": "hidden-production-artifacts:HP04",
-          "role": "话题供给来源标签"
+          "role": "话题供给来源标签",
+          "evidence_layer": "production_artifact",
+          "scope": "公开岗位、流程、研究或生产文档中的组织做法",
+          "limitation": "支持生产流程设计，不支持流量效果。"
         },
         {
           "ref": "hidden-production-artifacts:HP09",
-          "role": "数据血缘与观察窗"
+          "role": "数据血缘与观察窗",
+          "evidence_layer": "production_artifact",
+          "scope": "公开岗位、流程、研究或生产文档中的组织做法",
+          "limitation": "支持生产流程设计，不支持流量效果。"
         },
         {
-          "ref": "production-grade-evidence:rules-8-to-12",
-          "role": "自然/付费、生产门、指标与复现约束"
+          "ref": "production-grade-evidence:rule-8",
+          "role": "自然/付费、生产门、指标与复现约束",
+          "evidence_layer": "mixed_secondary_evidence",
+          "scope": "聚合审计文件中对应条目的限定作用域",
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+        },
+        {
+          "ref": "production-grade-evidence:rule-9",
+          "role": "自然/付费、生产门、指标与复现约束",
+          "evidence_layer": "mixed_secondary_evidence",
+          "scope": "聚合审计文件中对应条目的限定作用域",
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+        },
+        {
+          "ref": "production-grade-evidence:rule-10",
+          "role": "自然/付费、生产门、指标与复现约束",
+          "evidence_layer": "mixed_secondary_evidence",
+          "scope": "聚合审计文件中对应条目的限定作用域",
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+        },
+        {
+          "ref": "production-grade-evidence:rule-11",
+          "role": "自然/付费、生产门、指标与复现约束",
+          "evidence_layer": "mixed_secondary_evidence",
+          "scope": "聚合审计文件中对应条目的限定作用域",
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+        },
+        {
+          "ref": "production-grade-evidence:rule-12",
+          "role": "自然/付费、生产门、指标与复现约束",
+          "evidence_layer": "mixed_secondary_evidence",
+          "scope": "聚合审计文件中对应条目的限定作用域",
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
         },
         {
           "ref": "native-traffic-utility:machine-recapture-contract",
-          "role": "补采与 matched control 合同"
+          "role": "补采与 matched control 合同",
+          "evidence_layer": "live_public_proxy_audit",
+          "scope": "公开样本审计得到的任务适配或补采线索",
+          "limitation": "未形成同账号同窗口的一方流量实验，只能作为候选。"
         },
         {
-          "ref": "academic-multimodal-evidence:S2/S4",
-          "role": "帖子年龄、商业状态、估算分母与全模态风险审计边界"
+          "ref": "academic-multimodal-evidence:S2",
+          "role": "帖子年龄、商业状态、估算分母与全模态风险审计边界",
+          "evidence_layer": "academic_study",
+          "scope": "论文研究设计所定义的平台、样本与任务",
+          "limitation": "平台、时期、抽样和代理标签限制迁移，不证明当前推荐因果。"
+        },
+        {
+          "ref": "academic-multimodal-evidence:S4",
+          "role": "帖子年龄、商业状态、估算分母与全模态风险审计边界",
+          "evidence_layer": "academic_study",
+          "scope": "论文研究设计所定义的平台、样本与任务",
+          "limitation": "平台、时期、抽样和代理标签限制迁移，不证明当前推荐因果。"
         }
-      ]
+      ],
+      "mechanism_kind": "governance",
+      "required_material_codes": [
+        "source_ledger",
+        "version_log",
+        "rights_clearance"
+      ],
+      "forbidden_material_codes": [
+        "paid_organic_mixed",
+        "unlicensed_material"
+      ],
+      "requires": [],
+      "conflicts_with": [],
+      "activation": {
+        "phase": "publication_lineage",
+        "eligible_traffic_stages": [
+          "profile_follow",
+          "feed_stop",
+          "read_through",
+          "save_share",
+          "comment_cocreation"
+        ],
+        "eligible_primary_jobs": [
+          "feed_stop",
+          "search_answer",
+          "explain",
+          "trust_build",
+          "decision_support",
+          "relationship_build",
+          "conversion",
+          "authority_statement"
+        ],
+        "material_match": "all_required_and_no_forbidden",
+        "note": "仅在任务、载体和素材门同时满足时激活；公开代理不能替代素材或一方指标。"
+      },
+      "priority": 100
     }
-  ]
+  ],
+  "material_code_taxonomy": [
+    "promise",
+    "real_proof",
+    "user_language",
+    "scene_observation",
+    "before_after_sequence",
+    "constraint_cost",
+    "work_object",
+    "current_source",
+    "comparison_candidates",
+    "uniform_protocol",
+    "search_intent_sample",
+    "proof_inventory",
+    "human_use_record",
+    "rights_clearance",
+    "series_promise",
+    "fresh_payload",
+    "authorized_experience",
+    "actionable_method",
+    "problem_evidence",
+    "category_facts",
+    "real_comments",
+    "first_party_metrics",
+    "comment_semantics",
+    "variant_log",
+    "ai_draft",
+    "human_review",
+    "source_ledger",
+    "version_log",
+    "authorized_chat_original",
+    "fiction_disclosure",
+    "real_process_video",
+    "current_interface_capture",
+    "privacy_redaction",
+    "real_person_authorized",
+    "spoken_claim_sources"
+  ],
+  "forbidden_material_code_taxonomy": [
+    "fabricated_evidence",
+    "unverifiable_claim",
+    "unlicensed_material",
+    "fabricated_chat_presented_as_real",
+    "private_chat_without_authorization",
+    "fabricated_credential",
+    "copied_signature",
+    "fabricated_comment",
+    "coordinated_engagement",
+    "paid_organic_mixed",
+    "ai_output_as_real_experience"
+  ],
+  "mechanism_kind_taxonomy": [
+    "content",
+    "carrier_router",
+    "truth_gate",
+    "feedback",
+    "measurement",
+    "governance"
+  ],
+  "carrier_truth_conditions": {
+    "chat_dramatization": {
+      "required_all_material_codes": [
+        "rights_clearance"
+      ],
+      "required_any_material_codes": [
+        "authorized_chat_original",
+        "fiction_disclosure"
+      ],
+      "missing_material_code": "authorized_chat_original_or_fiction_disclosure",
+      "forbidden_material_codes": [
+        "fabricated_chat_presented_as_real",
+        "private_chat_without_authorization"
+      ],
+      "truth_note": "真实聊天须有原始记录与授权；虚构/合成聊天必须在画面或正文显著披露，不得伪装真人投稿。"
+    },
+    "process_video": {
+      "required_all_material_codes": [
+        "rights_clearance"
+      ],
+      "required_any_material_codes": [
+        "real_process_video",
+        "before_after_sequence"
+      ],
+      "missing_material_code": "real_process_video_or_sequence",
+      "forbidden_material_codes": [
+        "fabricated_evidence",
+        "unlicensed_material"
+      ],
+      "truth_note": "过程视频必须来自可授权的真实过程；补拍或演示要标明，不把生成镜头当结果证据。"
+    },
+    "screen_recording": {
+      "required_all_material_codes": [
+        "current_interface_capture",
+        "privacy_redaction"
+      ],
+      "required_any_material_codes": [],
+      "missing_material_code": "current_interface_capture_and_privacy_redaction",
+      "forbidden_material_codes": [
+        "fabricated_evidence",
+        "private_chat_without_authorization"
+      ],
+      "truth_note": "录屏须标版本/日期并完成隐私遮罩；过期界面只可作历史示例。"
+    },
+    "talking_head_or_field_video": {
+      "required_all_material_codes": [
+        "real_person_authorized",
+        "rights_clearance"
+      ],
+      "required_any_material_codes": [
+        "spoken_claim_sources",
+        "authorized_experience"
+      ],
+      "missing_material_code": "authorized_speaker_and_claim_basis",
+      "forbidden_material_codes": [
+        "fabricated_credential",
+        "unlicensed_material"
+      ],
+      "truth_note": "出镜者、场地和素材须授权；资历、数字和经历必须能追溯，情景演绎需披露。"
+    }
+  }
 }

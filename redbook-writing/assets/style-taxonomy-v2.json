@@ -149,6 +149,9 @@
     "comparison_warning",
     "collage_journal",
     "single_image_reminder",
+    "process_video",
+    "screen_recording",
+    "talking_head_or_field_video",
     "unknown",
     "other"
   ],

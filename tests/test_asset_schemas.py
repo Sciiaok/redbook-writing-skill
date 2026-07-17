@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import importlib.util
+import json
 import re
 import sys
 import unittest
@@ -255,6 +256,17 @@ class AssetSchemaTests(unittest.TestCase):
     def test_private_style_library_is_ignored(self) -> None:
         lines = (ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
         self.assertIn("**/_style_library/", lines)
+
+    def test_style_taxonomies_include_native_video_carriers(self) -> None:
+        expected = {
+            "process_video",
+            "screen_recording",
+            "talking_head_or_field_video",
+        }
+        payload = json.loads(
+            (SKILL / "assets" / "style-taxonomy-v2.json").read_text(encoding="utf-8")
+        )
+        self.assertTrue(expected.issubset(payload["carrier"]))
 
     def test_v2_style_templates_exist_without_fabricated_rows(self) -> None:
         csv_contracts = {
