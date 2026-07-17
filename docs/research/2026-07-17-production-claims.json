@@ -1,7 +1,7 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "snapshot_date": "2026-07-17",
-  "hash_method": "SHA-256 of the raw HTTP response bytes fetched with curl -L --compressed on verified_at; an empty hash is never substituted with a URL hash and forces a non-supporting verification status",
+  "hash_method": "snapshot_sha256 is SHA-256 of raw HTTP response bytes fetched with curl -L --compressed on verified_at; claim_text_hash is SHA-256 of the exact UTF-8 claim string; an unavailable raw snapshot remains null and machine_usable=false rather than being replaced with a URL hash",
   "claims": [
     {
       "claim_id": "CLM-S1-01",
@@ -11,12 +11,37 @@
       "primary_or_secondary": "primary_joint_report",
       "published_at": "2023",
       "verified_at": "2026-07-17",
+      "review_by": "2027-01-17",
       "page_or_section": "PDF p.3, organization process and measurement alignment",
+      "claim_type": "workflow_method",
       "claim": "Enterprise seeding requires cross-functional project organization, aligned measures, and a model refined with first-party, platform, and third-party data.",
-      "allowed_use": "Define production ownership, measurement fields, and an iterative operating loop.",
-      "prohibited_use": "Do not infer a visual style, algorithm weight, or fixed KPI threshold.",
+      "claim_text_hash": "c89fa71b8cce3632555d80bacc134e286df7987e55c0dd6d871eaabef858fa18",
+      "verification_status": "verified",
+      "machine_usable": true,
+      "applies_to": [
+        "content_brief",
+        "content_measurement",
+        "organic_content",
+        "paid_content"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not infer a visual style, algorithm weight, or fixed KPI threshold.",
+        "Public method evidence does not establish a causal Xiaohongshu style-performance effect."
+      ],
       "snapshot_sha256": "66bb7b4d3f2f645773b2d822c6c7edede49a851e225d36572c1bc520a8856ddf",
-      "verification_status": "verified"
+      "allowed_use_codes": [
+        "measurement_design"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S1-02",
@@ -26,12 +51,37 @@
       "primary_or_secondary": "primary_joint_report",
       "published_at": "2023",
       "verified_at": "2026-07-17",
+      "review_by": "2027-01-17",
       "page_or_section": "PDF p.10, feedback and dynamic iteration",
+      "claim_type": "workflow_method",
       "claim": "User sharing, comments, and interaction can supply feedback for product and experience iteration; content, creator, and exposure touchpoints need coordinated long-term operation.",
-      "allowed_use": "Require feedback capture and distinguish content, creator, and distribution objects.",
-      "prohibited_use": "Do not treat comments as representative demand without sampling controls or fabricate comments to create a narrative.",
+      "claim_text_hash": "6f64b0cd8ee9eb3fd04ea9cb84885b555a7ce4fa20db7339baf0c73003c122ef",
+      "verification_status": "verified",
+      "machine_usable": true,
+      "applies_to": [
+        "content_measurement",
+        "content_production",
+        "content_research"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not treat comments as representative demand without sampling controls or fabricate comments to create a narrative.",
+        "Public method evidence does not establish a causal Xiaohongshu style-performance effect."
+      ],
       "snapshot_sha256": "66bb7b4d3f2f645773b2d822c6c7edede49a851e225d36572c1bc520a8856ddf",
-      "verification_status": "verified"
+      "allowed_use_codes": [
+        "feedback_schema",
+        "production_process"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S1-03",
@@ -41,12 +91,37 @@
       "primary_or_secondary": "primary_joint_report",
       "published_at": "2023",
       "verified_at": "2026-07-17",
+      "review_by": "2027-01-17",
       "page_or_section": "PDF pp.31-32, KFS and content supply matrix",
+      "claim_type": "workflow_method",
       "claim": "KOL, KOC, and KOS have different content-production and feedback roles; KOC content can reveal selling points, usage scenes, and target groups.",
-      "allowed_use": "Model creator role, content role, feedback use, and distribution as separate fields.",
-      "prohibited_use": "Do not copy the report's historical performance ratios or use creator type as a quality guarantee.",
+      "claim_text_hash": "0ba7e59546dd3555be9f39d1585b28e7d2b88f5cfa68b2dfc73b4a7242342ec2",
+      "verification_status": "verified",
+      "machine_usable": true,
+      "applies_to": [
+        "content_brief",
+        "content_production",
+        "organization_governance"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not copy the report's historical performance ratios or use creator type as a quality guarantee.",
+        "Public method evidence does not establish a causal Xiaohongshu style-performance effect."
+      ],
       "snapshot_sha256": "66bb7b4d3f2f645773b2d822c6c7edede49a851e225d36572c1bc520a8856ddf",
-      "verification_status": "verified"
+      "allowed_use_codes": [
+        "brief_field_design",
+        "creator_role_schema"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S1-04",
@@ -56,12 +131,39 @@
       "primary_or_secondary": "primary_joint_report",
       "published_at": "2023",
       "verified_at": "2026-07-17",
+      "review_by": "2027-01-17",
       "page_or_section": "PDF pp.31-33, Feeds and Search roles",
+      "claim_type": "workflow_method",
       "claim": "Feeds and Search serve different decision stages, and paid optimization observes content, audience, and delivery-plan variables.",
-      "allowed_use": "Separate search/recommendation jobs and paid/natural evidence records.",
-      "prohibited_use": "Do not describe two natural posts as a randomized A/B test or transfer paid thresholds to organic distribution.",
+      "claim_text_hash": "91b7f2ee654189fc088e507213f337de83819fc789e5924ff8ba29dc55856539",
+      "verification_status": "verified",
+      "machine_usable": true,
+      "applies_to": [
+        "content_measurement",
+        "content_research",
+        "organic_content",
+        "paid_content"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not describe two natural posts as a randomized A/B test or transfer paid thresholds to organic distribution.",
+        "Public method evidence does not establish a causal Xiaohongshu style-performance effect."
+      ],
       "snapshot_sha256": "66bb7b4d3f2f645773b2d822c6c7edede49a851e225d36572c1bc520a8856ddf",
-      "verification_status": "verified"
+      "allowed_use_codes": [
+        "distribution_audit",
+        "surface_job_schema"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "organic_randomized_ab_claim",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S7-01",
@@ -69,14 +171,38 @@
       "source_url": "https://pgy.xiaohongshu.com/help/detail?id=6495c527d1eedeeb48fb18b1f875650e&userType=4",
       "grade": "A",
       "primary_or_secondary": "primary_official_rule",
-      "published_at": "2026-06",
+      "published_at": "2026-07-15",
       "verified_at": "2026-07-17",
+      "review_by": "2026-08-17",
       "page_or_section": "Rendered content-review rules page; safety, content, client, and advertising sections",
+      "claim_type": "current_rule",
       "claim": "Commercial content review separates safety, content quality, client requirements, and advertising requirements.",
-      "allowed_use": "Define separate compliance and quality gates and require delivery consistency.",
-      "prohibited_use": "Compliance passage does not imply traffic preference or excuse copying third-party content.",
-      "snapshot_sha256": "1ddb4f02a5cebe5439075c7c150f724f0f702869f9c1163b40b4e7606d043ffd",
-      "verification_status": "rendered_ui_verified_raw_shell_hashed"
+      "claim_text_hash": "80207a1adf9ac805cbd30203f7ca287597026098ded88862af2ee419e7684fae",
+      "verification_status": "rendered_ui_observed_spa_shell_not_body_snapshot_non_supporting",
+      "machine_usable": false,
+      "applies_to": [
+        "commercial_collaboration",
+        "content_review"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Compliance passage does not imply traffic preference or excuse copying third-party content.",
+        "Public method evidence does not establish a causal Xiaohongshu style-performance effect."
+      ],
+      "snapshot_sha256": null,
+      "allowed_use_codes": [
+        "compliance_gate",
+        "production_process"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S7-02",
@@ -84,14 +210,39 @@
       "source_url": "https://pgy.xiaohongshu.com/help/detail?id=6495c527d1eedeeb48fb18b1f875650e&userType=4",
       "grade": "A",
       "primary_or_secondary": "primary_official_rule",
-      "published_at": "2026-06",
+      "published_at": "2026-07-15",
       "verified_at": "2026-07-17",
+      "review_by": "2026-08-17",
       "page_or_section": "Rendered content-review rules page; vulgar/private-content risk examples for commercial collaboration notes",
+      "claim_type": "current_rule",
       "claim": "Within the current Pugongying commercial-collaboration review scope, sexual products and contraception or protection products are listed as vulgar/private-content risk examples and therefore require surface-, account-, SKU-, and current-rule-specific confirmation.",
-      "allowed_use": "Fail closed on commercial adult-product readiness until the exact SKU, account, collaboration or advertising surface, eligibility, and current review result are documented.",
-      "prohibited_use": "Do not generalize this scoped commercial rule into a claim that all relationship education is banned, and do not promise that educational framing makes an adult-product collaboration or advertisement eligible.",
-      "snapshot_sha256": "1ddb4f02a5cebe5439075c7c150f724f0f702869f9c1163b40b4e7606d043ffd",
-      "verification_status": "rendered_ui_verified_raw_shell_hashed_scope_limited"
+      "claim_text_hash": "3c901dd6f1b93bcfa8a26b7cdbe3a46a4a9f7018a365ba0a75e76fb9129638b6",
+      "verification_status": "rendered_ui_observed_spa_shell_not_body_snapshot_non_supporting",
+      "machine_usable": false,
+      "applies_to": [
+        "commercial_collaboration",
+        "content_review",
+        "sensitive_category"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not generalize this scoped commercial rule into a claim that all relationship education is banned, and do not promise that educational framing makes an adult-product collaboration or advertisement eligible.",
+        "Public method evidence does not establish a causal Xiaohongshu style-performance effect."
+      ],
+      "snapshot_sha256": null,
+      "allowed_use_codes": [
+        "sensitive_commercial_scope_gate"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "performance_tier",
+        "platform_wide_ban_claim",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S12-01",
@@ -101,27 +252,74 @@
       "primary_or_secondary": "primary_brand_case",
       "published_at": "2026-03-19",
       "verified_at": "2026-07-17",
+      "review_by": "2027-01-17",
       "page_or_section": "Paragraphs 93-102 and 128-134, feedback-to-product loop",
+      "claim_type": "case_practice",
       "claim": "The brand describes a repeatable loop from user comments and scene research to product response, public follow-up, and continued iteration, supported by research and R&D systems.",
-      "allowed_use": "Treat repeated, verifiable response behavior as a possible brand-recognition mechanism and store feedback-to-action links.",
-      "prohibited_use": "Do not accept self-reported sales causality, invent user requests, or convert 'listening' into staged comments.",
+      "claim_text_hash": "8b22ac86fe77fd50be026dc468fdce9f6b7785fb586f4700c53a951f95525fee",
+      "verification_status": "verified",
+      "machine_usable": true,
+      "applies_to": [
+        "content_production",
+        "content_research",
+        "organic_content"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not accept self-reported sales causality, invent user requests, or convert 'listening' into staged comments.",
+        "Public method evidence does not establish a causal Xiaohongshu style-performance effect."
+      ],
       "snapshot_sha256": "1fc3a2220d0ca057cd2511652665f5f46ed0b55c93763f9815baf3bd64434de3",
-      "verification_status": "verified"
+      "allowed_use_codes": [
+        "schema_hypothesis"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S13-01",
       "source_id": "S13",
       "source_url": "https://www.digitaling.com/articles/1046170.html",
-      "grade": "B/C",
+      "grade": "C",
       "primary_or_secondary": "secondary_interview",
       "published_at": "2024-03",
       "verified_at": "2026-07-17",
+      "review_by": "2027-01-17",
       "page_or_section": "Interview section on audience, scene, and content matrices",
+      "claim_type": "workflow_method",
       "claim": "A mature brand can express one product through multiple audience-scene-content combinations and use different carriers such as education, laboratory visits, and creative narrative.",
-      "allowed_use": "Generate testable content hypotheses and carrier variants by audience and scene.",
-      "prohibited_use": "Do not infer that the interview's category conclusions generalize or that any listed carrier is high-performing by default.",
+      "claim_text_hash": "542e38bf0d1a735e819b3f869136ea6a70badf3793db1acb374444e73f9dd20c",
+      "verification_status": "verified",
+      "machine_usable": true,
+      "applies_to": [
+        "content_brief",
+        "style_research"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not infer that the interview's category conclusions generalize or that any listed carrier is high-performing by default.",
+        "Public method evidence does not establish a causal Xiaohongshu style-performance effect."
+      ],
       "snapshot_sha256": "295c4d84a880563ea169fd8cac09571599270f06fe6e1dbba36f9dbbd51c8d31",
-      "verification_status": "verified"
+      "allowed_use_codes": [
+        "schema_hypothesis"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S15-01",
@@ -131,12 +329,39 @@
       "primary_or_secondary": "primary_qualitative_research",
       "published_at": "2024-09-12",
       "verified_at": "2026-07-17",
+      "review_by": "2027-01-17",
       "page_or_section": "PDF abstract and pp.1-4, stakeholder negotiation and obscured labor",
+      "claim_type": "research_finding",
       "claim": "KOC content production is negotiated among creators, marketers, brands, and the platform; commercial labor may be deliberately obscured to appear spontaneous.",
-      "allowed_use": "Preserve creator voice and everyday material while making sponsorship and production labor auditable.",
-      "prohibited_use": "Do not use 'native feel' to justify hidden sponsorship, fake ordinary users, or uncompensated creator labor.",
+      "claim_text_hash": "98a780caaa8eefdb633c807ca7e363063563c327289477e80a123ab238fcf902",
+      "verification_status": "verified",
+      "machine_usable": true,
+      "applies_to": [
+        "asset_governance",
+        "commercial_collaboration",
+        "content_production",
+        "content_review"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not use 'native feel' to justify hidden sponsorship, fake ordinary users, or uncompensated creator labor.",
+        "Public method evidence does not establish a causal Xiaohongshu style-performance effect."
+      ],
       "snapshot_sha256": "38b00a5995cdf1ef42d026036fa7da0ca1b9b12b62cd689d1876a7a38d078316",
-      "verification_status": "verified"
+      "allowed_use_codes": [
+        "asset_rights_schema"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "fabricated_experience",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "hidden_commercial_relationship",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S16-01",
@@ -146,12 +371,35 @@
       "primary_or_secondary": "primary_agency_report",
       "published_at": "2026",
       "verified_at": "2026-07-17",
+      "review_by": "2026-08-17",
       "page_or_section": "PDF pp.6-8, centralized distribution and 1:1 replication failure modes",
+      "claim_type": "workflow_method",
       "claim": "Distributing centralized brand material can become preachy and staged, while direct replication of already-validated seeding paths favors short-term extraction over durable differentiation.",
-      "allowed_use": "Create anti-patterns for ad-like material dumping and blind template replication.",
-      "prohibited_use": "Do not turn the agency model into a universal platform law or a per-post fixed structure.",
-      "snapshot_sha256": "",
-      "verification_status": "content_verified_hash_unavailable_non_supporting"
+      "claim_text_hash": "a26efb3038aa8767b53ce5c5b20bc5d54c65f9fec3f79cb0ee7df94cbf346cc7",
+      "verification_status": "content_verified_hash_unavailable_non_supporting",
+      "machine_usable": false,
+      "applies_to": [
+        "content_brief",
+        "style_research"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not turn the agency model into a universal platform law or a per-post fixed structure.",
+        "The raw source snapshot was not fully retrieved, so this row is retained only as a research lead and must fail closed in machine consumption."
+      ],
+      "snapshot_sha256": null,
+      "allowed_use_codes": [
+        "schema_hypothesis"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S16-02",
@@ -161,12 +409,35 @@
       "primary_or_secondary": "primary_agency_report",
       "published_at": "2026",
       "verified_at": "2026-07-17",
+      "review_by": "2026-08-17",
       "page_or_section": "PDF pp.10-12, WHY-HOW-WHAT narrative axis",
+      "claim_type": "workflow_method",
       "claim": "The report proposes value viewpoint, dynamic scene experience, and user identity as a strategic narrative axis across content, search, and browse surfaces.",
-      "allowed_use": "Use as a brief-level strategy prompt and source of hypotheses for different surfaces.",
-      "prohibited_use": "Do not force WHY-HOW-WHAT into every post or claim its effectiveness without live evidence.",
-      "snapshot_sha256": "",
-      "verification_status": "content_verified_hash_unavailable_non_supporting"
+      "claim_text_hash": "d6de66f64fd28c1293ff81e5f6ffffd9b44d4ccd329d8e7d1640f0e5e25fd64f",
+      "verification_status": "content_verified_hash_unavailable_non_supporting",
+      "machine_usable": false,
+      "applies_to": [
+        "content_brief",
+        "style_research"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not force WHY-HOW-WHAT into every post or claim its effectiveness without live evidence.",
+        "The raw source snapshot was not fully retrieved, so this row is retained only as a research lead and must fail closed in machine consumption."
+      ],
+      "snapshot_sha256": null,
+      "allowed_use_codes": [
+        "schema_hypothesis"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S17-01",
@@ -176,12 +447,37 @@
       "primary_or_secondary": "secondary_trade_press_case",
       "published_at": "2022-08-11",
       "verified_at": "2026-07-17",
+      "review_by": "2027-01-17",
       "page_or_section": "Section 3, more scientific content planning and production",
+      "claim_type": "case_practice",
       "claim": "A cross-functional creative-at-scale team tagged material elements, tested audience attention, evaluated delivery, and optimized material for subsequent rounds.",
-      "allowed_use": "Store element tags, audience hypothesis, version, evaluation result, and reinvestment decision in the content system.",
-      "prohibited_use": "Do not transfer the reported eye-tracking result, lift, or audience-specific creative conclusion to Xiaohongshu posts.",
+      "claim_text_hash": "d00b6890e120255656cc595de92ef6891905c4f4bac519b4814839d38d2b5ad8",
+      "verification_status": "verified",
+      "machine_usable": true,
+      "applies_to": [
+        "content_measurement",
+        "content_production",
+        "cross_platform_delivery",
+        "paid_content"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not transfer the reported eye-tracking result, lift, or audience-specific creative conclusion to Xiaohongshu posts.",
+        "Public method evidence does not establish a causal Xiaohongshu style-performance effect."
+      ],
       "snapshot_sha256": "695f51dedd532a552572e427449708a90c2236b0aedca551d0a46de44f26c28a",
-      "verification_status": "verified"
+      "allowed_use_codes": [
+        "schema_hypothesis"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S19-01",
@@ -191,12 +487,36 @@
       "primary_or_secondary": "primary_award_submission",
       "published_at": "2024-02",
       "verified_at": "2026-07-17",
+      "review_by": "2027-01-17",
       "page_or_section": "Sections 1-2, trend insight and audience-product-scene matrix",
+      "claim_type": "case_practice",
       "claim": "The case starts from audience overlap and a differentiated efficacy scene, then restructures the message house and audience-product-scene content matrix.",
-      "allowed_use": "Require a stated audience, scene, message pillar, and differentiation hypothesis before production.",
-      "prohibited_use": "Do not accept the case's claimed growth as causal evidence or copy its audience/category conclusion.",
+      "claim_text_hash": "6d075118749461099039deb215ffeb34311ddc7c21cd602ab938b1cc62a4d53a",
+      "verification_status": "verified",
+      "machine_usable": true,
+      "applies_to": [
+        "commercial_collaboration",
+        "content_brief",
+        "paid_content"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not accept the case's claimed growth as causal evidence or copy its audience/category conclusion.",
+        "Public method evidence does not establish a causal Xiaohongshu style-performance effect."
+      ],
       "snapshot_sha256": "49d9612472973dedb825b55cf8e97424e3cbe9bfb671c7466e272cbcf014c2d9",
-      "verification_status": "verified"
+      "allowed_use_codes": [
+        "schema_hypothesis"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S19-02",
@@ -206,27 +526,75 @@
       "primary_or_secondary": "primary_award_submission",
       "published_at": "2024-02",
       "verified_at": "2026-07-17",
+      "review_by": "2027-01-17",
       "page_or_section": "Sections 3-4 and award-submission strategy, high-TI content and search-feed coordination",
+      "claim_type": "case_practice",
       "claim": "The case identifies higher-decision-flow posts, studies their keyword/search paths, and uses search and feed surfaces for different stages and later delivery.",
-      "allowed_use": "Record why a post is selected for further delivery and preserve keyword, surface, and audience-flow context.",
-      "prohibited_use": "Do not use AIPS/TI language as an organic algorithm formula or quote unverified scale claims as thresholds.",
+      "claim_text_hash": "56aee4043e595ff6039f9bc9249c35562650e50b22ceeac687f046678b5c3864",
+      "verification_status": "verified",
+      "machine_usable": true,
+      "applies_to": [
+        "content_measurement",
+        "content_research",
+        "paid_content"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not use AIPS/TI language as an organic algorithm formula or quote unverified scale claims as thresholds.",
+        "Public method evidence does not establish a causal Xiaohongshu style-performance effect."
+      ],
       "snapshot_sha256": "49d9612472973dedb825b55cf8e97424e3cbe9bfb671c7466e272cbcf014c2d9",
-      "verification_status": "verified"
+      "allowed_use_codes": [
+        "schema_hypothesis"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S20-01",
       "source_id": "S20",
       "source_url": "https://www.digitaling.com/articles/623118.html",
-      "grade": "C/D",
+      "grade": "D",
       "primary_or_secondary": "secondary_service_provider_case",
       "published_at": "2021-10-25",
       "verified_at": "2026-07-17",
+      "review_by": "2026-10-17",
       "page_or_section": "Sections on KOL operations, UGC, and enterprise-account operations",
+      "claim_type": "case_practice",
       "claim": "The service workflow monitored trends, creators, competitors, and sentiment, adapted product benefits to creator style, and gave UGC and enterprise accounts different jobs.",
-      "allowed_use": "Separate monitoring, creator adaptation, UGC collection, and enterprise-account workstreams.",
-      "prohibited_use": "Do not copy reported metrics, rely on 2021 channel tactics, hide commercial disclosure, or manufacture UGC.",
+      "claim_text_hash": "07ea5e9d3fc907273532f2c5c05e25ea1bbccbe46007cd373021d35346a5c13e",
+      "verification_status": "verified_with_age_and_sales_bias",
+      "machine_usable": true,
+      "applies_to": [
+        "content_production",
+        "organization_governance"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not copy reported metrics, rely on 2021 channel tactics, hide commercial disclosure, or manufacture UGC.",
+        "This experience- or case-grade source can shape fields or risks only; it does not establish effectiveness."
+      ],
       "snapshot_sha256": "4ebe10fbb0403f98680169554307e1162e83a02312a29e4f16469c1bd1816073",
-      "verification_status": "verified_with_age_and_sales_bias"
+      "allowed_use_codes": [
+        "risk_lead"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "hidden_commercial_relationship",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S21-01",
@@ -236,12 +604,36 @@
       "primary_or_secondary": "secondary_academic_case_study",
       "published_at": "2026",
       "verified_at": "2026-07-17",
+      "review_by": "2027-01-17",
       "page_or_section": "PDF pp.11-12, scientific commercialization and value alignment",
+      "claim_type": "research_finding",
       "claim": "The case study treats track insight, target setting, delivery optimization, attribution, method, and commercial products as a connected operating system rather than isolated traffic tactics.",
-      "allowed_use": "Define system boundaries and require traceability from insight through outcome.",
-      "prohibited_use": "Do not infer visual or copywriting performance from a business-model case study.",
+      "claim_text_hash": "cbfca60e1bf97709fe3163c5a29d585a4a83bd37c2e31ccc98bb2597d71de356",
+      "verification_status": "verified",
+      "machine_usable": true,
+      "applies_to": [
+        "content_measurement",
+        "organization_governance"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not infer visual or copywriting performance from a business-model case study.",
+        "Public method evidence does not establish a causal Xiaohongshu style-performance effect."
+      ],
       "snapshot_sha256": "73987a1932dafea6546c9f127b67faab431e9b97f99c37395f1f6d7044932fa6",
-      "verification_status": "verified"
+      "allowed_use_codes": [
+        "audit_schema",
+        "measurement_design"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S22-01",
@@ -251,42 +643,113 @@
       "primary_or_secondary": "primary_joint_research_page",
       "published_at": "2025-10-21",
       "verified_at": "2026-07-17",
+      "review_by": "2027-01-17",
       "page_or_section": "Public report page, audience segmentation and people-scene-motive sections",
+      "claim_type": "workflow_method",
       "claim": "The joint study segments health audiences by label, scene, and motive, and distinguishes functional, efficiency, social, and meaning motives that translate product functions into perceivable outcomes.",
-      "allowed_use": "Require a brief to record functional need, lived scene, motive, and perceivable outcome as separate fields and generate different hypotheses for each motive.",
-      "prohibited_use": "Do not generalize the health segments to other categories, infer a visual style or traffic weight, or quote public-page figures without their survey context.",
+      "claim_text_hash": "6673acb9a95d2bdb687ded5ed96c6c87bcb1ac693730621676c633350443e5bb",
+      "verification_status": "verified_public_extract_full_report_unavailable",
+      "machine_usable": true,
+      "applies_to": [
+        "content_brief",
+        "content_research"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not generalize the health segments to other categories, infer a visual style or traffic weight, or quote public-page figures without their survey context.",
+        "Public method evidence does not establish a causal Xiaohongshu style-performance effect."
+      ],
       "snapshot_sha256": "54c7261a397aab64d539c1c4c9f812f2d8c54bb43c3f43f05bf52d9ebb1b0e7c",
-      "verification_status": "verified_public_extract_full_report_unavailable"
+      "allowed_use_codes": [
+        "brief_field_design",
+        "query_design"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S23-01",
       "source_id": "S23",
       "source_url": "https://www.youzan.com/cms/article/76079.html",
-      "grade": "C/D",
+      "grade": "D",
       "primary_or_secondary": "first_party_service_provider_editorial",
       "published_at": "2026-03-19",
       "verified_at": "2026-07-17",
+      "review_by": "2026-10-17",
       "page_or_section": "Team structure, role collaboration, project board, and small-team review sections",
+      "claim_type": "experience_signal",
       "claim": "The guide assigns business ownership to operations, separates content, delivery, supply, and support roles, and recommends tracking each SKU, content asset, and delivery plan with explicit owners and review responsibilities.",
-      "allowed_use": "Define project ownership, reviewer independence, SKU-content-delivery links, and problem localization fields.",
-      "prohibited_use": "Do not claim the proposed team structure causes traffic or treat unsourced editorial guidance as an industry benchmark.",
+      "claim_text_hash": "0d32e23f2d2a2bbdd9755bafa079ec76475ef22916ba11928e4dadd6842171c5",
+      "verification_status": "verified_editorial_no_effect_audit",
+      "machine_usable": true,
+      "applies_to": [
+        "commercial_collaboration",
+        "organization_governance"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not claim the proposed team structure causes traffic or treat unsourced editorial guidance as an industry benchmark.",
+        "This experience- or case-grade source can shape fields or risks only; it does not establish effectiveness."
+      ],
       "snapshot_sha256": "bdb44c3763830650cd23707dc64724bef2b429d9baedec0f8adb1ed3d8bcf810",
-      "verification_status": "verified_editorial_no_effect_audit"
+      "allowed_use_codes": [
+        "risk_lead"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S24-01",
       "source_id": "S24",
       "source_url": "https://www.kingsta.com/archives/11137",
-      "grade": "C/D",
+      "grade": "D",
       "primary_or_secondary": "first_party_agency_editorial",
       "published_at": "2026-04-03",
       "verified_at": "2026-07-17",
+      "review_by": "2026-10-17",
       "page_or_section": "Brief translation, creator selection, production response, monitoring, and retrospective sections",
+      "claim_type": "experience_signal",
       "claim": "The agency describes translating brand language into audience pain, scene, and perceivable benefit, checking creator history and recent query context, assigning specialist roles, and returning communication, cost, and conversion data to a knowledge base.",
-      "allowed_use": "Require a brand-to-user translation trace, creator-history evidence, current query snapshot, specialist review, and separated outcome layers.",
-      "prohibited_use": "Do not accept the agency's self-reported hit rate, manufacture comments or testimonials, automate engagement, or infer causality from client promotional material.",
+      "claim_text_hash": "54e6b696f6ddae00a68261c9c99d746351ed5297dbdbc943a2b04f2ecaade440",
+      "verification_status": "verified_self_promotional_unlisted_identity",
+      "machine_usable": true,
+      "applies_to": [
+        "content_brief",
+        "content_review",
+        "organization_governance"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not accept the agency's self-reported hit rate, manufacture comments or testimonials, automate engagement, or infer causality from client promotional material.",
+        "This experience- or case-grade source can shape fields or risks only; it does not establish effectiveness."
+      ],
       "snapshot_sha256": "bddef8f829908cc26507140c6a4e2979329a7631f4b33feaf2bb476375190f8c",
-      "verification_status": "verified_self_promotional_unlisted_identity"
+      "allowed_use_codes": [
+        "risk_lead"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S25-01",
@@ -296,12 +759,35 @@
       "primary_or_secondary": "practitioner_experience_post",
       "published_at": "2026-06",
       "verified_at": "2026-07-17",
+      "review_by": "2026-10-17",
       "page_or_section": "Execution granularity, judgment externalization, and transfer sections",
+      "claim_type": "experience_signal",
       "claim": "The practitioner argues that an operational SOP must externalize why a pattern works, what qualifies as acceptable, how it transfers across audience, scene, emotion, and product, and how failures are diagnosed instead of merely listing posting actions.",
-      "allowed_use": "Use as a schema and workflow prompt for mechanism, scope, contraindication, counterexample, acceptance criteria, and rejection reason.",
-      "prohibited_use": "Do not use the article as evidence that a content mechanism performs or interpret structural transfer as close copying of an original post.",
+      "claim_text_hash": "d1e281af751a45c3316fb0ef377d2b2da567c463d62e73ae2d3281427e7bb18d",
+      "verification_status": "verified_experience_signal_only",
+      "machine_usable": true,
+      "applies_to": [
+        "content_research",
+        "style_research"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not use the article as evidence that a content mechanism performs or interpret structural transfer as close copying of an original post.",
+        "This experience- or case-grade source can shape fields or risks only; it does not establish effectiveness."
+      ],
       "snapshot_sha256": "ff82f60522580ed607dd464cd870e8f9bccdd4cb8cb99651f0b2410e468396c0",
-      "verification_status": "verified_experience_signal_only"
+      "allowed_use_codes": [
+        "risk_lead"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S26-01",
@@ -311,12 +797,36 @@
       "primary_or_secondary": "practitioner_team_experience_post",
       "published_at": "2026-05-21",
       "verified_at": "2026-07-17",
+      "review_by": "2026-10-17",
       "page_or_section": "Creative-center and scale-distribution organization sections",
+      "claim_type": "experience_signal",
       "claim": "The practitioner separates zero-to-one content-model exploration from one-to-many production, notes that content models expire, and varies account, scene, angle, material, and expression only after a model is tested.",
-      "allowed_use": "Define candidate, validated, reusable, expired, and downgraded lifecycle states and keep exploratory tests separate from production variants.",
-      "prohibited_use": "Do not treat the proposed organization as universal, count bulk generation as validation, or indefinitely replicate one high-performing model.",
+      "claim_text_hash": "15cbc7383d2ac122d200e40b2f8ec72c634fea0fa5189b5e02370d07fc8b2a8f",
+      "verification_status": "verified_experience_signal_only",
+      "machine_usable": true,
+      "applies_to": [
+        "content_measurement",
+        "content_production",
+        "style_research"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not treat the proposed organization as universal, count bulk generation as validation, or indefinitely replicate one high-performing model.",
+        "This experience- or case-grade source can shape fields or risks only; it does not establish effectiveness."
+      ],
       "snapshot_sha256": "d7625d39cb3b3a7d66d0ddb06cbb88c0378f0bc723a556fca00555875d687956",
-      "verification_status": "verified_experience_signal_only"
+      "allowed_use_codes": [
+        "risk_lead"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S27-01",
@@ -326,27 +836,78 @@
       "primary_or_secondary": "promotional_podcast_show_notes",
       "published_at": "2025 approximate",
       "verified_at": "2026-07-17",
+      "review_by": "2026-10-17",
       "page_or_section": "Public show notes on content middle-platform exploration, production, data return, and replication",
+      "claim_type": "experience_signal",
       "claim": "The show notes frame industrial content operations as direction exploration, stable material production, data return, and scale using variable audience, scene, pain, function, and emotion fields, while also promoting several unverified or risky tactics.",
-      "allowed_use": "Use only as a pressure test for workflow completeness and a source of explicit anti-patterns.",
-      "prohibited_use": "Do not use covert-camera framing, masked pseudo-user presentation, staged supplier comments, cheap mass posting, unverified ROI, or a fixed reading threshold as production rules.",
+      "claim_text_hash": "2886db9aa7e9cbd7ec0be5cee81789ba43da3f33ba19b0b7487073e36387cd8a",
+      "verification_status": "verified_low_support_and_risk_flagged",
+      "machine_usable": true,
+      "applies_to": [
+        "content_production",
+        "content_review",
+        "organization_governance"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not use covert-camera framing, masked pseudo-user presentation, staged supplier comments, cheap mass posting, unverified ROI, or a fixed reading threshold as production rules.",
+        "This experience- or case-grade source can shape fields or risks only; it does not establish effectiveness."
+      ],
       "snapshot_sha256": "55249d7dcecace4abcbd4496b1b6febfde19ae9617591c3b20afef3446637328",
-      "verification_status": "verified_low_support_and_risk_flagged"
+      "allowed_use_codes": [
+        "risk_lead"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "covert_capture",
+        "fabricated_engagement",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S28-01",
       "source_id": "S28",
       "source_url": "https://www.adquan.com/article/357276",
-      "grade": "B/C",
+      "grade": "C",
       "primary_or_secondary": "official_program_with_participant_publication",
       "published_at": "2025-12-03",
       "verified_at": "2026-07-17",
+      "review_by": "2027-01-17",
       "page_or_section": "Whitepaper origin, eight capability chapters, risk controls, and four operating pillars",
+      "claim_type": "governance_framework",
       "claim": "A Xiaohongshu channel-business whitepaper co-created with sixteen agencies structures partner operations across strategy, client development, strategy, content, media delivery, service, team, and business management, and describes productized strategy, standardized operations, data assets, and organized talent as reusable operating capabilities.",
-      "allowed_use": "Define separate production and governance objects, ownership, operating gates, and risk records across the content lifecycle.",
-      "prohibited_use": "Do not infer recommendation-algorithm weights, style-performance effects, or universal agency organization from a partner-management whitepaper.",
+      "claim_text_hash": "a7812f12fcf456ac1426e8684a48d2674c0c84b8f23b8bac45c627ac317b8fd5",
+      "verification_status": "official_program_origin_verified_via_participant_publication",
+      "machine_usable": true,
+      "applies_to": [
+        "content_measurement",
+        "content_production",
+        "content_review",
+        "organization_governance"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not infer recommendation-algorithm weights, style-performance effects, or universal agency organization from a partner-management whitepaper.",
+        "Public method evidence does not establish a causal Xiaohongshu style-performance effect."
+      ],
       "snapshot_sha256": "dfd1e9d80ef5c519cde0b944b3652e78d0725731d9a143437715dd7357f18c57",
-      "verification_status": "official_program_origin_verified_via_participant_publication"
+      "allowed_use_codes": [
+        "schema_hypothesis"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S29-01",
@@ -356,12 +917,38 @@
       "primary_or_secondary": "coauthor_agency_public_excerpt",
       "published_at": "2025-12-02",
       "verified_at": "2026-07-17",
+      "review_by": "2027-01-17",
       "page_or_section": "Content-team structure, topic-to-review-to-retrospective SOP, tools, and role matrix",
+      "claim_type": "experience_signal",
       "claim": "A coauthor of the whitepaper's content chapter publicly describes a topic-demand, creation, review, and retrospective pipeline with explicit role, material, tool, and follow-up records.",
-      "allowed_use": "Require traceable topic evidence, framework, source material, review, retrospective window, and next-action fields, while separating search, competitive, delivery, and outcome data.",
-      "prohibited_use": "Do not reuse its self-reported daily output, hit-rate, review-time, creator, or cost thresholds as defaults or performance evidence.",
+      "claim_text_hash": "a69fc8c48a50a6b98504610062b8b65cd7b4968d8e6ff306859f8cac9352eb9d",
+      "verification_status": "verified_self_reported_production_process_no_effect_audit",
+      "machine_usable": true,
+      "applies_to": [
+        "content_measurement",
+        "content_production",
+        "content_research",
+        "content_review"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not reuse its self-reported daily output, hit-rate, review-time, creator, or cost thresholds as defaults or performance evidence.",
+        "Public method evidence does not establish a causal Xiaohongshu style-performance effect."
+      ],
       "snapshot_sha256": "0e5154fabeddf608f24034bd70f6c442597bf8ebb89cef1da0090f8b6c7b70c6",
-      "verification_status": "verified_self_reported_production_process_no_effect_audit"
+      "allowed_use_codes": [
+        "schema_hypothesis"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "default_production_quota",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S30-01",
@@ -371,12 +958,35 @@
       "primary_or_secondary": "primary_official_product_documentation",
       "published_at": "2026-06-18",
       "verified_at": "2026-07-17",
+      "review_by": "2026-08-17",
       "page_or_section": "Rendered agency-brand authorization relationship manual",
+      "claim_type": "product_capability",
       "claim": "Pugongying models brand and agency as separate roles and records authorization account, scope, validity, approval state, modification, and termination separately from existing project state.",
-      "allowed_use": "Require role separation and a current, scope-matching authorization record before a commercial agency workflow advances to invitation, publication, or CTA readiness.",
-      "prohibited_use": "Do not treat authorization as content, product, qualification, advertising, or publication approval, and do not recommend permanent authorization by default.",
-      "snapshot_sha256": "1ddb4f02a5cebe5439075c7c150f724f0f702869f9c1163b40b4e7606d043ffd",
-      "verification_status": "rendered_ui_verified_shared_spa_shell_hashed"
+      "claim_text_hash": "372c65ade99f6f35775075095f2f251dff2fd7280d1e8f2d717a21d79688c276",
+      "verification_status": "rendered_ui_observed_spa_shell_not_body_snapshot_non_supporting",
+      "machine_usable": false,
+      "applies_to": [
+        "commercial_collaboration",
+        "organization_governance"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not treat authorization as content, product, qualification, advertising, or publication approval, and do not recommend permanent authorization by default.",
+        "Public method evidence does not establish a causal Xiaohongshu style-performance effect."
+      ],
+      "snapshot_sha256": null,
+      "allowed_use_codes": [
+        "authorization_gate"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S31-01",
@@ -386,27 +996,76 @@
       "primary_or_secondary": "first_party_agency_joint_project_publication",
       "published_at": "2025-01-13",
       "verified_at": "2026-07-17",
+      "review_by": "2027-01-17",
       "page_or_section": "Search trends, category landscape, user mindset, and time/scene/subcategory analysis",
+      "claim_type": "research_finding",
       "claim": "Dentsu describes a Xiaohongshu joint category-insight project that decomposes a broad category into search trend, category landscape, user mindset, time, scene, audience, ingredient or attribute, and desired-outcome evidence.",
-      "allowed_use": "Define a current-query evidence matrix and timestamped brief fields for search- or trend-led content.",
-      "prohibited_use": "Do not infer ranking weights, keyword density, visual performance, or current demand from a historical agency announcement without current on-platform samples.",
+      "claim_text_hash": "b9b4ce2476f337513571f7528f34d7be58d2591c516b8a370dcb83d67041d045",
+      "verification_status": "verified_framework_no_dataset_or_effect_audit",
+      "machine_usable": true,
+      "applies_to": [
+        "content_brief",
+        "content_research"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not infer ranking weights, keyword density, visual performance, or current demand from a historical agency announcement without current on-platform samples.",
+        "Public method evidence does not establish a causal Xiaohongshu style-performance effect."
+      ],
       "snapshot_sha256": "661198d5ec5ba5e443d088760df796ce8c187a8a91b806334058d695da7668b9",
-      "verification_status": "verified_framework_no_dataset_or_effect_audit"
+      "allowed_use_codes": [
+        "schema_hypothesis"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S32-01",
       "source_id": "S32",
       "source_url": "https://www.prnasia.com/story/451037-1.shtml",
-      "grade": "B/C",
+      "grade": "C",
       "primary_or_secondary": "primary_joint_method_press_release",
       "published_at": "2024-06-17",
       "verified_at": "2026-07-17",
+      "review_by": "2027-01-17",
       "page_or_section": "Native content, asset origins, brand stage, content accumulation, audience penetration, and reputation objectives",
+      "claim_type": "workflow_method",
       "claim": "A Kantar and Xiaohongshu method release separates native experience and emotion inputs from professional authority content, distinguishes KOL, celebrity, official account, UGC, activity, and offline asset origins, and selects resource combinations by brand stage and objective.",
-      "allowed_use": "Record asset origin, brand stage, content objective, consent, reuse rights, and role-specific material strategy; treat template sameness as a risk to examine.",
-      "prohibited_use": "Do not equate native feel with fake users or undisclosed promotion, treat its models as recommendation formulas, or claim UGC guarantees performance.",
+      "claim_text_hash": "c32c5bbed46b031bee77f374bffd2152c399f337a053cd7b34feea16ce2561db",
+      "verification_status": "verified_method_release_no_causal_audit",
+      "machine_usable": true,
+      "applies_to": [
+        "asset_governance",
+        "commercial_collaboration",
+        "content_brief",
+        "content_production"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not equate native feel with fake users or undisclosed promotion, treat its models as recommendation formulas, or claim UGC guarantees performance.",
+        "Public method evidence does not establish a causal Xiaohongshu style-performance effect."
+      ],
       "snapshot_sha256": "5a8ff151332eeab56cbf1f157a2b93b2fd2d969ba6454a47b8e07d6c49926001",
-      "verification_status": "verified_method_release_no_causal_audit"
+      "allowed_use_codes": [
+        "schema_hypothesis",
+        "risk_lead"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S33-01",
@@ -416,143 +1075,453 @@
       "primary_or_secondary": "brand_award_case",
       "published_at": "2025",
       "verified_at": "2026-07-17",
+      "review_by": "2027-01-17",
       "page_or_section": "Year-long series, stages, product bindings, co-creation roles, and UGC asset accumulation",
+      "claim_type": "case_practice",
       "claim": "The brand award case describes a year-long staged co-creation program tied to product releases and multiple roles, with reusable authorized UGC as an explicit production asset goal.",
-      "allowed_use": "Define series, stage, product binding, asset-rights lineage, curation status, reuse scope, and stage ownership fields.",
-      "prohibited_use": "Do not attribute reported exposure, search, or sales effects to a visual style, and do not admit an award case directly as high-performance style evidence.",
+      "claim_text_hash": "8e27b3684edaada11ccb32e4eb3798d16d1ade85682ce8cf7d19756cb443f3c7",
+      "verification_status": "verified_case_structure_no_backend_or_control",
+      "machine_usable": true,
+      "applies_to": [
+        "asset_governance",
+        "content_production"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not attribute reported exposure, search, or sales effects to a visual style, and do not admit an award case directly as high-performance style evidence.",
+        "Public method evidence does not establish a causal Xiaohongshu style-performance effect."
+      ],
       "snapshot_sha256": "cf53293dc658f32394c68a2f0aaf7e3e8b3053355ee97d63f6f8338997fa86b6",
-      "verification_status": "verified_case_structure_no_backend_or_control"
+      "allowed_use_codes": [
+        "schema_hypothesis",
+        "risk_lead"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     },
     {
       "claim_id": "CLM-S34-01",
       "source_id": "S34",
       "source_url": "https://www.digitaling.com/articles/1401070.html",
-      "grade": "C/D",
+      "grade": "D",
       "primary_or_secondary": "first_party_agency_case",
       "published_at": "2025-09-10",
       "verified_at": "2026-07-17",
+      "review_by": "2026-10-17",
       "page_or_section": "Pre-, in-, and post-delivery workflow and external-destination handling",
+      "claim_type": "case_practice",
       "claim": "The agency case separates pre-delivery product and content fit, in-delivery infrastructure and optimization, and post-delivery attribution and strategy updates, while managing on-platform content and external destinations as different assets.",
-      "allowed_use": "Require organic-versus-paid mode, account capability, item or offer, destination, asset version, authorization, metric availability, attribution-window source, and postmortem decision fields.",
-      "prohibited_use": "Do not reuse agency-reported ROI, attribution windows, delivery capabilities, or thresholds as defaults or as promises for organic posts.",
+      "claim_text_hash": "39a03d5f7ff9b9e507da6e8edac16a44eae5a29f5b49d9a431fbc20aa29e2701",
+      "verification_status": "verified_self_reported_process_no_effect_audit",
+      "machine_usable": true,
+      "applies_to": [
+        "commercial_collaboration",
+        "content_measurement",
+        "cross_platform_delivery"
+      ],
+      "taxonomy_version": 2,
+      "limitations": [
+        "Do not reuse agency-reported ROI, attribution windows, delivery capabilities, or thresholds as defaults or as promises for organic posts.",
+        "This experience- or case-grade source can shape fields or risks only; it does not establish effectiveness."
+      ],
       "snapshot_sha256": "8a78894361976a356b232f9823f196c814ce4439d6fc79600ad7103cc55a085a",
-      "verification_status": "verified_self_reported_process_no_effect_audit"
+      "allowed_use_codes": [
+        "risk_lead"
+      ],
+      "prohibited_use_codes": [
+        "algorithm_causality",
+        "fixed_capacity_threshold",
+        "fixed_kpi_threshold",
+        "fixed_traffic_threshold",
+        "organic_randomized_ab_claim",
+        "performance_tier",
+        "rule_evidence_support",
+        "style_ready_evidence"
+      ]
     }
   ],
   "product_decisions": [
     {
       "decision_id": "PD-STYLE-NORMALIZATION",
       "decision": "Store observable mechanism, scope, evidence, and boundary rather than subjective decoration labels alone.",
-      "basis": ["CLM-S1-03", "CLM-S16-01"],
-      "status": "project_schema_policy"
+      "owner": "redbook-writing-maintainers",
+      "status": "active",
+      "review_by": "2026-10-17",
+      "basis_claim_ids": [
+        "CLM-S1-03",
+        "CLM-S16-01"
+      ],
+      "decision_scope": "project_schema_policy",
+      "limitations": "Internal project decision only; it is not a platform fact and cannot upgrade external evidence."
     },
     {
       "decision_id": "PD-PRIMARY-JOB",
       "decision": "One draft has one primary content job and is evaluated by the matching funnel stage.",
-      "basis": ["CLM-S1-04", "CLM-S19-02"],
-      "status": "project_policy_not_platform_fact"
+      "owner": "redbook-writing-maintainers",
+      "status": "active",
+      "review_by": "2026-10-17",
+      "basis_claim_ids": [
+        "CLM-S1-04",
+        "CLM-S19-02"
+      ],
+      "decision_scope": "project_policy_not_platform_fact",
+      "limitations": "Internal project decision only; it is not a platform fact and cannot upgrade external evidence."
     },
     {
       "decision_id": "PD-CONCEPT-DIVERSITY",
       "decision": "Produce at least two prototypes with different attention paths; color-only variants do not count.",
-      "basis": ["GeekLaws visual rework case"],
-      "status": "production_quality_gate"
+      "owner": "redbook-writing-maintainers",
+      "status": "active",
+      "review_by": "2026-10-17",
+      "basis_claim_ids": [],
+      "decision_scope": "production_quality_gate",
+      "limitations": "Internal project decision only; it is not a platform fact and cannot upgrade external evidence."
     },
     {
       "decision_id": "PD-DUAL-VIEW-QA",
       "decision": "Review every prototype both in feed-thumbnail size and full size.",
-      "basis": ["GeekLaws visual rework case"],
-      "status": "production_quality_gate"
+      "owner": "redbook-writing-maintainers",
+      "status": "active",
+      "review_by": "2026-10-17",
+      "basis_claim_ids": [],
+      "decision_scope": "production_quality_gate",
+      "limitations": "Internal project decision only; it is not a platform fact and cannot upgrade external evidence."
     },
     {
       "decision_id": "PD-DISCLOSURE",
       "decision": "Native adaptation never permits hidden sponsorship, fake identity, or fabricated personal experience.",
-      "basis": ["CLM-S7-01", "CLM-S15-01", "CLM-S32-01"],
-      "status": "compliance_and_ethics_gate"
+      "owner": "redbook-writing-maintainers",
+      "status": "active",
+      "review_by": "2026-10-17",
+      "basis_claim_ids": [
+        "CLM-S7-01",
+        "CLM-S15-01",
+        "CLM-S32-01"
+      ],
+      "decision_scope": "compliance_and_ethics_gate",
+      "limitations": "Internal project decision only; it is not a platform fact and cannot upgrade external evidence."
     },
     {
       "decision_id": "PD-BRAND-BEHAVIOR",
       "decision": "A repeated, verifiable brand action may be used as a recognition device; logo size is not the only brand-control lever.",
-      "basis": ["CLM-S12-01"],
-      "status": "creative_strategy_hypothesis"
+      "owner": "redbook-writing-maintainers",
+      "status": "active",
+      "review_by": "2026-10-17",
+      "basis_claim_ids": [
+        "CLM-S12-01"
+      ],
+      "decision_scope": "creative_strategy_hypothesis",
+      "limitations": "Internal project decision only; it is not a platform fact and cannot upgrade external evidence."
     },
     {
       "decision_id": "PD-EXPERIMENT-UNIT",
       "decision": "Every content-matrix row stores one audience-scene-message-carrier hypothesis and one actively varied factor.",
-      "basis": ["CLM-S13-01", "CLM-S19-01", "CLM-S31-01"],
-      "status": "project_experiment_policy"
+      "owner": "redbook-writing-maintainers",
+      "status": "active",
+      "review_by": "2026-10-17",
+      "basis_claim_ids": [
+        "CLM-S13-01",
+        "CLM-S19-01",
+        "CLM-S31-01"
+      ],
+      "decision_scope": "project_experiment_policy",
+      "limitations": "Internal project decision only; it is not a platform fact and cannot upgrade external evidence."
     },
     {
       "decision_id": "PD-EVIDENCE-PROMOTION",
       "decision": "A style association remains candidate until it has recomputable same-metric baselines, independent accounts and clusters, query context, and counterevidence.",
-      "basis": ["conservative evidence design"],
-      "status": "project_evidence_policy"
+      "owner": "redbook-writing-maintainers",
+      "status": "active",
+      "review_by": "2026-10-17",
+      "basis_claim_ids": [],
+      "decision_scope": "project_evidence_policy",
+      "limitations": "Internal project decision only; it is not a platform fact and cannot upgrade external evidence."
     },
     {
       "decision_id": "PD-CAUSALITY-BOUNDARY",
       "decision": "Natural-post comparisons are quasi-experimental observations; paid tests require audience, budget, delivery, time, and variable logs.",
-      "basis": ["CLM-S1-04"],
-      "status": "project_evidence_policy"
+      "owner": "redbook-writing-maintainers",
+      "status": "active",
+      "review_by": "2026-10-17",
+      "basis_claim_ids": [
+        "CLM-S1-04"
+      ],
+      "decision_scope": "project_evidence_policy",
+      "limitations": "Internal project decision only; it is not a platform fact and cannot upgrade external evidence."
     },
     {
       "decision_id": "PD-GATE-SEPARATION",
       "decision": "Evidence, native fit, visual quality, factual/compliance, client, delivery, and post-publication gates are recorded separately.",
-      "basis": ["CLM-S7-01", "CLM-S7-02", "CLM-S17-01", "CLM-S28-01", "CLM-S29-01", "CLM-S30-01", "CLM-S34-01"],
-      "status": "production_quality_gate"
+      "owner": "redbook-writing-maintainers",
+      "status": "active",
+      "review_by": "2026-10-17",
+      "basis_claim_ids": [
+        "CLM-S7-01",
+        "CLM-S7-02",
+        "CLM-S17-01",
+        "CLM-S28-01",
+        "CLM-S29-01",
+        "CLM-S30-01",
+        "CLM-S34-01"
+      ],
+      "decision_scope": "production_quality_gate",
+      "limitations": "Internal project decision only; it is not a platform fact and cannot upgrade external evidence."
     },
     {
       "decision_id": "PD-METRIC-BY-JOB",
       "decision": "Evaluation metrics are selected from the content's primary job and surface rather than one global engagement-rate threshold.",
-      "basis": ["CLM-S1-04", "CLM-S19-02"],
-      "status": "project_measurement_policy"
+      "owner": "redbook-writing-maintainers",
+      "status": "active",
+      "review_by": "2026-10-17",
+      "basis_claim_ids": [
+        "CLM-S1-04",
+        "CLM-S19-02"
+      ],
+      "decision_scope": "project_measurement_policy",
+      "limitations": "Internal project decision only; it is not a platform fact and cannot upgrade external evidence."
     },
     {
       "decision_id": "PD-AUDITABILITY",
       "decision": "The system retains source, hypothesis, version, review, delivery conditions, outcome, counterevidence, and selection/rejection reason.",
-      "basis": ["CLM-S17-01", "CLM-S21-01", "CLM-S28-01", "CLM-S29-01"],
-      "status": "project_schema_policy"
+      "owner": "redbook-writing-maintainers",
+      "status": "active",
+      "review_by": "2026-10-17",
+      "basis_claim_ids": [
+        "CLM-S17-01",
+        "CLM-S21-01",
+        "CLM-S28-01",
+        "CLM-S29-01"
+      ],
+      "decision_scope": "project_schema_policy",
+      "limitations": "Internal project decision only; it is not a platform fact and cannot upgrade external evidence."
     },
     {
       "decision_id": "PD-BRIEF-MOTIVE",
       "decision": "A production brief records functional need, lived scene, motive, and perceivable outcome separately before it selects a carrier or aesthetic direction.",
-      "basis": ["CLM-S22-01", "CLM-S24-01"],
-      "status": "project_brief_policy"
+      "owner": "redbook-writing-maintainers",
+      "status": "active",
+      "review_by": "2026-10-17",
+      "basis_claim_ids": [
+        "CLM-S22-01",
+        "CLM-S24-01"
+      ],
+      "decision_scope": "project_brief_policy",
+      "limitations": "Internal project decision only; it is not a platform fact and cannot upgrade external evidence."
     },
     {
       "decision_id": "PD-OWNER-REVIEWER",
       "decision": "Each SKU-content-delivery unit has an explicit owner and an independent reviewer for material strategic or budget decisions.",
-      "basis": ["CLM-S23-01", "CLM-S24-01"],
-      "status": "project_governance_policy"
+      "owner": "redbook-writing-maintainers",
+      "status": "active",
+      "review_by": "2026-10-17",
+      "basis_claim_ids": [
+        "CLM-S23-01",
+        "CLM-S24-01"
+      ],
+      "decision_scope": "project_governance_policy",
+      "limitations": "Internal project decision only; it is not a platform fact and cannot upgrade external evidence."
     },
     {
       "decision_id": "PD-MODEL-LIFECYCLE",
       "decision": "Exploratory content models and scaled production variants are separate objects; models can expire or be downgraded and bulk generation never counts as validation.",
-      "basis": ["CLM-S25-01", "CLM-S26-01"],
-      "status": "project_evidence_policy"
+      "owner": "redbook-writing-maintainers",
+      "status": "active",
+      "review_by": "2026-10-17",
+      "basis_claim_ids": [
+        "CLM-S25-01",
+        "CLM-S26-01"
+      ],
+      "decision_scope": "project_evidence_policy",
+      "limitations": "Internal project decision only; it is not a platform fact and cannot upgrade external evidence."
     },
     {
       "decision_id": "PD-INDUSTRIALIZATION-BOUNDARY",
       "decision": "Industrialization scales evidence capture, material versioning, review, and learning; it does not scale fabricated native identities, covert capture, staged comments, or pseudo-precise thresholds.",
-      "basis": ["CLM-S15-01", "CLM-S27-01"],
-      "status": "compliance_and_quality_gate"
+      "owner": "redbook-writing-maintainers",
+      "status": "active",
+      "review_by": "2026-10-17",
+      "basis_claim_ids": [
+        "CLM-S15-01",
+        "CLM-S27-01"
+      ],
+      "decision_scope": "compliance_and_quality_gate",
+      "limitations": "Internal project decision only; it is not a platform fact and cannot upgrade external evidence."
     },
     {
       "decision_id": "PD-SENSITIVE-SKU-SURFACE",
       "decision": "Relationship education and adult-product commercialization are separate eligibility questions; commercial readiness for a sensitive SKU fails closed until the exact account, SKU, collaboration or advertising surface, qualifications, current rule, and review outcome are documented.",
-      "basis": ["CLM-S7-02"],
-      "status": "current_platform_scope_gate"
+      "owner": "redbook-writing-maintainers",
+      "status": "active",
+      "review_by": "2026-10-17",
+      "basis_claim_ids": [
+        "CLM-S7-02"
+      ],
+      "decision_scope": "current_platform_scope_gate",
+      "limitations": "Internal project decision only; it is not a platform fact and cannot upgrade external evidence."
     },
     {
       "decision_id": "PD-AUTHORIZATION-SCOPE",
       "decision": "Commercial production records brand, agency, creator, factual or qualification reviewer, and brand approver separately, and requires a current scope-matching authorization before an agency workflow advances.",
-      "basis": ["CLM-S30-01"],
-      "status": "commercial_governance_gate"
+      "owner": "redbook-writing-maintainers",
+      "status": "active",
+      "review_by": "2026-10-17",
+      "basis_claim_ids": [
+        "CLM-S30-01"
+      ],
+      "decision_scope": "commercial_governance_gate",
+      "limitations": "Internal project decision only; it is not a platform fact and cannot upgrade external evidence."
     },
     {
       "decision_id": "PD-ASSET-RIGHTS-LINEAGE",
       "decision": "UGC and experience assets retain origin, authenticity, consent, reuse rights, derivative hash, curation status, and permitted surface before they enter a reusable material library.",
-      "basis": ["CLM-S32-01", "CLM-S33-01"],
-      "status": "asset_governance_policy"
+      "owner": "redbook-writing-maintainers",
+      "status": "active",
+      "review_by": "2026-10-17",
+      "basis_claim_ids": [
+        "CLM-S32-01",
+        "CLM-S33-01"
+      ],
+      "decision_scope": "asset_governance_policy",
+      "limitations": "Internal project decision only; it is not a platform fact and cannot upgrade external evidence."
     }
-  ]
+  ],
+  "taxonomy": {
+    "taxonomy_version": 2,
+    "grade": [
+      "A",
+      "B",
+      "C",
+      "D"
+    ],
+    "allowed_use_code": [
+      "compliance_gate",
+      "product_capability_gate",
+      "sensitive_commercial_scope_gate",
+      "authorization_gate",
+      "creator_disclosure_gate",
+      "production_process",
+      "query_design",
+      "asset_rights_schema",
+      "audit_schema",
+      "brief_field_design",
+      "commercial_delivery_audit",
+      "creator_role_schema",
+      "distribution_audit",
+      "evidence_schema",
+      "feedback_schema",
+      "governance_schema",
+      "industrialization_guardrail",
+      "measurement_design",
+      "model_lifecycle_design",
+      "series_architecture",
+      "surface_job_schema",
+      "translation_trace",
+      "schema_hypothesis",
+      "risk_lead"
+    ],
+    "prohibited_use_code": [
+      "algorithm_causality",
+      "covert_capture",
+      "default_production_quota",
+      "fabricated_engagement",
+      "fabricated_experience",
+      "fixed_capacity_threshold",
+      "fixed_kpi_threshold",
+      "fixed_traffic_threshold",
+      "hidden_commercial_relationship",
+      "organic_randomized_ab_claim",
+      "performance_tier",
+      "platform_wide_ban_claim",
+      "rule_evidence_support",
+      "style_ready_evidence"
+    ],
+    "grade_allowed_use_codes": {
+      "A": [
+        "compliance_gate",
+        "product_capability_gate",
+        "sensitive_commercial_scope_gate",
+        "authorization_gate",
+        "creator_disclosure_gate",
+        "production_process",
+        "query_design",
+        "asset_rights_schema",
+        "audit_schema",
+        "brief_field_design",
+        "commercial_delivery_audit",
+        "creator_role_schema",
+        "distribution_audit",
+        "evidence_schema",
+        "feedback_schema",
+        "governance_schema",
+        "industrialization_guardrail",
+        "measurement_design",
+        "model_lifecycle_design",
+        "series_architecture",
+        "surface_job_schema",
+        "translation_trace",
+        "schema_hypothesis",
+        "risk_lead"
+      ],
+      "B": [
+        "production_process",
+        "query_design",
+        "asset_rights_schema",
+        "audit_schema",
+        "brief_field_design",
+        "commercial_delivery_audit",
+        "creator_role_schema",
+        "distribution_audit",
+        "evidence_schema",
+        "feedback_schema",
+        "governance_schema",
+        "industrialization_guardrail",
+        "measurement_design",
+        "model_lifecycle_design",
+        "series_architecture",
+        "surface_job_schema",
+        "translation_trace",
+        "schema_hypothesis",
+        "risk_lead"
+      ],
+      "C": [
+        "schema_hypothesis",
+        "risk_lead"
+      ],
+      "D": [
+        "schema_hypothesis",
+        "risk_lead"
+      ]
+    },
+    "claim_type": [
+      "case_practice",
+      "current_rule",
+      "experience_signal",
+      "governance_framework",
+      "product_capability",
+      "research_finding",
+      "workflow_method"
+    ],
+    "applies_to": [
+      "asset_governance",
+      "commercial_collaboration",
+      "content_brief",
+      "content_measurement",
+      "content_production",
+      "content_research",
+      "content_review",
+      "cross_platform_delivery",
+      "organic_content",
+      "organization_governance",
+      "paid_content",
+      "sensitive_category",
+      "style_research"
+    ]
+  }
 }

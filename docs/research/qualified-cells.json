@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "taxonomy_version": 2,
+  "generated_at": "2026-07-18T00:00:00+08:00",
+  "status": "incomplete",
+  "release_gate": {
+    "minimum_qualified_cells": 10,
+    "minimum_distinct_carriers": 6,
+    "minimum_distinct_primary_jobs": 4,
+    "requires_recomputable_high": true,
+    "requires_control_or_boundary": true,
+    "requires_page_complete_asset_hashes": true,
+    "requires_usable_rights_status": true
+  },
+  "qualified_cell_count": 0,
+  "distinct_carrier_count": 0,
+  "distinct_primary_job_count": 0,
+  "qualified_cells": {},
+  "starter_pack_action": "forbidden",
+  "gap_reasons": [
+    {
+      "code": "performance_receipts_unverified",
+      "observation_ids": [
+        "O-XHS-001",
+        "O-XHS-002",
+        "O-XHS-003",
+        "O-XHS-004",
+        "O-XHS-005",
+        "O-XHS-006",
+        "O-XHS-007",
+        "O-XHS-008",
+        "O-XHS-009",
+        "O-XHS-010",
+        "O-XHS-011",
+        "O-XHS-012"
+      ],
+      "detail": "No committed row contains a complete independently recomputable metric, definition, member-set, baseline, and tier receipt."
+    },
+    {
+      "code": "page_assets_unhashed",
+      "detail": "The public index preserves short page observations but intentionally does not claim page-complete asset hashes."
+    },
+    {
+      "code": "rights_status_unverified",
+      "detail": "Public visibility does not establish reuse, adaptation, model-training, or commercial production rights."
+    },
+    {
+      "code": "matched_controls_incomplete",
+      "detail": "Several observations have only an age-mismatched, different-job, or same-series boundary rather than a published matched-control set."
+    }
+  ],
+  "limitations": [
+    "The twelve observations remain research leads or task-fit boundaries; none is a ready style rule.",
+    "The starter aesthetic pack must remain absent or unchanged until the full 10-cell, 6-carrier, 4-job gate is independently verified."
+  ]
+}
