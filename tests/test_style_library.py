@@ -1063,6 +1063,75 @@ class StyleLibrarySchemaTests(unittest.TestCase):
                 """
             )
 
+    def test_rule_evidence_targets_cannot_be_deleted(self) -> None:
+        run_cli("init", self.db)
+        con = sqlite3.connect(self.db)
+        self.addCleanup(con.close)
+        seed_style_graph(con)
+        con.executemany(
+            """
+            INSERT INTO rule_evidence(
+                rule_evidence_id, rule_id, observation_type,
+                observation_id, evidence_role
+            ) VALUES (?, ?, ?, ?, 'support')
+            """,
+            [
+                ("E-VISUAL", "RULE-A", "visual", "VISUAL-A"),
+                ("E-COPY", "RULE-B", "copy", "COPY-A"),
+                ("E-METRIC", "RULE-A", "post_metric", "METRIC-A"),
+            ],
+        )
+
+        targets = [
+            ("visual_observations", "visual_observation_id", "VISUAL-A"),
+            ("copy_observations", "observation_id", "COPY-A"),
+            ("post_metrics", "post_metric_id", "METRIC-A"),
+        ]
+        for table, primary_key, target_id in targets:
+            with self.subTest(table=table):
+                with self.assertRaisesRegex(
+                    sqlite3.IntegrityError, "rule_evidence"
+                ):
+                    con.execute(
+                        f"DELETE FROM {table} WHERE {primary_key} = ?",
+                        (target_id,),
+                    )
+
+    def test_rule_evidence_target_primary_keys_cannot_be_updated(self) -> None:
+        run_cli("init", self.db)
+        con = sqlite3.connect(self.db)
+        self.addCleanup(con.close)
+        seed_style_graph(con)
+        con.executemany(
+            """
+            INSERT INTO rule_evidence(
+                rule_evidence_id, rule_id, observation_type,
+                observation_id, evidence_role
+            ) VALUES (?, ?, ?, ?, 'support')
+            """,
+            [
+                ("E-VISUAL", "RULE-A", "visual", "VISUAL-A"),
+                ("E-COPY", "RULE-B", "copy", "COPY-A"),
+                ("E-METRIC", "RULE-A", "post_metric", "METRIC-A"),
+            ],
+        )
+
+        targets = [
+            ("visual_observations", "visual_observation_id", "VISUAL-A"),
+            ("copy_observations", "observation_id", "COPY-A"),
+            ("post_metrics", "post_metric_id", "METRIC-A"),
+        ]
+        for table, primary_key, target_id in targets:
+            with self.subTest(table=table):
+                with self.assertRaisesRegex(
+                    sqlite3.IntegrityError, "rule_evidence"
+                ):
+                    con.execute(
+                        f"UPDATE {table} SET {primary_key} = ? "
+                        f"WHERE {primary_key} = ?",
+                        (f"{target_id}-RENAMED", target_id),
+                    )
+
     def test_each_draft_allows_at_most_one_primary_binding(self) -> None:
         run_cli("init", self.db)
         con = sqlite3.connect(self.db)
@@ -1212,6 +1281,147 @@ class StyleLibrarySchemaTests(unittest.TestCase):
                     )
         insert_binding(con, "BIND-VALID", "DRAFT-VALID")
 
+    def test_selected_rules_cannot_be_deleted_or_primary_key_updated(self) -> None:
+        run_cli("init", self.db)
+        con = sqlite3.connect(self.db)
+        self.addCleanup(con.close)
+        seed_style_graph(con)
+        insert_binding(
+            con,
+            "BIND-A",
+            "DRAFT-A",
+            selected_rule_ids='["RULE-A", "RULE-B"]',
+        )
+
+        operations = [
+            ("delete", "DELETE FROM archetype_rules WHERE rule_id = 'RULE-A'"),
+            (
+                "primary-key update",
+                """
+                UPDATE archetype_rules SET rule_id = 'RULE-B-RENAMED'
+                WHERE rule_id = 'RULE-B'
+                """,
+            ),
+        ]
+        for operation, statement in operations:
+            with self.subTest(operation=operation):
+                with self.assertRaisesRegex(
+                    sqlite3.IntegrityError, "binding_rule"
+                ):
+                    con.execute(statement)
+
+    def test_draft_asset_rules_cannot_be_deleted_or_primary_key_updated(self) -> None:
+        run_cli("init", self.db)
+        con = sqlite3.connect(self.db)
+        self.addCleanup(con.close)
+        seed_style_graph(con)
+        con.executemany(
+            """
+            INSERT INTO archetype_rules(
+                rule_id, archetype_id, archetype_version, rule_type
+            ) VALUES (?, 'ARCH-A', 1, 'visual')
+            """,
+            [("RULE-ASSET-DELETE",), ("RULE-ASSET-UPDATE",)],
+        )
+        insert_binding(con, "BIND-A", "DRAFT-A")
+        con.execute(
+            """
+            INSERT INTO draft_assets(
+                draft_asset_id, draft_binding_id, asset_id,
+                slide_index, style_rule_ids
+            ) VALUES (
+                'DRAFT-ASSET-A', 'BIND-A', 'ASSET-DRAFT-1', 0,
+                '["RULE-ASSET-DELETE", "RULE-ASSET-UPDATE"]'
+            )
+            """
+        )
+
+        operations = [
+            (
+                "delete",
+                "DELETE FROM archetype_rules "
+                "WHERE rule_id = 'RULE-ASSET-DELETE'",
+            ),
+            (
+                "primary-key update",
+                """
+                UPDATE archetype_rules SET rule_id = 'RULE-ASSET-RENAMED'
+                WHERE rule_id = 'RULE-ASSET-UPDATE'
+                """,
+            ),
+        ]
+        for operation, statement in operations:
+            with self.subTest(operation=operation):
+                with self.assertRaisesRegex(
+                    sqlite3.IntegrityError, "draft_asset_rule"
+                ):
+                    con.execute(statement)
+
+    def test_referenced_posts_cannot_be_deleted(self) -> None:
+        run_cli("init", self.db)
+        con = sqlite3.connect(self.db)
+        self.addCleanup(con.close)
+        seed_style_graph(con)
+        con.executemany(
+            """
+            INSERT INTO style_posts(
+                library_post_id, platform, library_account_id, status
+            ) VALUES (?, 'xiaohongshu', 'ACC-A', 'active')
+            """,
+            [("POST-REF-DELETE",), ("POST-COUNTER-DELETE",)],
+        )
+        insert_binding(
+            con,
+            "BIND-A",
+            "DRAFT-A",
+            reference_post_ids='["POST-REF-DELETE"]',
+            counterexample_post_ids='["POST-COUNTER-DELETE"]',
+        )
+
+        for post_id in ("POST-REF-DELETE", "POST-COUNTER-DELETE"):
+            with self.subTest(post_id=post_id):
+                with self.assertRaisesRegex(
+                    sqlite3.IntegrityError, "binding_.*post"
+                ):
+                    con.execute(
+                        "DELETE FROM style_posts WHERE library_post_id = ?",
+                        (post_id,),
+                    )
+
+    def test_referenced_post_primary_keys_cannot_be_updated(self) -> None:
+        run_cli("init", self.db)
+        con = sqlite3.connect(self.db)
+        self.addCleanup(con.close)
+        seed_style_graph(con)
+        con.executemany(
+            """
+            INSERT INTO style_posts(
+                library_post_id, platform, library_account_id, status
+            ) VALUES (?, 'xiaohongshu', 'ACC-A', 'active')
+            """,
+            [("POST-REF-UPDATE",), ("POST-COUNTER-UPDATE",)],
+        )
+        insert_binding(
+            con,
+            "BIND-A",
+            "DRAFT-A",
+            reference_post_ids='["POST-REF-UPDATE"]',
+            counterexample_post_ids='["POST-COUNTER-UPDATE"]',
+        )
+
+        for post_id in ("POST-REF-UPDATE", "POST-COUNTER-UPDATE"):
+            with self.subTest(post_id=post_id):
+                with self.assertRaisesRegex(
+                    sqlite3.IntegrityError, "binding_.*post"
+                ):
+                    con.execute(
+                        """
+                        UPDATE style_posts SET library_post_id = ?
+                        WHERE library_post_id = ?
+                        """,
+                        (f"{post_id}-RENAMED", post_id),
+                    )
+
     def test_primary_binding_requires_supported_or_reusable_archetype(self) -> None:
         run_cli("init", self.db)
         con = sqlite3.connect(self.db)
@@ -1346,6 +1556,149 @@ class StyleLibrarySchemaTests(unittest.TestCase):
                 WHERE draft_binding_id='BIND-LIBRARY'
                 """
             )
+
+    def test_binding_source_is_pinned_after_a_draft_asset_exists(self) -> None:
+        run_cli("init", self.db)
+        con = sqlite3.connect(self.db)
+        self.addCleanup(con.close)
+        seed_style_graph(con)
+        insert_binding(con, "BIND-LIBRARY", "DRAFT-LIBRARY")
+        con.execute(
+            """
+            INSERT INTO draft_style_bindings(
+                draft_binding_id, draft_id, binding_role, binding_source,
+                starter_pack_id, starter_pack_version,
+                starter_pack_sha256, starter_prompt_id,
+                selected_rule_ids
+            ) VALUES (
+                'BIND-STARTER', 'DRAFT-STARTER', 'primary', 'starter_pack',
+                'STARTER-WARM', 1, 'starter-sha', 'PROMPT-COVER', '[]'
+            )
+            """
+        )
+        con.executemany(
+            """
+            INSERT INTO draft_assets(
+                draft_asset_id, draft_binding_id, asset_id,
+                slide_index, style_rule_ids
+            ) VALUES (?, ?, ?, 0, ?)
+            """,
+            [
+                (
+                    "DRAFT-ASSET-LIBRARY",
+                    "BIND-LIBRARY",
+                    "ASSET-DRAFT-1",
+                    '["RULE-A"]',
+                ),
+                (
+                    "DRAFT-ASSET-STARTER",
+                    "BIND-STARTER",
+                    "ASSET-DRAFT-2",
+                    "[]",
+                ),
+            ],
+        )
+
+        switches = [
+            (
+                "library-to-starter",
+                """
+                UPDATE draft_style_bindings
+                SET binding_source = 'starter_pack',
+                    archetype_id = NULL,
+                    archetype_version = NULL,
+                    archetype_snapshot_sha256 = NULL,
+                    selected_rule_ids = '[]',
+                    starter_pack_id = 'STARTER-WARM',
+                    starter_pack_version = 1,
+                    starter_pack_sha256 = 'starter-sha',
+                    starter_prompt_id = 'PROMPT-COVER'
+                WHERE draft_binding_id = 'BIND-LIBRARY'
+                """,
+            ),
+            (
+                "starter-to-library",
+                """
+                UPDATE draft_style_bindings
+                SET binding_source = 'library',
+                    archetype_id = 'ARCH-A',
+                    archetype_version = 1,
+                    archetype_snapshot_sha256 = 'snapshot-a-v1',
+                    selected_rule_ids = '["RULE-A"]',
+                    starter_pack_id = NULL,
+                    starter_pack_version = NULL,
+                    starter_pack_sha256 = NULL,
+                    starter_prompt_id = NULL
+                WHERE draft_binding_id = 'BIND-STARTER'
+                """,
+            ),
+        ]
+        for direction, statement in switches:
+            with self.subTest(direction=direction):
+                with self.assertRaisesRegex(
+                    sqlite3.IntegrityError,
+                    "binding_fields_pinned_by_draft_assets",
+                ):
+                    con.execute(statement)
+
+    def test_binding_archetype_fields_are_pinned_after_assets_exist(self) -> None:
+        run_cli("init", self.db)
+        con = sqlite3.connect(self.db)
+        self.addCleanup(con.close)
+        seed_style_graph(con)
+        bindings = [
+            ("BIND-ARCHETYPE", "DRAFT-ARCHETYPE"),
+            ("BIND-VERSION", "DRAFT-VERSION"),
+            ("BIND-RULES", "DRAFT-RULES"),
+        ]
+        for binding_id, draft_id in bindings:
+            insert_binding(con, binding_id, draft_id)
+        con.executemany(
+            """
+            INSERT INTO draft_assets(
+                draft_asset_id, draft_binding_id, asset_id,
+                slide_index, style_rule_ids
+            ) VALUES (?, ?, 'ASSET-DRAFT-1', 0, '["RULE-A"]')
+            """,
+            [
+                ("DRAFT-ASSET-ARCHETYPE", "BIND-ARCHETYPE"),
+                ("DRAFT-ASSET-VERSION", "BIND-VERSION"),
+                ("DRAFT-ASSET-RULES", "BIND-RULES"),
+            ],
+        )
+
+        valid_rebindings = [
+            (
+                "BIND-ARCHETYPE",
+                """
+                archetype_id = 'ARCH-B', archetype_version = 1,
+                archetype_snapshot_sha256 = 'snapshot-b-v1',
+                selected_rule_ids = '["RULE-OTHER"]'
+                """,
+            ),
+            (
+                "BIND-VERSION",
+                """
+                archetype_version = 2,
+                archetype_snapshot_sha256 = 'snapshot-a-v2',
+                selected_rule_ids = '["RULE-A-V2"]'
+                """,
+            ),
+            ("BIND-RULES", "selected_rule_ids = '[\"RULE-B\"]'"),
+        ]
+        for binding_id, assignments in valid_rebindings:
+            with self.subTest(binding_id=binding_id):
+                with self.assertRaisesRegex(
+                    sqlite3.IntegrityError,
+                    "binding_fields_pinned_by_draft_assets",
+                ):
+                    con.execute(
+                        f"""
+                        UPDATE draft_style_bindings SET {assignments}
+                        WHERE draft_binding_id = ?
+                        """,
+                        (binding_id,),
+                    )
 
     def test_draft_assets_keep_one_current_revision_per_binding_slide(self) -> None:
         run_cli("init", self.db)

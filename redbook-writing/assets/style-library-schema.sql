@@ -501,6 +501,75 @@ BEGIN
     END;
 END;
 
+CREATE TRIGGER IF NOT EXISTS trg_visual_observation_guard_evidence_delete
+BEFORE DELETE ON visual_observations
+WHEN EXISTS (
+    SELECT 1 FROM rule_evidence
+    WHERE observation_type = 'visual'
+      AND observation_id = OLD.visual_observation_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'rule_evidence_visual_target_referenced');
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_visual_observation_guard_evidence_update
+BEFORE UPDATE OF visual_observation_id ON visual_observations
+WHEN NEW.visual_observation_id IS NOT OLD.visual_observation_id
+ AND EXISTS (
+     SELECT 1 FROM rule_evidence
+     WHERE observation_type = 'visual'
+       AND observation_id = OLD.visual_observation_id
+ )
+BEGIN
+    SELECT RAISE(ABORT, 'rule_evidence_visual_target_referenced');
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_copy_observation_guard_evidence_delete
+BEFORE DELETE ON copy_observations
+WHEN EXISTS (
+    SELECT 1 FROM rule_evidence
+    WHERE observation_type = 'copy'
+      AND observation_id = OLD.observation_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'rule_evidence_copy_target_referenced');
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_copy_observation_guard_evidence_update
+BEFORE UPDATE OF observation_id ON copy_observations
+WHEN NEW.observation_id IS NOT OLD.observation_id
+ AND EXISTS (
+     SELECT 1 FROM rule_evidence
+     WHERE observation_type = 'copy'
+       AND observation_id = OLD.observation_id
+ )
+BEGIN
+    SELECT RAISE(ABORT, 'rule_evidence_copy_target_referenced');
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_post_metric_guard_evidence_delete
+BEFORE DELETE ON post_metrics
+WHEN EXISTS (
+    SELECT 1 FROM rule_evidence
+    WHERE observation_type = 'post_metric'
+      AND observation_id = OLD.post_metric_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'rule_evidence_post_metric_target_referenced');
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_post_metric_guard_evidence_update
+BEFORE UPDATE OF post_metric_id ON post_metrics
+WHEN NEW.post_metric_id IS NOT OLD.post_metric_id
+ AND EXISTS (
+     SELECT 1 FROM rule_evidence
+     WHERE observation_type = 'post_metric'
+       AND observation_id = OLD.post_metric_id
+ )
+BEGIN
+    SELECT RAISE(ABORT, 'rule_evidence_post_metric_target_referenced');
+END;
+
 CREATE INDEX IF NOT EXISTS ix_rule_evidence_rule
     ON rule_evidence(rule_id);
 
@@ -789,6 +858,37 @@ CREATE TABLE IF NOT EXISTS draft_assets (
     CHECK (revision_of IS NULL OR revision_of <> draft_asset_id)
 ) STRICT;
 
+CREATE TRIGGER IF NOT EXISTS trg_draft_binding_guard_pinned_asset_fields
+BEFORE UPDATE OF
+    binding_source,
+    archetype_id,
+    archetype_version,
+    archetype_snapshot_sha256,
+    selected_rule_ids,
+    starter_pack_id,
+    starter_pack_version,
+    starter_pack_sha256,
+    starter_prompt_id
+ON draft_style_bindings
+WHEN EXISTS (
+    SELECT 1 FROM draft_assets
+    WHERE draft_binding_id = OLD.draft_binding_id
+)
+AND (
+    NEW.binding_source IS NOT OLD.binding_source
+    OR NEW.archetype_id IS NOT OLD.archetype_id
+    OR NEW.archetype_version IS NOT OLD.archetype_version
+    OR NEW.archetype_snapshot_sha256 IS NOT OLD.archetype_snapshot_sha256
+    OR NEW.selected_rule_ids IS NOT OLD.selected_rule_ids
+    OR NEW.starter_pack_id IS NOT OLD.starter_pack_id
+    OR NEW.starter_pack_version IS NOT OLD.starter_pack_version
+    OR NEW.starter_pack_sha256 IS NOT OLD.starter_pack_sha256
+    OR NEW.starter_prompt_id IS NOT OLD.starter_prompt_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'binding_fields_pinned_by_draft_assets');
+END;
+
 CREATE TRIGGER IF NOT EXISTS trg_draft_asset_validate_insert
 BEFORE INSERT ON draft_assets
 BEGIN
@@ -875,6 +975,111 @@ CREATE UNIQUE INDEX IF NOT EXISTS ux_draft_assets_current_slide
 
 CREATE INDEX IF NOT EXISTS ix_draft_assets_binding
     ON draft_assets(draft_binding_id);
+
+CREATE TRIGGER IF NOT EXISTS trg_archetype_rule_guard_binding_delete
+BEFORE DELETE ON archetype_rules
+WHEN EXISTS (
+    SELECT 1
+    FROM draft_style_bindings AS binding,
+         json_each(binding.selected_rule_ids) AS item
+    WHERE item.type = 'text'
+      AND item.value = OLD.rule_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'binding_rule_reference_exists');
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_archetype_rule_guard_binding_update
+BEFORE UPDATE OF rule_id, archetype_id, archetype_version ON archetype_rules
+WHEN (
+    NEW.rule_id IS NOT OLD.rule_id
+    OR NEW.archetype_id IS NOT OLD.archetype_id
+    OR NEW.archetype_version IS NOT OLD.archetype_version
+)
+AND EXISTS (
+    SELECT 1
+    FROM draft_style_bindings AS binding,
+         json_each(binding.selected_rule_ids) AS item
+    WHERE item.type = 'text'
+      AND item.value = OLD.rule_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'binding_rule_reference_exists');
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_archetype_rule_guard_draft_asset_delete
+BEFORE DELETE ON archetype_rules
+WHEN EXISTS (
+    SELECT 1
+    FROM draft_assets AS asset,
+         json_each(asset.style_rule_ids) AS item
+    WHERE item.type = 'text'
+      AND item.value = OLD.rule_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'draft_asset_rule_reference_exists');
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_archetype_rule_guard_draft_asset_update
+BEFORE UPDATE OF rule_id, archetype_id, archetype_version ON archetype_rules
+WHEN (
+    NEW.rule_id IS NOT OLD.rule_id
+    OR NEW.archetype_id IS NOT OLD.archetype_id
+    OR NEW.archetype_version IS NOT OLD.archetype_version
+)
+AND EXISTS (
+    SELECT 1
+    FROM draft_assets AS asset,
+         json_each(asset.style_rule_ids) AS item
+    WHERE item.type = 'text'
+      AND item.value = OLD.rule_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'draft_asset_rule_reference_exists');
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_style_post_guard_binding_delete
+BEFORE DELETE ON style_posts
+WHEN EXISTS (
+    SELECT 1
+    FROM draft_style_bindings AS binding,
+         json_each(binding.reference_library_post_ids) AS item
+    WHERE item.type = 'text'
+      AND item.value = OLD.library_post_id
+)
+OR EXISTS (
+    SELECT 1
+    FROM draft_style_bindings AS binding,
+         json_each(binding.counterexample_library_post_ids) AS item
+    WHERE item.type = 'text'
+      AND item.value = OLD.library_post_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'binding_referenced_post_exists');
+END;
+
+CREATE TRIGGER IF NOT EXISTS trg_style_post_guard_binding_update
+BEFORE UPDATE OF library_post_id ON style_posts
+WHEN NEW.library_post_id IS NOT OLD.library_post_id
+AND (
+    EXISTS (
+        SELECT 1
+        FROM draft_style_bindings AS binding,
+             json_each(binding.reference_library_post_ids) AS item
+        WHERE item.type = 'text'
+          AND item.value = OLD.library_post_id
+    )
+    OR EXISTS (
+        SELECT 1
+        FROM draft_style_bindings AS binding,
+             json_each(binding.counterexample_library_post_ids) AS item
+        WHERE item.type = 'text'
+          AND item.value = OLD.library_post_id
+    )
+)
+BEGIN
+    SELECT RAISE(ABORT, 'binding_referenced_post_exists');
+END;
 
 CREATE TABLE IF NOT EXISTS draft_outcomes (
     draft_outcome_id TEXT PRIMARY KEY NOT NULL,
