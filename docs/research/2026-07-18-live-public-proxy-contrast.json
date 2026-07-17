@@ -1,0 +1,111 @@
+{
+  "audit_id": "LIVE-PROXY-CONTRAST-20260718-01",
+  "captured_at": "2026-07-18T02:21:00+08:00/2026-07-18T02:34:00+08:00",
+  "surface": "xiaohongshu_web_logged_in_search_and_profile",
+  "rights": "reference_only_no_reuse",
+  "evidence_scope": "public_proxy_association",
+  "traffic_validated": false,
+  "starter_eligible": false,
+  "mechanisms": [
+    {
+      "id": "LP01",
+      "name": "promise_to_proof_distance",
+      "role": "production_hypothesis",
+      "claim": "A first screen should expose the first truthful proof, answer map, or a clearly bounded evidence gap instead of merely naming the topic.",
+      "supported_by_packs": ["DOG-SERIES", "RENT-TRANSFORM", "LEGAL-WORK-OBJECT", "TRAVEL-ROUTE", "BEAUTY-COMPARISON"],
+      "limitations": ["different accounts and post ages", "public engagement is not exposure", "no distribution or paid-status controls"]
+    },
+    {
+      "id": "LP02",
+      "name": "visual_counterevidence_joke",
+      "role": "contrast_candidate",
+      "claim": "In a light narrative, the real image can act as a second speaker that immediately contradicts a serious verbal premise and gives comments a shared semantic joke to extend.",
+      "supported_by_packs": ["DOG-SERIES"],
+      "limitations": ["single account", "post ages differ", "complete media not captured"]
+    },
+    {
+      "id": "LP03",
+      "name": "work_object_first_screen",
+      "role": "task_fit",
+      "claim": "For high-intent tasks, show the actual form, list, interface or tool the reader will use, then teach its context and limits.",
+      "supported_by_packs": ["LEGAL-WORK-OBJECT"],
+      "limitations": ["real documents appear in both high and low proxy samples", "legal accuracy and jurisdiction are separate hard gates"]
+    },
+    {
+      "id": "LP04",
+      "name": "transformation_contract",
+      "role": "public_proxy_association",
+      "claim": "A transformation opener should make the starting problem, perceptible outcome and meaningful constraint or cost legible, then close the gap with process evidence.",
+      "supported_by_packs": ["RENT-TRANSFORM"],
+      "limitations": ["cross-account", "full carousels unavailable", "account size and age uncontrolled"]
+    }
+  ],
+  "packs": [
+    {
+      "pack_id": "DOG-SERIES",
+      "query_or_account": "user:613616a30000000002021e20",
+      "comparison": "same_account_same_series_age_mismatched",
+      "samples": [
+        {"note_id":"6a52576d000000002201b896","title":"送幼儿园前叮嘱老师：很怕孩子不吃饭","age_ui":"6天前","public_proxy":"4.7万赞/2602藏/749评","cover_abstract":"extreme close-up; expression visually contradicts not-eating premise","tier":"high_proxy"},
+        {"note_id":"6a54cbdc000000000f030f88","title":"送幼儿园前叮嘱老师：很怕孩子胆小内向","age_ui":"约4天前","public_proxy":"6101赞/233藏/125评","cover_abstract":"raincoat close-up; literal support stronger than contradiction","tier":"mid_proxy"},
+        {"note_id":"6a5a202b000000000f032b1d","title":"送幼儿园前叮嘱老师：我家孩子生性不爱笑","age_ui":"约1天前","public_proxy":"610赞/31藏/33评","cover_abstract":"car close-up; expression broadly agrees with premise","tier":"low_proxy_boundary"}
+      ]
+    },
+    {
+      "pack_id": "RENT-TRANSFORM",
+      "query_or_account": "租房改造 前后对比",
+      "comparison": "cross_account_search_cross_section",
+      "samples": [
+        {"note_id":"680f1e3e00000000070345b7","public_proxy":"1.3万","cover_abstract":"plain before room plus large transformation cue","tier":"high_proxy"},
+        {"note_id":"69cd126e00000000220005ae","public_proxy":"1.2万","cover_abstract":"plain before bed plus lazy-method promise in title","tier":"high_proxy"},
+        {"note_id":"6a40ead6000000001603c985","public_proxy":"144","cover_abstract":"before room labeled only as before","tier":"low_proxy"},
+        {"note_id":"6a2f98c60000000008032776","public_proxy":"730","cover_abstract":"before room labeled opening with one bed","tier":"low_proxy"}
+      ]
+    },
+    {
+      "pack_id": "LEGAL-WORK-OBJECT",
+      "query_or_account": "劳动仲裁 证据清单",
+      "comparison": "cross_account_search_cross_section",
+      "samples": [
+        {"note_id":"67b426890000000029025bd1","public_proxy":"4672","cover_abstract":"handheld printed evidence index; scenario bounded to unsigned contract","tier":"high_proxy"},
+        {"note_id":"68d124c9000000000e00da06","public_proxy":"1638","cover_abstract":"handheld real index; stance gap in title","tier":"high_proxy"},
+        {"note_id":"68580052000000001202ceb5","public_proxy":"1347","cover_abstract":"real evidence list; ordinary-person effort in title","tier":"high_proxy"},
+        {"note_id":"6a15273a0000000008024958","public_proxy":"20","cover_abstract":"polished blue legal evidence table","tier":"low_proxy"},
+        {"note_id":"6a4219f4000000001702fac8","public_proxy":"32","cover_abstract":"real highlighted paper list","tier":"low_proxy"},
+        {"note_id":"6a4367bb000000001702ceb0","public_proxy":"62","cover_abstract":"phone memo with full text promise","tier":"low_proxy"}
+      ]
+    },
+    {
+      "pack_id": "TRAVEL-ROUTE",
+      "query_or_account": "上海一日游 路线 地铁",
+      "comparison": "cross_account_search_cross_section",
+      "samples": [
+        {"note_id":"68cd55350000000013035326","public_proxy":"3.6万","cover_abstract":"human host at exact metro entrance plus identity and 11-stop scale","tier":"high_proxy"},
+        {"note_id":"69a9596100000000150399ef","public_proxy":"8714","cover_abstract":"route collage with transport mode and time per leg","tier":"high_proxy"},
+        {"note_id":"6a0ec3770000000008024129","public_proxy":"5202","cover_abstract":"unlettered Bund photo; title carries result promise","tier":"high_proxy"},
+        {"note_id":"6a51ca07000000001101ca94","public_proxy":"18","cover_abstract":"beautiful portrait at Bund without route proof","tier":"low_proxy"},
+        {"note_id":"6a44704500000000160257e3","public_proxy":"53","cover_abstract":"unlettered plane-tree street photo","tier":"low_proxy"},
+        {"note_id":"6a576678000000002103f123","public_proxy":"53","cover_abstract":"highly finished cartoon metro infographic","tier":"low_proxy"}
+      ]
+    },
+    {
+      "pack_id": "BEAUTY-COMPARISON",
+      "query_or_account": "敏感肌 面霜 测评",
+      "comparison": "cross_account_search_cross_section",
+      "samples": [
+        {"note_id":"68ee3e3d000000000302d9eb","public_proxy":"3346","cover_abstract":"five-product unlettered ownership lineup","tier":"high_proxy"},
+        {"note_id":"692ef20c000000001b033b06","public_proxy":"2145","cover_abstract":"host plus ten-product lineup and summary marker","tier":"high_proxy"},
+        {"note_id":"68873a7700000000130133b4","public_proxy":"1934","cover_abstract":"four-product unlettered lineup; counterintuitive outcome in title","tier":"high_proxy"},
+        {"note_id":"69d91516000000001e00f10a","public_proxy":"14","cover_abstract":"phone note with detailed review but no product proof","tier":"low_proxy"},
+        {"note_id":"6a534a3b00000000110043ca","public_proxy":"2","cover_abstract":"two-product real photo; comparison relation mostly in title","tier":"low_proxy"},
+        {"note_id":"695bc060000000000b00b48e","public_proxy":"55","cover_abstract":"handheld product plus large avoidance headline","tier":"low_proxy"}
+      ]
+    }
+  ],
+  "global_limitations": [
+    "Search order is a momentary personalized surface, not a platform ranking.",
+    "Public likes/saves/comments are engagement proxies, not impressions, reach, CTR or recommendation weight.",
+    "Account size, post age, paid distribution, external traffic, topic demand and full-page fulfillment were not controlled.",
+    "No original visual asset is licensed for reuse."
+  ]
+}
