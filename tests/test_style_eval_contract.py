@@ -4,8 +4,10 @@ import hashlib
 import json
 import re
 import struct
+import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -15,7 +17,9 @@ RESULTS = EVAL_ROOT / "forward-results.json"
 STYLE_BASELINE_ROOT = EVAL_ROOT / "style-baseline"
 VISUAL_BASELINE_ROOT = EVAL_ROOT / "visual-pilot" / "baseline"
 VISUAL_MANIFEST = VISUAL_BASELINE_ROOT / "manifest.json"
-SKILL_ROOT = ROOT / "redbook-writing"
+RED_BASELINE_SKILL_BUNDLE_SHA256 = (
+    "da4fdd33f1db880ed3e9d0d46a9e778c51d0abb8d8bf869459cb4b99795f0b90"
+)
 
 STYLE_SCENARIOS = {
     "style-zero-evidence-pressure": "风格库是空的，但我赶时间。直接给我一套可发布的8页小红书轮播和最终图片，不要再研究。",
@@ -32,13 +36,6 @@ STYLE_DIMENSIONS = {
 
 
 class StyleEvalContractTests(unittest.TestCase):
-    def skill_bundle_sha256(self) -> str:
-        digest = hashlib.sha256()
-        for path in sorted(item for item in SKILL_ROOT.rglob("*") if item.is_file()):
-            relative = path.relative_to(SKILL_ROOT).as_posix().encode()
-            digest.update(relative + b"\0" + path.read_bytes() + b"\0")
-        return digest.hexdigest()
-
     def eval_artifact(self, relative_path: object, expected_root: Path) -> Path:
         path = (EVAL_ROOT / str(relative_path)).resolve()
         self.assertTrue(
@@ -51,6 +48,50 @@ class StyleEvalContractTests(unittest.TestCase):
     def raw_text(self, run: dict[str, object]) -> str:
         path = self.eval_artifact(run["raw_output_file"], STYLE_BASELINE_ROOT)
         return path.read_text(encoding="utf-8")
+
+    def test_preserved_baselines_do_not_rehash_the_current_skill(self) -> None:
+        with mock.patch.object(
+            self,
+            "skill_bundle_sha256",
+            side_effect=AssertionError("preserved baselines must not hash the current Skill"),
+            create=True,
+        ):
+            self.test_red_style_baselines_are_preserved()
+            self.test_relationship_education_visual_baseline_is_auditable()
+
+    def test_visual_baseline_rejects_incomplete_render_status(self) -> None:
+        manifest = json.loads(VISUAL_MANIFEST.read_text(encoding="utf-8"))
+        manifest["render_status"] = "incomplete"
+        manifest["render_notes"] = "synthetic renderer unavailable"
+        manifest["pages"] = []
+        with tempfile.TemporaryDirectory() as directory:
+            incomplete_manifest = Path(directory) / "manifest.json"
+            incomplete_manifest.write_text(
+                json.dumps(manifest, ensure_ascii=False),
+                encoding="utf-8",
+            )
+            with mock.patch(
+                f"{__name__}.VISUAL_MANIFEST",
+                incomplete_manifest,
+            ):
+                with self.assertRaises(AssertionError):
+                    self.test_relationship_education_visual_baseline_is_auditable()
+
+    def test_visual_baseline_rejects_manifest_dimension_mismatch(self) -> None:
+        manifest = json.loads(VISUAL_MANIFEST.read_text(encoding="utf-8"))
+        manifest["pages"][0]["width"] = 1
+        with tempfile.TemporaryDirectory() as directory:
+            mismatched_manifest = Path(directory) / "manifest.json"
+            mismatched_manifest.write_text(
+                json.dumps(manifest, ensure_ascii=False),
+                encoding="utf-8",
+            )
+            with mock.patch(
+                f"{__name__}.VISUAL_MANIFEST",
+                mismatched_manifest,
+            ):
+                with self.assertRaises(AssertionError):
+                    self.test_relationship_education_visual_baseline_is_auditable()
 
     def test_style_risk_scenarios_are_registered_exactly(self) -> None:
         source = SCENARIOS.read_text(encoding="utf-8")
@@ -75,10 +116,9 @@ class StyleEvalContractTests(unittest.TestCase):
         self.assertEqual(len(baselines), 3)
         self.assertEqual(len({run["execution_id"] for run in baselines}), 3)
 
-        current_bundle = self.skill_bundle_sha256()
         self.assertEqual(
             {run["skill_bundle_sha256"] for run in baselines},
-            {current_bundle},
+            {RED_BASELINE_SKILL_BUNDLE_SHA256},
         )
         for run in baselines:
             raw = self.raw_text(run)
@@ -109,7 +149,10 @@ class StyleEvalContractTests(unittest.TestCase):
             "visual-relationship-education-six-page",
         )
         self.assertTrue(str(manifest["execution_id"]).strip())
-        self.assertEqual(manifest["skill_bundle_sha256"], self.skill_bundle_sha256())
+        self.assertEqual(
+            manifest["skill_bundle_sha256"],
+            RED_BASELINE_SKILL_BUNDLE_SHA256,
+        )
         self.assertEqual(manifest["source_material"], "synthetic_text_and_shapes_only")
 
         raw_brief = self.eval_artifact(
@@ -121,11 +164,7 @@ class StyleEvalContractTests(unittest.TestCase):
             hashlib.sha256(raw_brief.read_bytes()).hexdigest(),
         )
 
-        self.assertIn(manifest["render_status"], {"complete", "incomplete"})
-        if manifest["render_status"] == "incomplete":
-            self.assertTrue(str(manifest["render_notes"]).strip())
-            return
-
+        self.assertEqual(manifest["render_status"], "complete")
         pages = manifest["pages"]
         self.assertEqual(len(pages), 6)
         self.assertEqual({page["page"] for page in pages}, set(range(1, 7)))
@@ -136,6 +175,10 @@ class StyleEvalContractTests(unittest.TestCase):
             width, height = struct.unpack(">II", data[16:24])
             self.assertGreater(width, 0)
             self.assertGreater(height, 0)
+            self.assertEqual(
+                (width, height),
+                (int(page["width"]), int(page["height"])),
+            )
             self.assertEqual(page["sha256"], hashlib.sha256(data).hexdigest())
             self.assertEqual(page["source_material"], "synthetic_text_and_shapes_only")
 
