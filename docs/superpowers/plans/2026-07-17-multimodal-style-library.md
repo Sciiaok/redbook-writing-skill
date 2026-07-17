@@ -714,6 +714,7 @@ git commit -m "feat: enforce style evidence and visual delivery gates"
 
 **Files:**
 - Modify: `redbook-writing/SKILL.md`
+- Modify: `redbook-writing/agents/openai.yaml`
 - Modify: `redbook-writing/references/research-method.md`
 - Modify: `redbook-writing/references/draft-quality.md`
 - Modify: `redbook-writing/references/schemas.md`
@@ -748,6 +749,8 @@ Require page-specific evidence for gradients, repeated rounded cards, icon matri
 
 - [ ] **Step 6: Run documentation tests and validator**
 
+Update `agents/openai.yaml` so its display text/default prompt mentions evidence-grounded visual/copy style research and still names `$redbook-writing`; keep strings quoted and `short_description` within 25–64 characters.
+
 Run: `python3 -m unittest tests.test_asset_schemas tests.test_validate_run -v`
 
 Expected: PASS.
@@ -755,7 +758,7 @@ Expected: PASS.
 - [ ] **Step 7: Commit Skill behavior**
 
 ```bash
-git add redbook-writing/SKILL.md redbook-writing/references tests/test_asset_schemas.py
+git add redbook-writing/SKILL.md redbook-writing/agents/openai.yaml redbook-writing/references tests/test_asset_schemas.py
 git commit -m "feat: make style research mandatory for publishable drafts"
 ```
 
@@ -897,6 +900,7 @@ Expected: all tests PASS; the total is greater than the pre-change 84.
 
 ```bash
 python3 -m py_compile redbook-writing/scripts/validate_run.py redbook-writing/scripts/style_library.py
+python3 /Users/hermione/.codex/skills/.system/skill-creator/scripts/quick_validate.py redbook-writing
 python3 redbook-writing/scripts/style_library.py init /tmp/redbook-style-review.sqlite
 python3 redbook-writing/scripts/style_library.py validate /tmp/redbook-style-review.sqlite
 git diff --check
