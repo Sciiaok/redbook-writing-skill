@@ -1,10 +1,21 @@
-# redbook-writing：小红书全链路 Skill
+# redbook-writing：不是文案 Prompt，是小红书内容生产系统
 
-面向小红书运营者和创作者的研究、风格拆解、写作与审校 Skill，覆盖类目调研、账号拆解、逐页视觉/文风观察、选题成稿、发布诊断、评论边界和商业承接。
+面向小红书运营者和创作者的研究、风格拆解、写作与审校 Skill。它覆盖类目调研、账号拆解、逐页视觉/文风观察、选题成稿、发布诊断、评论边界和商业承接；更重要的是，它会把每轮发现继续沉淀成下一轮可调用的机制资产。
 
 这个项目从一个很具体的不满开始：很多“小红书方法论”经不起第二句追问。CES 的出处在哪？所谓 200 初始流量看的是曝光还是浏览？一篇笔记比账号平时高多少，分母是什么？评论区里出现三次“求链接”，能不能代表需求？
 
 `redbook-writing` 不急着给答案。它先建一次可审计的 run，把查询、原始来源、账号基线、高低对照、逐页素材、视觉/文风规则、选题和成稿串起来。它不会看到一篇 2.7 万赞字卡，就宣布“大字 + 长文”是爆款公式；也不会把公开点赞冒充曝光。最终交付不仅有稿，还会交代这篇为什么这样写、参考了哪种信息工作、哪些只是候选关联、发出去后该看什么。
+
+目前最核心的不是一个万能提示词，而是三层能继续生长的资产：
+
+```text
+公开生产经验与真实站内样本
+  ├─ 17 张跨类目流量机制卡：标题 / 封面 / 正文 / 评论 / 指标 / 失效条件
+  ├─ 12 张视觉方向卡：真实素材 → attention path → 逐页 layout → 一次性 prompt
+  └─ 本地 style library：逐页 observation → 高低对照 → rule publication → draft binding
+```
+
+17 和 12 是当前版本的资产数量，不是平台公式数量。它们都保留来源、反例、自然/付费边界；没有一方 exposure 复现时，不会标成“已验证流量”。
 
 安装入口是 [`redbook-writing/`](redbook-writing/)，方法总览见 [`SKILL.md`](redbook-writing/SKILL.md)。
 
@@ -15,9 +26,11 @@
 | 工作 | 它会做什么 | 主要产物 |
 | --- | --- | --- |
 | 类目调研 | 拆人群、场景、痛点、方案、结果、载体和反例查询，观察综合/热门/最新 | query log、source log、研究问题 |
+| 生产经验深挖 | 搜官方课程、服务商/品牌结案、JD/岗位访谈、招标/合作规范、学术研究和失败返工 | 生产物、机制候选、来源/激励/混杂 |
 | 对标账号与笔记 | 先找笔记再反查账号，区分规模、近期表现、受众精准和商业邻近四种头部 | accounts、posts、近期中位数与异常倍数 |
+| 流量机制选择 | 按 `stage × job × carrier × materials` 检索，不靠模型记忆临时拼公式 | 1 条内容 + 1 条载体/真实性 + 1 条复盘/治理机制 |
 | 视觉与文风研究 | 保存完整轮播页，拆 carrier、page role、素材、层级、注意力路径和 copy move；高帖与普通/低帖成对看 | 私有 style library、脱敏 observation、counterexample |
-| 风格检索与视觉 brief | 按 `carrier × primary_job × materials × constraints` 检索；先做两个注意力路径不同的原型，再扩展选中方向 | style binding、page-role plan、prototype QA |
+| 风格检索与视觉 brief | 先匹配 12 张任务型视觉卡，再按 `carrier × primary_job × materials × constraints` 检索实证风格；两个原型必须换 attention path | visual card、style binding、page-role plan、prototype QA |
 | 流量说法核查 | 查 CES、流量池、冷启动、搜索、限流、养号等说法的原始依据与作用域 | claim ledger、冲突来源、可测替代指标 |
 | 选题库 | 把需求样本、内容样本、账号基线和反例连到同一个选题 | research question、experimental / active topic |
 | 完整成稿 | 给出标题、封面、轮播或聊天场景、正文、关键词、真实性标签和观测计划 | draft 文件与 2–3 个表达版本 |
@@ -29,9 +42,9 @@
 
 ```mermaid
 flowchart LR
-    A["账号目标与限制"] --> B["discovery<br/>类目、账号、笔记、评论"]
-    B --> C["近期基线、高低对照、逐页观察"]
-    C --> S["traffic + style library<br/>机制、载体、视觉、文风、反例"]
+    A["账号目标与限制"] --> B["双轨 discovery<br/>站内样本 + 生产经验"]
+    B --> C["近期基线、高低对照、逐页观察、项目生产物"]
+    C --> S["traffic + visual + style library<br/>机制、方向卡、规则、反例"]
     S --> D["topic<br/>研究问题 / 实验选题 / active"]
     D --> E["draft<br/>检索、双原型、完整成稿"]
     E --> F["合规审校 + 创意审校"]
@@ -117,7 +130,19 @@ python3 redbook-writing/scripts/style_library.py init \
   research/xiaohongshu/_style_library/style-library.sqlite
 ```
 
-当前公开样本账本已经收录 12 组真实站内观察，但它们都诚实标为 `unverified/unknown`：没有完整 performance receipt 和素材权利链时，不会为了凑数升级成“已验证风格”。
+当前公开样本包含关系档案、系列字卡/代理视角、宠物反证、租房改造、劳动仲裁工作物、路线、美妆比较、截图教程和复杂解释等多种任务。它们没有被揉成一个“原生风模板”：缺完整 performance receipt、matched control 或素材权利链的样本保持 `lead/task_fit/candidate`，不会为了凑数升级成“已验证风格”。
+
+机制可以先用机器选择器筛一遍：
+
+```bash
+python3 redbook-writing/scripts/select_traffic_mechanisms.py \
+  --stage save_share \
+  --job decision_support \
+  --carrier comparison_warning \
+  --json
+```
+
+输出不只是卡名，还包含真实输入、标题/封面/正文/评论动作、主指标、失效条件、反套路和来源。没有 exact match 时返回 `needs_research`；不会偷偷换掉 primary job 来凑结果。
 
 ### 4. 从研究结果生成成稿
 
@@ -139,7 +164,7 @@ python3 redbook-writing/scripts/style_library.py init \
 7. 发布后的 exposure primary、质量 guardrail 与实验设计
 ```
 
-如果 topic 或风格库没有足够证据，`draft` 会返回 `needs_style_research`，先列最小补采查询与素材缺口，不会把单篇爆文临时做成母版，也不会把探索稿写成 ready。
+如果 topic 或风格库没有足够证据，`draft` 会返回 `needs_style_research`。当至少绑定了 task-fit 机制、反例和真实素材，并通过事实/授权/商业门时，可以继续产出显著标注的 `candidate_only / needs_review` 完整候选；否则只列最小补采查询。无论哪种情况，都不会把探索稿写成 ready，也不会把视觉方向卡冒充已验证 style binding。
 
 ### 5. 发布后复盘
 
@@ -270,11 +295,13 @@ flowchart LR
 
 ## Reference 不是附录
 
-`SKILL.md` 负责识别任务、选择模式和决定何时停止。真正影响研究与成稿判断的细节，放在八份 reference 里。这里不硬编码行数；代码和方法继续变化时，README 不会拿一个过期数字装深度。
+`SKILL.md` 负责识别任务、选择模式和决定何时停止。真正影响研究与成稿判断的细节，放在按需加载的 reference 里。这里不拿行数装深度；深度来自来源口径、反例、数据合同和失败门。
 
 | 文件 | 它负责的判断 | 已写进去的具体内容 |
 | --- | --- | --- |
 | [`research-method.md`](redbook-writing/references/research-method.md) | 怎么搜、怎么取样、什么时候算研究完成 | 四种模式、八组关键词、四轮查询、notes-first、近期中位数、高低位与反例、评论编码、去重和停止条件 |
+| [`traffic-mechanism-library.md`](redbook-writing/references/traffic-mechanism-library.md) | 这篇到底调用哪条流量机制 | 17 张跨类目机制卡、标题/封面/正文/评论动作、指标、自然/付费边界、失败条件与反套路 |
+| [`visual-direction-cards.md`](redbook-writing/references/visual-direction-cards.md) | 怎样把真实素材做成好看的逐页视觉 | 12 个任务型 attention path、封面/逐页 role、中文排版、光色质感、一次性 prompt、negative prompt 与 Anti-PPT |
 | [`style-research-and-generation.md`](redbook-writing/references/style-research-and-generation.md) | 怎样把线上风格变成可检索资产 | 完整轮播采集、matched/boundary 对照、特征角色、SQLite、双原型、Anti-PPT、12 帖实验与流量质量门 |
 | [`platform-mechanisms.md`](redbook-writing/references/platform-mechanisms.md) | 哪些流量说法有一手依据 | 算法备案、推荐与搜索工程、图文冷启动、查询理解、相关性、重排、榜单和限流的模块边界 |
 | [`experience-hypotheses.md`](redbook-writing/references/experience-hypotheses.md) | 公众号、知乎、服务商和操盘复盘该信多少 | 分母/样本/入口/反例四问，B/C/D 经验分级，玄学黑名单，条件性经验和自然准实验 |
@@ -285,11 +312,11 @@ flowchart LR
 
 行数只说明范围，不代表这些判断天然正确。因此 reference 里同时保留日期、作用域、原始链接、不可外推部分和冲突来源；规则型文件还要求运行时重新打开官方页面。
 
-八份文件也不会在每次任务里全部灌进上下文。类目调研只加载研究方法和 Schema；解释 CES 时再加载机制与经验审计；碰到成人内容、商品或外跳，才追加现行规则与渠道合同；需要视觉或文风时才加载风格研究；要成稿时再读写作质量。这样既保留方法深度，也避免不相关规则挤掉当前样本。
+这些文件不会在每次任务里全部灌进上下文。类目调研加载研究方法和 Schema；解释 CES 时再加载平台机制与经验审计；写稿先加载统一流量机制；碰到视觉任务再加载方向卡和风格研究；成人内容、商品或外跳才追加现行规则与渠道合同。这样保留方法深度，也避免无关规则挤掉当前样本。
 
 ## 这些方法吃了哪些输入
 
-仓库没有把一批文章读完后压成一篇“行业共识”。2026-07-16 的研究快照逐条保存了 59 个查询、130 个去重来源和 75 个可审计 claim。来源结构是：
+仓库没有把一批文章读完后压成一篇“行业共识”。第一轮 2026-07-16 快照逐条保存了 59 个查询、130 个去重来源和 75 个可审计 claim。来源结构是：
 
 | 来源层 | 数量 | 主要输入 | 在 Skill 里的用途 |
 | --- | ---: | --- | --- |
@@ -301,6 +328,19 @@ flowchart LR
 行业输入不是随手摘几句。单独的证据矩阵复核了 37 篇原文，每一行都记录“方法/样本、能支持什么、主要局限、证据级别”。研究目录还保存了 11 条既有笔记字段样本、20 张“评论区截流”登录态搜索卡、11 条渠道矩阵、11 条 SKU-surface 资格记录和 8 条非 SKU offer 记录。
 
 这里有个刻意保留的难看数字：20 张搜索卡只打开并核验了 1 条详情。它足以证明“评论区截流教程很多”，远远不够证明这种做法有效。因此这部分在综合报告中明确写成缺口，没有包装成评论获客研究，更没有拿来生成头部账号榜单。
+
+第二轮 2026-07-18 没有继续堆同类文章，而是专门补生产现场和反证：
+
+| 深挖方向 | 已落盘内容 | 为什么有用 |
+|---|---|---|
+| 小红书官方商家课 | 4 节公开课、9 张派生机制、5 个明确淘汰/历史说法 | 能看到平台怎样教商家做账号、封面标题、正文和评论；同时把 2024 口径与 2026 算法分开 |
+| 头部机构/操盘课 | 17 个来源、13 张 playbook、4 组冲突、6 个淘汰说法 | 不只抄口诀，追到样本、项目、指标与失败条件 |
+| 品牌/代理结案 | 12 个来源、9 个项目、11 张 playbook | 还原选品、人群、创意、KFS、搜索承接与复盘；付费结果不冒充自然流 |
+| 隐藏生产物 | 23 个公开来源、9 组机制 | 抽出 brief、母资产、达人 handoff、话题供给、指标合同、AI 返工和版本血缘 |
+| 学术/大样本 | 5 篇原始研究/公开数据 | 审计标题相似度、美妆商业帖、KOC 劳动、隐性广告和 AI 内容；把显著相关与可执行因果分开 |
+| 站内高低横截面 | 5 个跨类目任务包 + 实用载体/缺口审计 | 专门找“漂亮但低、密集但低、真人但低、真实文件但低”的反例，阻断审美迷信 |
+
+完整目录与每组 can/cannot-support 见 [`docs/research/README.md`](docs/research/README.md)。长研究不会直接塞进每稿；它们先被去重成机器可读的 17 张机制卡，再由本稿任务检索。
 
 ### 来源多，不等于多数票通过
 
@@ -441,7 +481,7 @@ python3 redbook-writing/scripts/validate_run.py <run-dir> --strict
 - 只有 CTR 或停留、没有 impressions/reach，却给出 traffic win；
 - 成人关系教育被错误外推成成人商品 CTA 已获准。
 
-成功输出也分状态：`VALID_IN_PROGRESS`、`VALID_BLOCKED`、`VALID_COMPLETE`。前两种只说明当前检查点内部一致，不等于研究已经完成。
+V2 成功输出分 `VALID_IN_PROGRESS`、`VALID_BLOCKED`、`VALID_COMPLETE`。旧 run 必须显式加 `--allow-legacy-contract`，且只会得到 `VALID_LEGACY_*`，不会因为删掉版本字段绕过 V2 门禁。
 
 ## 这个仓库怎么验证自己
 
@@ -468,9 +508,10 @@ python3 -m unittest discover -s tests -p 'test_*.py' -v
 redbook-writing/
 ├── SKILL.md
 ├── references/                  # 研究、机制、规则、成稿、渠道、Schema
-├── assets/                      # 运行模板、v1/v2 Schema 与受控 taxonomy
+├── assets/                      # 机制卡、视觉方向卡、运行模板、Schema 与 taxonomy
 ├── scripts/
 │   ├── style_library.py         # 本地 SQLite 风格库
+│   ├── select_traffic_mechanisms.py # 按任务检索机制栈
 │   └── validate_run.py          # run / draft fail-closed 验证
 └── agents/openai.yaml
 docs/research/                   # 生产方法、站内观察与脱敏机器账本
@@ -488,7 +529,7 @@ tests/                           # Validator、Schema 与前向评测
 - 自动点赞、关注、评论、私信或发布；
 - 读取创作者后台没有提供的数据，或从公开互动反推 CTR、订单和退款；
 - 保证某篇内容成为爆款；
-- 在当前 `qualified=0` 的研究状态下把候选风格升级为 starter、supported 或“流量已验证”；
+- 在当前 `qualified=0` 的研究状态下把候选方向升级为 starter、supported、ready 或“流量已验证”；它仍可在有机制/反例/真实素材时产出 `candidate_only / needs_review` 候选；
 - 用自动分数替代真实 feed 缩略图、全尺寸图和人工审美判断；
 - 把尚未执行的 12 帖实验或 3 人盲评写成已经获得效果；
 - 替代平台审核、法律意见或具体 SKU 的官方资格确认；
