@@ -79,6 +79,21 @@
       "verification_status": "rendered_ui_verified_raw_shell_hashed"
     },
     {
+      "claim_id": "CLM-S7-02",
+      "source_id": "S7",
+      "source_url": "https://pgy.xiaohongshu.com/help/detail?id=6495c527d1eedeeb48fb18b1f875650e&userType=4",
+      "grade": "A",
+      "primary_or_secondary": "primary_official_rule",
+      "published_at": "2026-06",
+      "verified_at": "2026-07-17",
+      "page_or_section": "Rendered content-review rules page; vulgar/private-content risk examples for commercial collaboration notes",
+      "claim": "Within the current Pugongying commercial-collaboration review scope, sexual products and contraception or protection products are listed as vulgar/private-content risk examples and therefore require surface-, account-, SKU-, and current-rule-specific confirmation.",
+      "allowed_use": "Fail closed on commercial adult-product readiness until the exact SKU, account, collaboration or advertising surface, eligibility, and current review result are documented.",
+      "prohibited_use": "Do not generalize this scoped commercial rule into a claim that all relationship education is banned, and do not promise that educational framing makes an adult-product collaboration or advertisement eligible.",
+      "snapshot_sha256": "1ddb4f02a5cebe5439075c7c150f724f0f702869f9c1163b40b4e7606d043ffd",
+      "verification_status": "rendered_ui_verified_raw_shell_hashed_scope_limited"
+    },
+    {
       "claim_id": "CLM-S12-01",
       "source_id": "S12",
       "source_url": "https://www.haier.com/press-events/news/20260319_288051.shtml",
@@ -347,6 +362,81 @@
       "prohibited_use": "Do not reuse its self-reported daily output, hit-rate, review-time, creator, or cost thresholds as defaults or performance evidence.",
       "snapshot_sha256": "0e5154fabeddf608f24034bd70f6c442597bf8ebb89cef1da0090f8b6c7b70c6",
       "verification_status": "verified_self_reported_production_process_no_effect_audit"
+    },
+    {
+      "claim_id": "CLM-S30-01",
+      "source_id": "S30",
+      "source_url": "https://pgy.xiaohongshu.com/help/detail?id=ee5627d75ed618f98f15fd98799da74d&userType=601",
+      "grade": "A",
+      "primary_or_secondary": "primary_official_product_documentation",
+      "published_at": "2026-06-18",
+      "verified_at": "2026-07-17",
+      "page_or_section": "Rendered agency-brand authorization relationship manual",
+      "claim": "Pugongying models brand and agency as separate roles and records authorization account, scope, validity, approval state, modification, and termination separately from existing project state.",
+      "allowed_use": "Require role separation and a current, scope-matching authorization record before a commercial agency workflow advances to invitation, publication, or CTA readiness.",
+      "prohibited_use": "Do not treat authorization as content, product, qualification, advertising, or publication approval, and do not recommend permanent authorization by default.",
+      "snapshot_sha256": "1ddb4f02a5cebe5439075c7c150f724f0f702869f9c1163b40b4e7606d043ffd",
+      "verification_status": "rendered_ui_verified_shared_spa_shell_hashed"
+    },
+    {
+      "claim_id": "CLM-S31-01",
+      "source_id": "S31",
+      "source_url": "https://www.dentsu.com/cn/zh/news-releases/dentsu-and-xiaohongshu-insights",
+      "grade": "C",
+      "primary_or_secondary": "first_party_agency_joint_project_publication",
+      "published_at": "2025-01-13",
+      "verified_at": "2026-07-17",
+      "page_or_section": "Search trends, category landscape, user mindset, and time/scene/subcategory analysis",
+      "claim": "Dentsu describes a Xiaohongshu joint category-insight project that decomposes a broad category into search trend, category landscape, user mindset, time, scene, audience, ingredient or attribute, and desired-outcome evidence.",
+      "allowed_use": "Define a current-query evidence matrix and timestamped brief fields for search- or trend-led content.",
+      "prohibited_use": "Do not infer ranking weights, keyword density, visual performance, or current demand from a historical agency announcement without current on-platform samples.",
+      "snapshot_sha256": "661198d5ec5ba5e443d088760df796ce8c187a8a91b806334058d695da7668b9",
+      "verification_status": "verified_framework_no_dataset_or_effect_audit"
+    },
+    {
+      "claim_id": "CLM-S32-01",
+      "source_id": "S32",
+      "source_url": "https://www.prnasia.com/story/451037-1.shtml",
+      "grade": "B/C",
+      "primary_or_secondary": "primary_joint_method_press_release",
+      "published_at": "2024-06-17",
+      "verified_at": "2026-07-17",
+      "page_or_section": "Native content, asset origins, brand stage, content accumulation, audience penetration, and reputation objectives",
+      "claim": "A Kantar and Xiaohongshu method release separates native experience and emotion inputs from professional authority content, distinguishes KOL, celebrity, official account, UGC, activity, and offline asset origins, and selects resource combinations by brand stage and objective.",
+      "allowed_use": "Record asset origin, brand stage, content objective, consent, reuse rights, and role-specific material strategy; treat template sameness as a risk to examine.",
+      "prohibited_use": "Do not equate native feel with fake users or undisclosed promotion, treat its models as recommendation formulas, or claim UGC guarantees performance.",
+      "snapshot_sha256": "5a8ff151332eeab56cbf1f157a2b93b2fd2d969ba6454a47b8e07d6c49926001",
+      "verification_status": "verified_method_release_no_causal_audit"
+    },
+    {
+      "claim_id": "CLM-S33-01",
+      "source_id": "S33",
+      "source_url": "https://winner.roifestival.com/cn/winners/detail/1e4a6ofl?year=2025",
+      "grade": "C",
+      "primary_or_secondary": "brand_award_case",
+      "published_at": "2025",
+      "verified_at": "2026-07-17",
+      "page_or_section": "Year-long series, stages, product bindings, co-creation roles, and UGC asset accumulation",
+      "claim": "The brand award case describes a year-long staged co-creation program tied to product releases and multiple roles, with reusable authorized UGC as an explicit production asset goal.",
+      "allowed_use": "Define series, stage, product binding, asset-rights lineage, curation status, reuse scope, and stage ownership fields.",
+      "prohibited_use": "Do not attribute reported exposure, search, or sales effects to a visual style, and do not admit an award case directly as high-performance style evidence.",
+      "snapshot_sha256": "cf53293dc658f32394c68a2f0aaf7e3e8b3053355ee97d63f6f8338997fa86b6",
+      "verification_status": "verified_case_structure_no_backend_or_control"
+    },
+    {
+      "claim_id": "CLM-S34-01",
+      "source_id": "S34",
+      "source_url": "https://www.digitaling.com/articles/1401070.html",
+      "grade": "C/D",
+      "primary_or_secondary": "first_party_agency_case",
+      "published_at": "2025-09-10",
+      "verified_at": "2026-07-17",
+      "page_or_section": "Pre-, in-, and post-delivery workflow and external-destination handling",
+      "claim": "The agency case separates pre-delivery product and content fit, in-delivery infrastructure and optimization, and post-delivery attribution and strategy updates, while managing on-platform content and external destinations as different assets.",
+      "allowed_use": "Require organic-versus-paid mode, account capability, item or offer, destination, asset version, authorization, metric availability, attribution-window source, and postmortem decision fields.",
+      "prohibited_use": "Do not reuse agency-reported ROI, attribution windows, delivery capabilities, or thresholds as defaults or as promises for organic posts.",
+      "snapshot_sha256": "8a78894361976a356b232f9823f196c814ce4439d6fc79600ad7103cc55a085a",
+      "verification_status": "verified_self_reported_process_no_effect_audit"
     }
   ],
   "product_decisions": [
@@ -377,7 +467,7 @@
     {
       "decision_id": "PD-DISCLOSURE",
       "decision": "Native adaptation never permits hidden sponsorship, fake identity, or fabricated personal experience.",
-      "basis": ["CLM-S7-01", "CLM-S15-01"],
+      "basis": ["CLM-S7-01", "CLM-S15-01", "CLM-S32-01"],
       "status": "compliance_and_ethics_gate"
     },
     {
@@ -389,7 +479,7 @@
     {
       "decision_id": "PD-EXPERIMENT-UNIT",
       "decision": "Every content-matrix row stores one audience-scene-message-carrier hypothesis and one actively varied factor.",
-      "basis": ["CLM-S13-01", "CLM-S19-01"],
+      "basis": ["CLM-S13-01", "CLM-S19-01", "CLM-S31-01"],
       "status": "project_experiment_policy"
     },
     {
@@ -407,7 +497,7 @@
     {
       "decision_id": "PD-GATE-SEPARATION",
       "decision": "Evidence, native fit, visual quality, factual/compliance, client, delivery, and post-publication gates are recorded separately.",
-      "basis": ["CLM-S7-01", "CLM-S17-01", "CLM-S28-01", "CLM-S29-01"],
+      "basis": ["CLM-S7-01", "CLM-S7-02", "CLM-S17-01", "CLM-S28-01", "CLM-S29-01", "CLM-S30-01", "CLM-S34-01"],
       "status": "production_quality_gate"
     },
     {
@@ -445,6 +535,24 @@
       "decision": "Industrialization scales evidence capture, material versioning, review, and learning; it does not scale fabricated native identities, covert capture, staged comments, or pseudo-precise thresholds.",
       "basis": ["CLM-S15-01", "CLM-S27-01"],
       "status": "compliance_and_quality_gate"
+    },
+    {
+      "decision_id": "PD-SENSITIVE-SKU-SURFACE",
+      "decision": "Relationship education and adult-product commercialization are separate eligibility questions; commercial readiness for a sensitive SKU fails closed until the exact account, SKU, collaboration or advertising surface, qualifications, current rule, and review outcome are documented.",
+      "basis": ["CLM-S7-02"],
+      "status": "current_platform_scope_gate"
+    },
+    {
+      "decision_id": "PD-AUTHORIZATION-SCOPE",
+      "decision": "Commercial production records brand, agency, creator, factual or qualification reviewer, and brand approver separately, and requires a current scope-matching authorization before an agency workflow advances.",
+      "basis": ["CLM-S30-01"],
+      "status": "commercial_governance_gate"
+    },
+    {
+      "decision_id": "PD-ASSET-RIGHTS-LINEAGE",
+      "decision": "UGC and experience assets retain origin, authenticity, consent, reuse rights, derivative hash, curation status, and permitted surface before they enter a reusable material library.",
+      "basis": ["CLM-S32-01", "CLM-S33-01"],
+      "status": "asset_governance_policy"
     }
   ]
 }
