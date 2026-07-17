@@ -283,6 +283,10 @@
           "role": "钩子兑现契约"
         },
         {
+          "ref": "official-xhs-merchant-course:OX03/OX07",
+          "role": "官方商家课的一篇一承诺与承诺—证据—答案闭环；仅支持生产教学，不支持流量因果"
+        },
+        {
           "ref": "production-grade-evidence:S7",
           "role": "误导点击边界；机器正文证据仍待完善"
         }
@@ -426,6 +430,10 @@
         {
           "ref": "operator-course-playbooks:P13",
           "role": "钩子兑现契约主来源"
+        },
+        {
+          "ref": "official-xhs-merchant-course:OX07",
+          "role": "官方商家课的承诺—证据—答案闭环；历史生产指导"
         },
         {
           "ref": "brand-operator-case-playbooks:P03",
@@ -588,6 +596,10 @@
         {
           "ref": "operator-course-playbooks:P03",
           "role": "人群场景单一理由证据"
+        },
+        {
+          "ref": "official-xhs-merchant-course:OX01/OX03",
+          "role": "官方商家课的角色—对象—价值与单一主承诺"
         },
         {
           "ref": "operator-course-playbooks:P10",
@@ -1197,6 +1209,10 @@
           "role": "搜索意图阶梯"
         },
         {
+          "ref": "official-xhs-merchant-course:OX04",
+          "role": "官方商家课的推荐流/搜索流任务区分；固定时长主张已排除"
+        },
+        {
           "ref": "brand-operator-case-playbooks:P08",
           "role": "搜索意图簇"
         },
@@ -1359,6 +1375,10 @@
         {
           "ref": "brand-operator-case-playbooks:P07",
           "role": "载体按任务选择"
+        },
+        {
+          "ref": "official-xhs-merchant-course:OX05",
+          "role": "官方商家课的常见封面载体族；只作任务适配，不作爆款版式"
         },
         {
           "ref": "production-grade-evidence:rules-1-to-4",
@@ -2123,6 +2143,10 @@
           "role": "评论语义校验"
         },
         {
+          "ref": "official-xhs-merchant-course:OX08",
+          "role": "官方商家课的真实答疑、异议回收与下一题闭环"
+        },
+        {
           "ref": "brand-operator-case-playbooks:P11",
           "role": "真问题反馈闭环"
         },
@@ -2462,6 +2486,10 @@
         {
           "ref": "operator-course-playbooks:P11",
           "role": "漏斗诊断与资产循环"
+        },
+        {
+          "ref": "official-xhs-merchant-course:OX09",
+          "role": "官方商家课的固定观察窗与自账号样本库；七天仅为可配置示例"
         },
         {
           "ref": "hidden-production-artifacts:HP05",
