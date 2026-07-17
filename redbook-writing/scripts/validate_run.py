@@ -1081,9 +1081,16 @@ def channel_status_class(value: str | None) -> str | None:
 
 
 class RunValidator:
-    def __init__(self, run_dir: Path, strict: bool = False) -> None:
+    def __init__(
+        self,
+        run_dir: Path,
+        strict: bool = False,
+        allow_legacy_contract: bool = False,
+    ) -> None:
         self.run_dir = run_dir
         self.strict = strict
+        self.allow_legacy_contract = allow_legacy_contract
+        self.legacy_contract = False
         self.issues: list[Issue] = []
         self.rows: dict[str, list[dict[str, str]]] = {}
         self.run: dict[str, str] = {}
@@ -1201,12 +1208,22 @@ class RunValidator:
             self.error("invalid_date_order", "run.yaml", "window_start cannot be after window_end")
         if created and window_end and window_end > created:
             self.error("future_date", "run.yaml", "window_end cannot be after created_at")
-        if self.run.get("run_contract_version", "").strip():
+        contract_version = self.run.get("run_contract_version", "").strip()
+        if not contract_version:
+            if self.allow_legacy_contract:
+                self.legacy_contract = True
+            else:
+                self.error(
+                    "missing_run_contract_version",
+                    "run.yaml",
+                    "run_contract_version=2 is required; use --allow-legacy-contract only to inspect an older run",
+                )
+        else:
             if not self._is_v2():
                 self.error(
                     "invalid_run_contract_version",
                     "run.yaml",
-                    "run_contract_version must be 2 when present",
+                    "run_contract_version must be 2",
                 )
             else:
                 self._load_style_taxonomy_v2()
@@ -3301,7 +3318,12 @@ class RunValidator:
             self._check_draft_eligibility(path, meta, registry)
 
 
-def format_text(issues: Iterable[Issue], strict: bool, status: str = "unknown") -> tuple[str, int]:
+def format_text(
+    issues: Iterable[Issue],
+    strict: bool,
+    status: str = "unknown",
+    legacy_contract: bool = False,
+) -> tuple[str, int]:
     issues = list(issues)
     errors = [issue for issue in issues if issue.severity == "error"]
     warnings = [issue for issue in issues if issue.severity == "warning"]
@@ -3311,7 +3333,12 @@ def format_text(issues: Iterable[Issue], strict: bool, status: str = "unknown") 
             f"[{issue.severity.upper()}] {issue.code} {issue.location}: {issue.message}"
         )
     failed = bool(errors or (strict and warnings))
-    verdict = "INVALID" if failed else f"VALID_{status.upper()}"
+    if failed:
+        verdict = "INVALID"
+    elif legacy_contract:
+        verdict = f"VALID_LEGACY_{status.upper()}"
+    else:
+        verdict = f"VALID_{status.upper()}"
     lines.append(f"{verdict}: {len(errors)} error(s), {len(warnings)} warning(s)")
     return "\n".join(lines) + "\n", 1 if failed else 0
 
@@ -3327,18 +3354,40 @@ def main(argv: list[str] | None = None) -> int:
         help="Treat warnings (for example stale current rules) as failures.",
     )
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON.")
+    parser.add_argument(
+        "--allow-legacy-contract",
+        action="store_true",
+        help=(
+            "Inspect a pre-v2 run that has no run_contract_version. "
+            "Legacy runs never receive a current VALID_COMPLETE verdict."
+        ),
+    )
     args = parser.parse_args(argv)
 
-    validator = RunValidator(args.run_dir.expanduser().resolve(), strict=args.strict)
+    validator = RunValidator(
+        args.run_dir.expanduser().resolve(),
+        strict=args.strict,
+        allow_legacy_contract=args.allow_legacy_contract,
+    )
     issues = validator.validate()
     run_status = validator.run.get("status", "unknown")
-    text_output, exit_code = format_text(issues, args.strict, run_status)
+    text_output, exit_code = format_text(
+        issues,
+        args.strict,
+        run_status,
+        legacy_contract=validator.legacy_contract,
+    )
     if args.json:
         payload = {
             "valid": exit_code == 0,
             "strict": args.strict,
             "status": run_status,
-            "complete": run_status == "complete" and exit_code == 0,
+            "complete": (
+                run_status == "complete"
+                and exit_code == 0
+                and not validator.legacy_contract
+            ),
+            "contract_version": "legacy" if validator.legacy_contract else "2",
             "run_dir": str(validator.run_dir),
             "errors": sum(issue.severity == "error" for issue in issues),
             "warnings": sum(issue.severity == "warning" for issue in issues),

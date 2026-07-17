@@ -664,7 +664,13 @@ class ValidateRunTests(unittest.TestCase):
 
     def run_validator(self, *extra: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
-            ["python3", str(VALIDATOR), str(self.fixture.path), *extra],
+            [
+                "python3",
+                str(VALIDATOR),
+                str(self.fixture.path),
+                "--allow-legacy-contract",
+                *extra,
+            ],
             capture_output=True,
             text=True,
             check=False,
@@ -677,15 +683,25 @@ class ValidateRunTests(unittest.TestCase):
 
     def test_valid_verdict_exposes_run_status(self) -> None:
         in_progress = self.run_validator()
-        self.assertIn("VALID_IN_PROGRESS", in_progress.stdout)
+        self.assertIn("VALID_LEGACY_IN_PROGRESS", in_progress.stdout)
         self.fixture.set_run_field("status", "complete")
         complete = self.run_validator()
         self.assertEqual(complete.returncode, 0, complete.stdout + complete.stderr)
-        self.assertIn("VALID_COMPLETE", complete.stdout)
+        self.assertIn("VALID_LEGACY_COMPLETE", complete.stdout)
         self.fixture.set_run_field("status", "blocked")
         blocked = self.run_validator()
         self.assertEqual(blocked.returncode, 0, blocked.stdout + blocked.stderr)
-        self.assertIn("VALID_BLOCKED", blocked.stdout)
+        self.assertIn("VALID_LEGACY_BLOCKED", blocked.stdout)
+
+    def test_legacy_contract_requires_explicit_flag(self) -> None:
+        result = subprocess.run(
+            ["python3", str(VALIDATOR), str(self.fixture.path)],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("missing_run_contract_version", result.stdout)
 
     def test_duplicate_source_id_is_rejected(self) -> None:
         write_csv(self.fixture.path / "source-log.csv", [base_source(), base_source()])
