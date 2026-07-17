@@ -1,0 +1,306 @@
+{
+  "schema_version": 1,
+  "snapshot_date": "2026-07-17",
+  "hash_method": "SHA-256 of the raw HTTP response bytes fetched with curl -L --compressed on verified_at; an empty hash is never substituted with a URL hash and forces a non-supporting verification status",
+  "claims": [
+    {
+      "claim_id": "CLM-S1-01",
+      "source_id": "S1",
+      "source_url": "https://www.kotler.com.cn/pdf/2023kmg-xhs.pdf",
+      "grade": "B",
+      "primary_or_secondary": "primary_joint_report",
+      "published_at": "2023",
+      "verified_at": "2026-07-17",
+      "page_or_section": "PDF p.3, organization process and measurement alignment",
+      "claim": "Enterprise seeding requires cross-functional project organization, aligned measures, and a model refined with first-party, platform, and third-party data.",
+      "allowed_use": "Define production ownership, measurement fields, and an iterative operating loop.",
+      "prohibited_use": "Do not infer a visual style, algorithm weight, or fixed KPI threshold.",
+      "snapshot_sha256": "66bb7b4d3f2f645773b2d822c6c7edede49a851e225d36572c1bc520a8856ddf",
+      "verification_status": "verified"
+    },
+    {
+      "claim_id": "CLM-S1-02",
+      "source_id": "S1",
+      "source_url": "https://www.kotler.com.cn/pdf/2023kmg-xhs.pdf",
+      "grade": "B",
+      "primary_or_secondary": "primary_joint_report",
+      "published_at": "2023",
+      "verified_at": "2026-07-17",
+      "page_or_section": "PDF p.10, feedback and dynamic iteration",
+      "claim": "User sharing, comments, and interaction can supply feedback for product and experience iteration; content, creator, and exposure touchpoints need coordinated long-term operation.",
+      "allowed_use": "Require feedback capture and distinguish content, creator, and distribution objects.",
+      "prohibited_use": "Do not treat comments as representative demand without sampling controls or fabricate comments to create a narrative.",
+      "snapshot_sha256": "66bb7b4d3f2f645773b2d822c6c7edede49a851e225d36572c1bc520a8856ddf",
+      "verification_status": "verified"
+    },
+    {
+      "claim_id": "CLM-S1-03",
+      "source_id": "S1",
+      "source_url": "https://www.kotler.com.cn/pdf/2023kmg-xhs.pdf",
+      "grade": "B",
+      "primary_or_secondary": "primary_joint_report",
+      "published_at": "2023",
+      "verified_at": "2026-07-17",
+      "page_or_section": "PDF pp.31-32, KFS and content supply matrix",
+      "claim": "KOL, KOC, and KOS have different content-production and feedback roles; KOC content can reveal selling points, usage scenes, and target groups.",
+      "allowed_use": "Model creator role, content role, feedback use, and distribution as separate fields.",
+      "prohibited_use": "Do not copy the report's historical performance ratios or use creator type as a quality guarantee.",
+      "snapshot_sha256": "66bb7b4d3f2f645773b2d822c6c7edede49a851e225d36572c1bc520a8856ddf",
+      "verification_status": "verified"
+    },
+    {
+      "claim_id": "CLM-S1-04",
+      "source_id": "S1",
+      "source_url": "https://www.kotler.com.cn/pdf/2023kmg-xhs.pdf",
+      "grade": "B",
+      "primary_or_secondary": "primary_joint_report",
+      "published_at": "2023",
+      "verified_at": "2026-07-17",
+      "page_or_section": "PDF pp.31-33, Feeds and Search roles",
+      "claim": "Feeds and Search serve different decision stages, and paid optimization observes content, audience, and delivery-plan variables.",
+      "allowed_use": "Separate search/recommendation jobs and paid/natural evidence records.",
+      "prohibited_use": "Do not describe two natural posts as a randomized A/B test or transfer paid thresholds to organic distribution.",
+      "snapshot_sha256": "66bb7b4d3f2f645773b2d822c6c7edede49a851e225d36572c1bc520a8856ddf",
+      "verification_status": "verified"
+    },
+    {
+      "claim_id": "CLM-S7-01",
+      "source_id": "S7",
+      "source_url": "https://pgy.xiaohongshu.com/help/detail?id=6495c527d1eedeeb48fb18b1f875650e&userType=4",
+      "grade": "A",
+      "primary_or_secondary": "primary_official_rule",
+      "published_at": "2026-06",
+      "verified_at": "2026-07-17",
+      "page_or_section": "Rendered content-review rules page; safety, content, client, and advertising sections",
+      "claim": "Commercial content review separates safety, content quality, client requirements, and advertising requirements.",
+      "allowed_use": "Define separate compliance and quality gates and require delivery consistency.",
+      "prohibited_use": "Compliance passage does not imply traffic preference or excuse copying third-party content.",
+      "snapshot_sha256": "1ddb4f02a5cebe5439075c7c150f724f0f702869f9c1163b40b4e7606d043ffd",
+      "verification_status": "rendered_ui_verified_raw_shell_hashed"
+    },
+    {
+      "claim_id": "CLM-S12-01",
+      "source_id": "S12",
+      "source_url": "https://www.haier.com/press-events/news/20260319_288051.shtml",
+      "grade": "C",
+      "primary_or_secondary": "primary_brand_case",
+      "published_at": "2026-03-19",
+      "verified_at": "2026-07-17",
+      "page_or_section": "Paragraphs 93-102 and 128-134, feedback-to-product loop",
+      "claim": "The brand describes a repeatable loop from user comments and scene research to product response, public follow-up, and continued iteration, supported by research and R&D systems.",
+      "allowed_use": "Treat repeated, verifiable response behavior as a possible brand-recognition mechanism and store feedback-to-action links.",
+      "prohibited_use": "Do not accept self-reported sales causality, invent user requests, or convert 'listening' into staged comments.",
+      "snapshot_sha256": "1fc3a2220d0ca057cd2511652665f5f46ed0b55c93763f9815baf3bd64434de3",
+      "verification_status": "verified"
+    },
+    {
+      "claim_id": "CLM-S13-01",
+      "source_id": "S13",
+      "source_url": "https://www.digitaling.com/articles/1046170.html",
+      "grade": "B/C",
+      "primary_or_secondary": "secondary_interview",
+      "published_at": "2024-03",
+      "verified_at": "2026-07-17",
+      "page_or_section": "Interview section on audience, scene, and content matrices",
+      "claim": "A mature brand can express one product through multiple audience-scene-content combinations and use different carriers such as education, laboratory visits, and creative narrative.",
+      "allowed_use": "Generate testable content hypotheses and carrier variants by audience and scene.",
+      "prohibited_use": "Do not infer that the interview's category conclusions generalize or that any listed carrier is high-performing by default.",
+      "snapshot_sha256": "295c4d84a880563ea169fd8cac09571599270f06fe6e1dbba36f9dbbd51c8d31",
+      "verification_status": "verified"
+    },
+    {
+      "claim_id": "CLM-S15-01",
+      "source_id": "S15",
+      "source_url": "https://arxiv.org/pdf/2409.08360",
+      "grade": "B",
+      "primary_or_secondary": "primary_qualitative_research",
+      "published_at": "2024-09-12",
+      "verified_at": "2026-07-17",
+      "page_or_section": "PDF abstract and pp.1-4, stakeholder negotiation and obscured labor",
+      "claim": "KOC content production is negotiated among creators, marketers, brands, and the platform; commercial labor may be deliberately obscured to appear spontaneous.",
+      "allowed_use": "Preserve creator voice and everyday material while making sponsorship and production labor auditable.",
+      "prohibited_use": "Do not use 'native feel' to justify hidden sponsorship, fake ordinary users, or uncompensated creator labor.",
+      "snapshot_sha256": "38b00a5995cdf1ef42d026036fa7da0ca1b9b12b62cd689d1876a7a38d078316",
+      "verification_status": "verified"
+    },
+    {
+      "claim_id": "CLM-S16-01",
+      "source_id": "S16",
+      "source_url": "https://www.sgad.com.cn/SG_superog_handbook_2026.pdf",
+      "grade": "C",
+      "primary_or_secondary": "primary_agency_report",
+      "published_at": "2026",
+      "verified_at": "2026-07-17",
+      "page_or_section": "PDF pp.6-8, centralized distribution and 1:1 replication failure modes",
+      "claim": "Distributing centralized brand material can become preachy and staged, while direct replication of already-validated seeding paths favors short-term extraction over durable differentiation.",
+      "allowed_use": "Create anti-patterns for ad-like material dumping and blind template replication.",
+      "prohibited_use": "Do not turn the agency model into a universal platform law or a per-post fixed structure.",
+      "snapshot_sha256": "",
+      "verification_status": "content_verified_hash_unavailable_non_supporting"
+    },
+    {
+      "claim_id": "CLM-S16-02",
+      "source_id": "S16",
+      "source_url": "https://www.sgad.com.cn/SG_superog_handbook_2026.pdf",
+      "grade": "C",
+      "primary_or_secondary": "primary_agency_report",
+      "published_at": "2026",
+      "verified_at": "2026-07-17",
+      "page_or_section": "PDF pp.10-12, WHY-HOW-WHAT narrative axis",
+      "claim": "The report proposes value viewpoint, dynamic scene experience, and user identity as a strategic narrative axis across content, search, and browse surfaces.",
+      "allowed_use": "Use as a brief-level strategy prompt and source of hypotheses for different surfaces.",
+      "prohibited_use": "Do not force WHY-HOW-WHAT into every post or claim its effectiveness without live evidence.",
+      "snapshot_sha256": "",
+      "verification_status": "content_verified_hash_unavailable_non_supporting"
+    },
+    {
+      "claim_id": "CLM-S17-01",
+      "source_id": "S17",
+      "source_url": "https://www.campaignchina.com/article/%E6%95%B0%E8%AF%B4%E9%98%B3%E7%8B%AE%E9%9B%86%E5%9B%A2%E5%8A%A9%E6%8E%A8%E8%B5%AB%E5%8A%9B%E6%98%82%E6%88%90%E4%B8%BA%E6%AF%8F%E6%97%A5%E5%81%A5%E5%BA%B7%E4%B8%93%E5%AE%B6/480924",
+      "grade": "C",
+      "primary_or_secondary": "secondary_trade_press_case",
+      "published_at": "2022-08-11",
+      "verified_at": "2026-07-17",
+      "page_or_section": "Section 3, more scientific content planning and production",
+      "claim": "A cross-functional creative-at-scale team tagged material elements, tested audience attention, evaluated delivery, and optimized material for subsequent rounds.",
+      "allowed_use": "Store element tags, audience hypothesis, version, evaluation result, and reinvestment decision in the content system.",
+      "prohibited_use": "Do not transfer the reported eye-tracking result, lift, or audience-specific creative conclusion to Xiaohongshu posts.",
+      "snapshot_sha256": "695f51dedd532a552572e427449708a90c2236b0aedca551d0a46de44f26c28a",
+      "verification_status": "verified"
+    },
+    {
+      "claim_id": "CLM-S19-01",
+      "source_id": "S19",
+      "source_url": "https://www.digitaling.com/projects/315706.html",
+      "grade": "C",
+      "primary_or_secondary": "primary_award_submission",
+      "published_at": "2024-02",
+      "verified_at": "2026-07-17",
+      "page_or_section": "Sections 1-2, trend insight and audience-product-scene matrix",
+      "claim": "The case starts from audience overlap and a differentiated efficacy scene, then restructures the message house and audience-product-scene content matrix.",
+      "allowed_use": "Require a stated audience, scene, message pillar, and differentiation hypothesis before production.",
+      "prohibited_use": "Do not accept the case's claimed growth as causal evidence or copy its audience/category conclusion.",
+      "snapshot_sha256": "49d9612472973dedb825b55cf8e97424e3cbe9bfb671c7466e272cbcf014c2d9",
+      "verification_status": "verified"
+    },
+    {
+      "claim_id": "CLM-S19-02",
+      "source_id": "S19",
+      "source_url": "https://www.digitaling.com/projects/315706.html",
+      "grade": "C",
+      "primary_or_secondary": "primary_award_submission",
+      "published_at": "2024-02",
+      "verified_at": "2026-07-17",
+      "page_or_section": "Sections 3-4 and award-submission strategy, high-TI content and search-feed coordination",
+      "claim": "The case identifies higher-decision-flow posts, studies their keyword/search paths, and uses search and feed surfaces for different stages and later delivery.",
+      "allowed_use": "Record why a post is selected for further delivery and preserve keyword, surface, and audience-flow context.",
+      "prohibited_use": "Do not use AIPS/TI language as an organic algorithm formula or quote unverified scale claims as thresholds.",
+      "snapshot_sha256": "49d9612472973dedb825b55cf8e97424e3cbe9bfb671c7466e272cbcf014c2d9",
+      "verification_status": "verified"
+    },
+    {
+      "claim_id": "CLM-S20-01",
+      "source_id": "S20",
+      "source_url": "https://www.digitaling.com/articles/623118.html",
+      "grade": "C/D",
+      "primary_or_secondary": "secondary_service_provider_case",
+      "published_at": "2021-10-25",
+      "verified_at": "2026-07-17",
+      "page_or_section": "Sections on KOL operations, UGC, and enterprise-account operations",
+      "claim": "The service workflow monitored trends, creators, competitors, and sentiment, adapted product benefits to creator style, and gave UGC and enterprise accounts different jobs.",
+      "allowed_use": "Separate monitoring, creator adaptation, UGC collection, and enterprise-account workstreams.",
+      "prohibited_use": "Do not copy reported metrics, rely on 2021 channel tactics, hide commercial disclosure, or manufacture UGC.",
+      "snapshot_sha256": "4ebe10fbb0403f98680169554307e1162e83a02312a29e4f16469c1bd1816073",
+      "verification_status": "verified_with_age_and_sales_bias"
+    },
+    {
+      "claim_id": "CLM-S21-01",
+      "source_id": "S21",
+      "source_url": "https://qks.shufe.edu.cn/J/PDFFull/A0hffWK2cu-pztJ-Ei7J-xH7B-3ntYHcMFh96y.pdf",
+      "grade": "B",
+      "primary_or_secondary": "secondary_academic_case_study",
+      "published_at": "2026",
+      "verified_at": "2026-07-17",
+      "page_or_section": "PDF pp.11-12, scientific commercialization and value alignment",
+      "claim": "The case study treats track insight, target setting, delivery optimization, attribution, method, and commercial products as a connected operating system rather than isolated traffic tactics.",
+      "allowed_use": "Define system boundaries and require traceability from insight through outcome.",
+      "prohibited_use": "Do not infer visual or copywriting performance from a business-model case study.",
+      "snapshot_sha256": "73987a1932dafea6546c9f127b67faab431e9b97f99c37395f1f6d7044932fa6",
+      "verification_status": "verified"
+    }
+  ],
+  "product_decisions": [
+    {
+      "decision_id": "PD-STYLE-NORMALIZATION",
+      "decision": "Store observable mechanism, scope, evidence, and boundary rather than subjective decoration labels alone.",
+      "basis": ["CLM-S1-03", "CLM-S16-01"],
+      "status": "project_schema_policy"
+    },
+    {
+      "decision_id": "PD-PRIMARY-JOB",
+      "decision": "One draft has one primary content job and is evaluated by the matching funnel stage.",
+      "basis": ["CLM-S1-04", "CLM-S19-02"],
+      "status": "project_policy_not_platform_fact"
+    },
+    {
+      "decision_id": "PD-CONCEPT-DIVERSITY",
+      "decision": "Produce at least two prototypes with different attention paths; color-only variants do not count.",
+      "basis": ["GeekLaws visual rework case"],
+      "status": "production_quality_gate"
+    },
+    {
+      "decision_id": "PD-DUAL-VIEW-QA",
+      "decision": "Review every prototype both in feed-thumbnail size and full size.",
+      "basis": ["GeekLaws visual rework case"],
+      "status": "production_quality_gate"
+    },
+    {
+      "decision_id": "PD-DISCLOSURE",
+      "decision": "Native adaptation never permits hidden sponsorship, fake identity, or fabricated personal experience.",
+      "basis": ["CLM-S7-01", "CLM-S15-01"],
+      "status": "compliance_and_ethics_gate"
+    },
+    {
+      "decision_id": "PD-BRAND-BEHAVIOR",
+      "decision": "A repeated, verifiable brand action may be used as a recognition device; logo size is not the only brand-control lever.",
+      "basis": ["CLM-S12-01"],
+      "status": "creative_strategy_hypothesis"
+    },
+    {
+      "decision_id": "PD-EXPERIMENT-UNIT",
+      "decision": "Every content-matrix row stores one audience-scene-message-carrier hypothesis and one actively varied factor.",
+      "basis": ["CLM-S13-01", "CLM-S19-01"],
+      "status": "project_experiment_policy"
+    },
+    {
+      "decision_id": "PD-EVIDENCE-PROMOTION",
+      "decision": "A style association remains candidate until it has recomputable same-metric baselines, independent accounts and clusters, query context, and counterevidence.",
+      "basis": ["conservative evidence design"],
+      "status": "project_evidence_policy"
+    },
+    {
+      "decision_id": "PD-CAUSALITY-BOUNDARY",
+      "decision": "Natural-post comparisons are quasi-experimental observations; paid tests require audience, budget, delivery, time, and variable logs.",
+      "basis": ["CLM-S1-04"],
+      "status": "project_evidence_policy"
+    },
+    {
+      "decision_id": "PD-GATE-SEPARATION",
+      "decision": "Evidence, native fit, visual quality, factual/compliance, client, delivery, and post-publication gates are recorded separately.",
+      "basis": ["CLM-S7-01", "CLM-S17-01"],
+      "status": "production_quality_gate"
+    },
+    {
+      "decision_id": "PD-METRIC-BY-JOB",
+      "decision": "Evaluation metrics are selected from the content's primary job and surface rather than one global engagement-rate threshold.",
+      "basis": ["CLM-S1-04", "CLM-S19-02"],
+      "status": "project_measurement_policy"
+    },
+    {
+      "decision_id": "PD-AUDITABILITY",
+      "decision": "The system retains source, hypothesis, version, review, delivery conditions, outcome, counterevidence, and selection/rejection reason.",
+      "basis": ["CLM-S17-01", "CLM-S21-01"],
+      "status": "project_schema_policy"
+    }
+  ]
+}
