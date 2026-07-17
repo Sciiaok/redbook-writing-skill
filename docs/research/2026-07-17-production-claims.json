@@ -317,6 +317,36 @@
       "prohibited_use": "Do not use covert-camera framing, masked pseudo-user presentation, staged supplier comments, cheap mass posting, unverified ROI, or a fixed reading threshold as production rules.",
       "snapshot_sha256": "55249d7dcecace4abcbd4496b1b6febfde19ae9617591c3b20afef3446637328",
       "verification_status": "verified_low_support_and_risk_flagged"
+    },
+    {
+      "claim_id": "CLM-S28-01",
+      "source_id": "S28",
+      "source_url": "https://www.adquan.com/article/357276",
+      "grade": "B/C",
+      "primary_or_secondary": "official_program_with_participant_publication",
+      "published_at": "2025-12-03",
+      "verified_at": "2026-07-17",
+      "page_or_section": "Whitepaper origin, eight capability chapters, risk controls, and four operating pillars",
+      "claim": "A Xiaohongshu channel-business whitepaper co-created with sixteen agencies structures partner operations across strategy, client development, strategy, content, media delivery, service, team, and business management, and describes productized strategy, standardized operations, data assets, and organized talent as reusable operating capabilities.",
+      "allowed_use": "Define separate production and governance objects, ownership, operating gates, and risk records across the content lifecycle.",
+      "prohibited_use": "Do not infer recommendation-algorithm weights, style-performance effects, or universal agency organization from a partner-management whitepaper.",
+      "snapshot_sha256": "dfd1e9d80ef5c519cde0b944b3652e78d0725731d9a143437715dd7357f18c57",
+      "verification_status": "official_program_origin_verified_via_participant_publication"
+    },
+    {
+      "claim_id": "CLM-S29-01",
+      "source_id": "S29",
+      "source_url": "https://www.10100.com/article/51603608",
+      "grade": "C",
+      "primary_or_secondary": "coauthor_agency_public_excerpt",
+      "published_at": "2025-12-02",
+      "verified_at": "2026-07-17",
+      "page_or_section": "Content-team structure, topic-to-review-to-retrospective SOP, tools, and role matrix",
+      "claim": "A coauthor of the whitepaper's content chapter publicly describes a topic-demand, creation, review, and retrospective pipeline with explicit role, material, tool, and follow-up records.",
+      "allowed_use": "Require traceable topic evidence, framework, source material, review, retrospective window, and next-action fields, while separating search, competitive, delivery, and outcome data.",
+      "prohibited_use": "Do not reuse its self-reported daily output, hit-rate, review-time, creator, or cost thresholds as defaults or performance evidence.",
+      "snapshot_sha256": "0e5154fabeddf608f24034bd70f6c442597bf8ebb89cef1da0090f8b6c7b70c6",
+      "verification_status": "verified_self_reported_production_process_no_effect_audit"
     }
   ],
   "product_decisions": [
@@ -377,7 +407,7 @@
     {
       "decision_id": "PD-GATE-SEPARATION",
       "decision": "Evidence, native fit, visual quality, factual/compliance, client, delivery, and post-publication gates are recorded separately.",
-      "basis": ["CLM-S7-01", "CLM-S17-01"],
+      "basis": ["CLM-S7-01", "CLM-S17-01", "CLM-S28-01", "CLM-S29-01"],
       "status": "production_quality_gate"
     },
     {
@@ -389,7 +419,7 @@
     {
       "decision_id": "PD-AUDITABILITY",
       "decision": "The system retains source, hypothesis, version, review, delivery conditions, outcome, counterevidence, and selection/rejection reason.",
-      "basis": ["CLM-S17-01", "CLM-S21-01"],
+      "basis": ["CLM-S17-01", "CLM-S21-01", "CLM-S28-01", "CLM-S29-01"],
       "status": "project_schema_policy"
     },
     {
