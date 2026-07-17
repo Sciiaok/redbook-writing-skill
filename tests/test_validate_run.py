@@ -105,6 +105,11 @@ HEADERS = {
         "duplicate_of",
         "cluster_id",
         "status",
+        "performance_tier",
+        "style_capture_status",
+        "style_library_post_id",
+        "style_observation_ids",
+        "style_skip_reason",
     ],
     "topics.csv": [
         "topic_id",
@@ -219,6 +224,15 @@ HEADERS = {
         "status",
         "authorized_output_sha256",
     ],
+}
+
+
+V2_POST_STYLE_COLUMNS = {
+    "performance_tier",
+    "style_capture_status",
+    "style_library_post_id",
+    "style_observation_ids",
+    "style_skip_reason",
 }
 
 
@@ -476,6 +490,29 @@ def write_complete_draft(path: Path, **overrides: str) -> None:
         + "\n",
         encoding="utf-8",
     )
+
+
+def v2_style_meta(**overrides: str) -> dict[str, str]:
+    meta = {
+        "style_contract_version": "2",
+        "business_objective": "traffic_first",
+        "style_requirement": "both",
+        "style_query_carrier": "text_card",
+        "style_query_primary_job": "feed_stop",
+        "style_binding_source": "none",
+        "style_binding_status": "needs_style_research",
+        "performance_rule_claim_kind": "series_constant",
+        "style_feature_contrast": "invariant",
+        "performance_evidence_scope": "not_performance_evidence",
+        "performance_visibility_scope": "public_proxy",
+        "traffic_primary_metric": "engagement_proxy",
+        "traffic_verdict": "not_applicable",
+        "traffic_stage": "feed_stop",
+        "visual_delivery_requirement": "brief",
+        "visual_delivery_status": "brief_only",
+    }
+    meta.update(overrides)
+    return meta
 
 
 def asset_sha256(path: Path) -> str:
@@ -3340,6 +3377,180 @@ class ValidateRunTests(unittest.TestCase):
         )
         result = self.run_validator("--strict")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
+class StyleContractFastPathTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.fixture = RunFixture(mode="draft")
+        demand_source = base_source("USER-001")
+        demand_source.update(
+            {
+                "source_layer": "creator_experience",
+                "source_type": "user_material",
+                "title": "用户需求材料",
+                "author_org": "用户授权材料",
+                "evidence_form": "user_material",
+                "evidence_grade": "C",
+            }
+        )
+        write_csv(
+            self.fixture.path / "source-log.csv",
+            [base_source(), demand_source],
+        )
+        for field, value in {
+            "run_contract_version": "2",
+            "business_objective": "traffic_first",
+            "objective_primary_job": "feed_stop",
+            "performance_visibility_scope": "public_proxy",
+            "style_requirement": "both",
+            "style_library_path": "../_style_library/style-library.sqlite",
+            "style_taxonomy_version": "2",
+        }.items():
+            self.fixture.set_run_field(field, value)
+        write_csv(
+            self.fixture.path / "topics.csv",
+            [base_topic(primary_job="feed_stop")],
+        )
+        drafts = self.fixture.path / "drafts"
+        drafts.mkdir()
+        self.draft = drafts / "v2.md"
+
+    def tearDown(self) -> None:
+        self.fixture.close()
+
+    def run_validator(self, *extra: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            ["python3", str(VALIDATOR), str(self.fixture.path), *extra],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+    def write_v2_draft(self, **overrides: str) -> None:
+        meta = v2_style_meta(**overrides)
+        primary_job = meta.pop("primary_job", meta["style_query_primary_job"])
+        write_complete_draft(
+            self.draft,
+            primary_job=primary_job,
+            status=meta.pop("status", "needs_review"),
+            **meta,
+        )
+
+    def test_needs_style_research_is_a_valid_nonready_v2_stop(self) -> None:
+        self.write_v2_draft()
+        result = self.run_validator()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_v2_rejects_uncontrolled_objective_job_and_carrier(self) -> None:
+        self.fixture.set_run_field("business_objective", "go_viral")
+        self.write_v2_draft(
+            business_objective="go_viral",
+            style_query_primary_job="recommendation_reach",
+            style_query_carrier="viral_ppt",
+            traffic_stage="viral_loop",
+            primary_job="recommendation_reach",
+        )
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("invalid_v2_style_enum", result.stdout)
+
+    def test_ready_style_draft_cannot_stop_at_needs_style_research(self) -> None:
+        self.write_v2_draft(status="ready")
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("style_not_grounded", result.stdout)
+
+    def test_starter_binding_is_unavailable_while_release_gate_is_incomplete(self) -> None:
+        self.write_v2_draft(style_binding_status="starter_applied")
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("starter_gate_incomplete", result.stdout)
+
+    def test_public_proxy_can_only_report_not_applicable_traffic_verdict(self) -> None:
+        self.write_v2_draft(traffic_verdict="win")
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("public_proxy_traffic_verdict", result.stdout)
+
+    def test_traffic_win_requires_first_party_impressions_or_reach(self) -> None:
+        self.fixture.set_run_field("performance_visibility_scope", "first_party_analytics")
+        self.write_v2_draft(
+            performance_visibility_scope="first_party_analytics",
+            traffic_primary_metric="feed_ctr",
+            traffic_verdict="win",
+        )
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("traffic_primary_metric", result.stdout)
+
+    def test_invariant_high_low_feature_cannot_be_performance_rule(self) -> None:
+        self.write_v2_draft(
+            performance_rule_claim_kind="contrastive_performance_hypothesis",
+            style_feature_contrast="invariant",
+            performance_evidence_scope="public_proxy_association",
+        )
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("shared_feature_not_performance", result.stdout)
+
+    def test_series_constant_and_task_fit_must_remain_nonperformance(self) -> None:
+        for claim_kind in ("series_constant", "task_fit"):
+            with self.subTest(claim_kind=claim_kind):
+                self.write_v2_draft(
+                    performance_rule_claim_kind=claim_kind,
+                    style_feature_contrast="not_applicable",
+                    performance_evidence_scope="first_party_traffic_validated",
+                )
+                result = self.run_validator()
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("nonperformance_rule_scope", result.stdout)
+
+    def test_rendered_request_cannot_be_delivered_as_brief_only(self) -> None:
+        self.write_v2_draft(
+            visual_delivery_requirement="rendered",
+            visual_delivery_status="brief_only",
+        )
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("rendered_delivery_missing", result.stdout)
+
+    def test_adult_product_cta_requires_current_production_gate_receipt(self) -> None:
+        write_csv(
+            self.fixture.path / "topics.csv",
+            [base_topic(primary_job="conversion")],
+        )
+        self.write_v2_draft(
+            primary_job="conversion",
+            style_query_primary_job="conversion",
+            cta_type="product_component",
+            commercial_relationship="owned_product",
+            disclosure_text="本店自营产品",
+            disclosure_location="CTA前",
+            cta_product_scope="adult_product",
+            production_gate_status="unknown",
+            production_gate_receipt_ids="none",
+        )
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("sensitive_commercial_gate", result.stdout)
+
+    def test_relationship_education_is_not_product_eligibility(self) -> None:
+        write_csv(
+            self.fixture.path / "topics.csv",
+            [base_topic(primary_job="conversion")],
+        )
+        self.write_v2_draft(
+            primary_job="conversion",
+            style_query_primary_job="conversion",
+            cta_type="product_component",
+            commercial_relationship="owned_product",
+            disclosure_text="本店自营产品",
+            disclosure_location="CTA前",
+            cta_product_scope="relationship_education_only",
+        )
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("relationship_education_not_product_eligibility", result.stdout)
 
 
 if __name__ == "__main__":

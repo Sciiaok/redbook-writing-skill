@@ -108,6 +108,11 @@ SCHEMAS: dict[str, list[str]] = {
         "duplicate_of",
         "cluster_id",
         "status",
+        "performance_tier",
+        "style_capture_status",
+        "style_library_post_id",
+        "style_observation_ids",
+        "style_skip_reason",
     ],
     "topics.csv": [
         "topic_id",
@@ -487,6 +492,84 @@ PRIMARY_JOBS = {
     "search_capture",
     "relationship_building",
     "commercial_conversion",
+}
+V2_BUSINESS_OBJECTIVES = {"traffic_first", "engagement_proxy"}
+V2_STYLE_REQUIREMENTS = {"none", "copy", "visual", "both"}
+V2_STYLE_BINDING_STATUSES = {"grounded", "needs_style_research"}
+V2_PERFORMANCE_VISIBILITY_SCOPES = {"first_party_analytics", "public_proxy"}
+V2_PERFORMANCE_EVIDENCE_SCOPES = {
+    "not_performance_evidence",
+    "public_proxy_association",
+    "first_party_traffic_validated",
+}
+V2_RULE_CLAIM_KINDS = {
+    "series_constant",
+    "task_fit",
+    "contrastive_performance_hypothesis",
+}
+V2_FEATURE_CONTRASTS = {"invariant", "differentiated", "not_applicable"}
+V2_TRAFFIC_PRIMARY_METRICS = {
+    "impressions",
+    "reach",
+    "engagement_proxy",
+    "unavailable",
+}
+V2_TRAFFIC_VERDICTS = {
+    "win",
+    "loss",
+    "inconclusive",
+    "unavailable",
+    "insufficient",
+    "not_applicable",
+}
+V2_TRAFFIC_STAGES = {
+    "feed_stop",
+    "read_complete",
+    "save_share",
+    "comment_cocreation",
+    "profile_follow",
+}
+V2_VISUAL_DELIVERY_REQUIREMENTS = {"none", "brief", "rendered"}
+V2_VISUAL_DELIVERY_STATUSES = {
+    "not_requested",
+    "brief_only",
+    "rendered_needs_review",
+    "rendered_pass",
+}
+V2_CTA_PRODUCT_SCOPES = {
+    "none",
+    "general_product",
+    "adult_product",
+    "relationship_education_only",
+}
+V2_PRODUCTION_GATE_STATUSES = {
+    "not_applicable",
+    "ready",
+    "needs_revision",
+    "needs_platform_confirmation",
+    "blocked_safety",
+    "blocked_rights",
+    "unknown",
+}
+V2_PERFORMANCE_TIERS = {"high", "ordinary", "low", "unknown"}
+V2_STYLE_CAPTURE_STATUSES = {"complete", "partial", "skipped", "not_required"}
+V2_DRAFT_META = {
+    "style_contract_version",
+    "business_objective",
+    "style_requirement",
+    "style_query_carrier",
+    "style_query_primary_job",
+    "style_binding_source",
+    "style_binding_status",
+    "performance_rule_claim_kind",
+    "style_feature_contrast",
+    "performance_evidence_scope",
+    "performance_visibility_scope",
+    "traffic_primary_metric",
+    "traffic_verdict",
+    "traffic_stage",
+    "visual_delivery_requirement",
+    "visual_delivery_status",
 }
 LIFECYCLES = {"hot", "periodic", "evergreen_search"}
 DIRECTIONS = {
@@ -1004,6 +1087,37 @@ class RunValidator:
         self.issues: list[Issue] = []
         self.rows: dict[str, list[dict[str, str]]] = {}
         self.run: dict[str, str] = {}
+        self.style_taxonomy_v2: dict[str, object] = {}
+
+    def _is_v2(self) -> bool:
+        return self.run.get("run_contract_version", "").strip() == "2"
+
+    def _load_style_taxonomy_v2(self) -> None:
+        path = Path(__file__).resolve().parents[1] / "assets" / "style-taxonomy-v2.json"
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            self.error("style_taxonomy_unavailable", "run.yaml", str(exc))
+            return
+        if payload.get("taxonomy_version") != 2:
+            self.error(
+                "style_taxonomy_unavailable",
+                "run.yaml",
+                "style taxonomy must declare taxonomy_version=2",
+            )
+            return
+        self.style_taxonomy_v2 = payload
+
+    def _v2_codes(self, key: str) -> set[str]:
+        value = self.style_taxonomy_v2.get(key, [])
+        if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+            self.error(
+                "style_taxonomy_unavailable",
+                "run.yaml",
+                f"style taxonomy key {key} must be a string array",
+            )
+            return set()
+        return set(value)
 
     def add(self, severity: str, code: str, location: str, message: str) -> None:
         self.issues.append(Issue(severity, code, location, message))
@@ -1087,6 +1201,90 @@ class RunValidator:
             self.error("invalid_date_order", "run.yaml", "window_start cannot be after window_end")
         if created and window_end and window_end > created:
             self.error("future_date", "run.yaml", "window_end cannot be after created_at")
+        if self.run.get("run_contract_version", "").strip():
+            if not self._is_v2():
+                self.error(
+                    "invalid_run_contract_version",
+                    "run.yaml",
+                    "run_contract_version must be 2 when present",
+                )
+            else:
+                self._load_style_taxonomy_v2()
+                self._check_v2_run_contract()
+
+    def _check_v2_run_contract(self) -> None:
+        required = {
+            "business_objective",
+            "objective_primary_job",
+            "performance_visibility_scope",
+            "style_requirement",
+            "style_library_path",
+            "style_taxonomy_version",
+        }
+        for key in sorted(required):
+            if not self.run.get(key, "").strip():
+                self.error("missing_v2_run_field", "run.yaml", f"missing or blank field: {key}")
+
+        objective = self.run.get("business_objective", "")
+        if objective not in V2_BUSINESS_OBJECTIVES:
+            self.error(
+                "invalid_v2_style_enum",
+                "run.yaml",
+                f"invalid business_objective: {objective}",
+            )
+        primary_job = self.run.get("objective_primary_job", "")
+        primary_jobs = self._v2_codes("primary_job")
+        if primary_job not in primary_jobs:
+            self.error(
+                "invalid_v2_style_enum",
+                "run.yaml",
+                f"invalid objective_primary_job: {primary_job}",
+            )
+        if objective == "traffic_first" and primary_job != "feed_stop":
+            self.error(
+                "objective_job_mismatch",
+                "run.yaml",
+                "business_objective=traffic_first requires objective_primary_job=feed_stop",
+            )
+        visibility = self.run.get("performance_visibility_scope", "")
+        if visibility not in V2_PERFORMANCE_VISIBILITY_SCOPES:
+            self.error(
+                "invalid_v2_style_enum",
+                "run.yaml",
+                f"invalid performance_visibility_scope: {visibility}",
+            )
+        requirement = self.run.get("style_requirement", "")
+        if requirement not in V2_STYLE_REQUIREMENTS:
+            self.error(
+                "invalid_v2_style_enum",
+                "run.yaml",
+                f"invalid style_requirement: {requirement}",
+            )
+        mode = self.run.get("mode", "")
+        if mode == "mechanism" and requirement != "none":
+            self.error(
+                "style_requirement_mismatch",
+                "run.yaml",
+                "mechanism mode requires style_requirement=none",
+            )
+        elif mode in {"discovery", "refresh"} and requirement != "both":
+            self.error(
+                "style_requirement_mismatch",
+                "run.yaml",
+                f"{mode} mode requires style_requirement=both",
+            )
+        elif mode == "draft" and requirement == "none":
+            self.error(
+                "style_requirement_mismatch",
+                "run.yaml",
+                "draft mode requires copy, visual, or both",
+            )
+        if self.run.get("style_taxonomy_version", "") != "2":
+            self.error(
+                "invalid_v2_style_enum",
+                "run.yaml",
+                "style_taxonomy_version must be 2",
+            )
 
     def _check_required_files(self) -> None:
         mode = self.run.get("mode", "")
@@ -1653,6 +1851,38 @@ class RunValidator:
                 self.error("invalid_enum", location, f"invalid date_confidence: {date_confidence}")
             if row.get("status") not in POST_STATUSES:
                 self.error("invalid_enum", location, f"invalid post status: {row.get('status')}")
+            if self._is_v2():
+                performance_tier = row.get("performance_tier", "")
+                if performance_tier not in V2_PERFORMANCE_TIERS:
+                    self.error(
+                        "invalid_v2_style_enum",
+                        location,
+                        f"invalid performance_tier: {performance_tier}",
+                    )
+                capture_status = row.get("style_capture_status", "")
+                if capture_status not in V2_STYLE_CAPTURE_STATUSES:
+                    self.error(
+                        "invalid_v2_style_enum",
+                        location,
+                        f"invalid style_capture_status: {capture_status}",
+                    )
+                if capture_status == "complete" and not (
+                    row.get("style_library_post_id", "").strip()
+                    and row.get("style_observation_ids", "").strip()
+                ):
+                    self.error(
+                        "incomplete_style_capture",
+                        location,
+                        "complete style capture requires library post and observation IDs",
+                    )
+                if capture_status in {"partial", "skipped", "not_required"} and not row.get(
+                    "style_skip_reason", ""
+                ).strip():
+                    self.error(
+                        "missing_style_skip_reason",
+                        location,
+                        f"{capture_status} style capture requires style_skip_reason",
+                    )
             multiple = row.get("account_baseline_multiple", "").strip()
             if multiple:
                 try:
@@ -1764,9 +1994,12 @@ class RunValidator:
             | set(sources)
             | self._id_set("claim-ledger.csv")
         )
+        allowed_primary_jobs = (
+            self._v2_codes("primary_job") if self._is_v2() else PRIMARY_JOBS
+        )
         for index, row in enumerate(self.rows.get("topics.csv", []), start=2):
             location = f"topics.csv:{index}"
-            if row.get("primary_job") not in PRIMARY_JOBS:
+            if row.get("primary_job") not in allowed_primary_jobs:
                 self.error("invalid_enum", location, f"invalid primary_job: {row.get('primary_job')}")
             if row.get("lifecycle") not in LIFECYCLES:
                 self.error("invalid_enum", location, f"invalid lifecycle: {row.get('lifecycle')}")
@@ -2514,6 +2747,265 @@ class RunValidator:
                 f"draft surfaces {sorted(surfaces)} do not exactly match registry {sorted(registry_surfaces)}",
             )
 
+    def _check_v2_draft_style_contract(
+        self,
+        path: Path,
+        meta: dict[str, str],
+    ) -> None:
+        def invalid(field: str, value: str) -> None:
+            self.error(
+                "invalid_v2_style_enum",
+                path.name,
+                f"invalid {field}: {value}",
+            )
+
+        if meta.get("style_contract_version", "") != "2":
+            invalid("style_contract_version", meta.get("style_contract_version", ""))
+
+        objective = meta.get("business_objective", "")
+        if objective not in V2_BUSINESS_OBJECTIVES:
+            invalid("business_objective", objective)
+        elif objective != self.run.get("business_objective", ""):
+            self.error(
+                "style_run_mismatch",
+                path.name,
+                "draft business_objective must match run.yaml",
+            )
+
+        requirement = meta.get("style_requirement", "")
+        if requirement not in V2_STYLE_REQUIREMENTS:
+            invalid("style_requirement", requirement)
+        elif requirement != self.run.get("style_requirement", ""):
+            self.error(
+                "style_run_mismatch",
+                path.name,
+                "draft style_requirement must match run.yaml",
+            )
+
+        primary_jobs = self._v2_codes("primary_job")
+        query_job = meta.get("style_query_primary_job", "")
+        if query_job not in primary_jobs:
+            invalid("style_query_primary_job", query_job)
+        elif query_job != meta.get("primary_job", ""):
+            self.error(
+                "style_query_mismatch",
+                path.name,
+                "style_query_primary_job must match draft primary_job",
+            )
+        if query_job and query_job != self.run.get("objective_primary_job", ""):
+            self.error(
+                "style_run_mismatch",
+                path.name,
+                "style_query_primary_job must match run objective_primary_job",
+            )
+
+        carrier = meta.get("style_query_carrier", "")
+        carriers = self._v2_codes("carrier")
+        if requirement == "none":
+            if carrier not in {"", "none"}:
+                invalid("style_query_carrier", carrier)
+        elif carrier not in carriers:
+            invalid("style_query_carrier", carrier)
+
+        binding_status = meta.get("style_binding_status", "")
+        if binding_status == "starter_applied":
+            self.error(
+                "starter_gate_incomplete",
+                path.name,
+                "starter binding is unavailable until the qualified-cell release gate passes",
+            )
+        elif binding_status not in V2_STYLE_BINDING_STATUSES:
+            invalid("style_binding_status", binding_status)
+        binding_source = meta.get("style_binding_source", "")
+        if binding_source not in {"none", "library"}:
+            invalid("style_binding_source", binding_source)
+        if binding_status == "grounded" and binding_source != "library":
+            self.error(
+                "style_not_grounded",
+                path.name,
+                "grounded style requires style_binding_source=library",
+            )
+        if binding_status == "needs_style_research" and binding_source != "none":
+            self.error(
+                "style_not_grounded",
+                path.name,
+                "needs_style_research cannot claim a library binding",
+            )
+        draft_status = meta.get("status", "")
+        if requirement != "none" and draft_status == "ready" and binding_status != "grounded":
+            self.error(
+                "style_not_grounded",
+                path.name,
+                "ready draft with a style requirement must be grounded",
+            )
+        if binding_status == "needs_style_research" and draft_status not in {
+            "needs_review",
+            "blocked",
+        }:
+            self.error(
+                "style_not_grounded",
+                path.name,
+                "needs_style_research requires draft status needs_review or blocked",
+            )
+
+        claim_kind = meta.get("performance_rule_claim_kind", "")
+        if claim_kind not in V2_RULE_CLAIM_KINDS:
+            invalid("performance_rule_claim_kind", claim_kind)
+        contrast = meta.get("style_feature_contrast", "")
+        if contrast not in V2_FEATURE_CONTRASTS:
+            invalid("style_feature_contrast", contrast)
+        evidence_scope = meta.get("performance_evidence_scope", "")
+        if evidence_scope not in V2_PERFORMANCE_EVIDENCE_SCOPES:
+            invalid("performance_evidence_scope", evidence_scope)
+        if claim_kind in {"series_constant", "task_fit"} and evidence_scope != "not_performance_evidence":
+            self.error(
+                "nonperformance_rule_scope",
+                path.name,
+                f"{claim_kind} must remain not_performance_evidence",
+            )
+        if contrast == "invariant" and (
+            claim_kind != "series_constant"
+            or evidence_scope != "not_performance_evidence"
+        ):
+            self.error(
+                "shared_feature_not_performance",
+                path.name,
+                "a feature shared by high and low samples is a series constant, not a performance rule",
+            )
+        if evidence_scope in {
+            "public_proxy_association",
+            "first_party_traffic_validated",
+        } and (
+            claim_kind != "contrastive_performance_hypothesis"
+            or contrast != "differentiated"
+        ):
+            self.error(
+                "performance_scope_without_contrast",
+                path.name,
+                "performance evidence requires a differentiated contrastive hypothesis",
+            )
+
+        visibility = meta.get("performance_visibility_scope", "")
+        if visibility not in V2_PERFORMANCE_VISIBILITY_SCOPES:
+            invalid("performance_visibility_scope", visibility)
+        elif visibility != self.run.get("performance_visibility_scope", ""):
+            self.error(
+                "style_run_mismatch",
+                path.name,
+                "draft performance_visibility_scope must match run.yaml",
+            )
+        traffic_metric = meta.get("traffic_primary_metric", "")
+        if traffic_metric not in V2_TRAFFIC_PRIMARY_METRICS:
+            invalid("traffic_primary_metric", traffic_metric)
+        traffic_verdict = meta.get("traffic_verdict", "")
+        if traffic_verdict not in V2_TRAFFIC_VERDICTS:
+            invalid("traffic_verdict", traffic_verdict)
+        traffic_stage = meta.get("traffic_stage", "")
+        if traffic_stage not in V2_TRAFFIC_STAGES:
+            invalid("traffic_stage", traffic_stage)
+        if visibility == "public_proxy" and traffic_verdict != "not_applicable":
+            self.error(
+                "public_proxy_traffic_verdict",
+                path.name,
+                "public proxy evidence can only use traffic_verdict=not_applicable",
+            )
+        if visibility == "public_proxy" and traffic_metric != "engagement_proxy":
+            self.error(
+                "traffic_primary_metric",
+                path.name,
+                "public proxy evidence must be labelled engagement_proxy, not traffic",
+            )
+        if objective == "engagement_proxy" and (
+            visibility != "public_proxy"
+            or traffic_metric != "engagement_proxy"
+            or traffic_verdict != "not_applicable"
+        ):
+            self.error(
+                "public_proxy_traffic_verdict",
+                path.name,
+                "engagement_proxy objective requires public_proxy and not_applicable traffic verdict",
+            )
+        if objective == "traffic_first" and traffic_verdict in {"win", "loss"} and not (
+            visibility == "first_party_analytics"
+            and traffic_metric in {"impressions", "reach"}
+        ):
+            self.error(
+                "traffic_primary_metric",
+                path.name,
+                "traffic win/loss requires first-party impressions or reach",
+            )
+        if evidence_scope == "first_party_traffic_validated" and not (
+            visibility == "first_party_analytics"
+            and traffic_metric in {"impressions", "reach"}
+        ):
+            self.error(
+                "traffic_primary_metric",
+                path.name,
+                "first_party_traffic_validated requires first-party impressions or reach",
+            )
+
+        visual_requirement = meta.get("visual_delivery_requirement", "")
+        if visual_requirement not in V2_VISUAL_DELIVERY_REQUIREMENTS:
+            invalid("visual_delivery_requirement", visual_requirement)
+        visual_status = meta.get("visual_delivery_status", "")
+        if visual_status not in V2_VISUAL_DELIVERY_STATUSES:
+            invalid("visual_delivery_status", visual_status)
+        if visual_requirement == "rendered" and visual_status in {
+            "not_requested",
+            "brief_only",
+        }:
+            self.error(
+                "rendered_delivery_missing",
+                path.name,
+                "a rendered-image request cannot be delivered as a brief",
+            )
+        if visual_requirement == "rendered" and draft_status == "ready" and visual_status != "rendered_pass":
+            self.error(
+                "rendered_delivery_missing",
+                path.name,
+                "ready rendered delivery requires visual_delivery_status=rendered_pass",
+            )
+        if visual_status == "rendered_pass" and visual_requirement != "rendered":
+            self.error(
+                "rendered_delivery_mismatch",
+                path.name,
+                "rendered_pass requires visual_delivery_requirement=rendered",
+            )
+
+        product_scope = meta.get("cta_product_scope", "").strip()
+        if product_scope and product_scope not in V2_CTA_PRODUCT_SCOPES:
+            invalid("cta_product_scope", product_scope)
+        gate_status = meta.get("production_gate_status", "").strip()
+        if gate_status and gate_status not in V2_PRODUCTION_GATE_STATUSES:
+            invalid("production_gate_status", gate_status)
+        receipt_ids = [
+            value
+            for value in split_ids(meta.get("production_gate_receipt_ids", ""))
+            if value.lower() != "none"
+        ]
+        cta_type = meta.get("cta_type", "")
+        if cta_type in COMMERCIAL_CTA_TYPES and product_scope == "relationship_education_only":
+            self.error(
+                "relationship_education_not_product_eligibility",
+                path.name,
+                "relationship education does not establish product eligibility",
+            )
+        if cta_type in COMMERCIAL_CTA_TYPES and product_scope == "adult_product":
+            gate_ready = gate_status == "ready" and bool(receipt_ids)
+            explicitly_blocked = draft_status == "blocked" and gate_status in {
+                "needs_revision",
+                "needs_platform_confirmation",
+                "blocked_safety",
+                "blocked_rights",
+                "unknown",
+            }
+            if not (gate_ready or explicitly_blocked):
+                self.error(
+                    "sensitive_commercial_gate",
+                    path.name,
+                    "adult-product CTA requires a current production-gate receipt or an explicitly blocked draft",
+                )
+
     def _check_drafts(self) -> None:
         drafts = self.run_dir / "drafts"
         if not drafts.is_dir():
@@ -2537,13 +3029,16 @@ class RunValidator:
                 continue
             meta = parse_frontmatter(text)
             rendered_text = visible_markdown(text)
-            missing_meta = sorted(DRAFT_META - meta.keys())
+            required_meta = DRAFT_META | (V2_DRAFT_META if self._is_v2() else set())
+            missing_meta = sorted(required_meta - meta.keys())
             if missing_meta:
                 self.error(
                     "draft_contract",
                     path.name,
                     "missing frontmatter: " + ", ".join(missing_meta),
                 )
+            if self._is_v2():
+                self._check_v2_draft_style_contract(path, meta)
             if self.run.get("status") == "complete":
                 for field in sorted(DRAFT_NONEMPTY_META):
                     if not meta.get(field, "").strip():
@@ -2699,7 +3194,10 @@ class RunValidator:
                         "draft and topic disagree on: " + ", ".join(mismatches),
                     )
             primary_job = meta.get("primary_job", "")
-            if primary_job and primary_job not in PRIMARY_JOBS:
+            allowed_primary_jobs = (
+                self._v2_codes("primary_job") if self._is_v2() else PRIMARY_JOBS
+            )
+            if primary_job and primary_job not in allowed_primary_jobs:
                 self.error("invalid_enum", path.name, f"invalid primary_job: {primary_job}")
             lifecycle = meta.get("lifecycle", "")
             if lifecycle and lifecycle not in LIFECYCLES:
@@ -2774,11 +3272,12 @@ class RunValidator:
                     path.name,
                     "commercial CTA requires the real commercial relationship and disclosure",
                 )
-            if cta_type in COMMERCIAL_CTA_TYPES and primary_job != "commercial_conversion":
+            commercial_job = "conversion" if self._is_v2() else "commercial_conversion"
+            if cta_type in COMMERCIAL_CTA_TYPES and primary_job != commercial_job:
                 self.error(
                     "commercial_cta_job_mismatch",
                     path.name,
-                    "commercial CTA requires primary_job=commercial_conversion",
+                    f"commercial CTA requires primary_job={commercial_job}",
                 )
             draft_status = meta.get("status", "")
             if draft_status and draft_status not in DRAFT_STATUSES:

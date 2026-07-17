@@ -3,8 +3,33 @@ draft_id: DRAFT-001
 topic_id: TOPIC-001
 platform: xiaohongshu
 account_scope: none
-primary_job: search_capture
+primary_job: feed_stop
 lifecycle: evergreen_search
+style_contract_version: 2
+business_objective: traffic_first
+style_requirement: both
+style_library_path: ../_style_library/style-library.sqlite
+style_taxonomy_version: 2
+style_query_category: "待填写"
+style_query_carrier: text_card
+style_query_primary_job: feed_stop
+style_query_required_constraint_codes: none
+style_query_active_constraint_codes: none
+style_query_available_material_codes: text_only
+style_query_active_contraindication_codes: none
+style_binding_source: none
+style_binding_status: needs_style_research
+primary_style_archetype_id: none
+secondary_style_archetype_id: none
+performance_rule_claim_kind: series_constant
+style_feature_contrast: invariant
+performance_evidence_scope: not_performance_evidence
+performance_visibility_scope: public_proxy
+traffic_stage: feed_stop
+traffic_primary_metric: engagement_proxy
+traffic_verdict: not_applicable
+visual_delivery_requirement: brief
+visual_delivery_status: brief_only
 truth_label: factual_explainer
 truth_disclosure_text: 事实说明
 truth_disclosure_location: 首屏
@@ -46,6 +71,13 @@ status: needs_review
 1. 文案 / 画面 / 与正文的答案关系：
 2. 文案 / 画面 / 与正文的答案关系：
 3. 文案 / 画面 / 与正文的答案关系：
+
+## 风格检索与规则合同
+
+- 当前状态：`needs_style_research` 只交付证据缺口与补采计划；不得写成 ready。
+- `series_constant` / `task_fit` 只说明系列识别或任务适配，必须保持 `not_performance_evidence`。
+- 公开竞品只有 `engagement_proxy`，`traffic_verdict` 必须为 `not_applicable`。
+- starter 当前发布门禁未完成，不得绑定或包装成爆款公式。
 
 ## 成稿
 
@@ -111,6 +143,7 @@ review_status: pending
 
 ## 观测计划
 
+- 流量阶段：`feed_stop | read_complete | save_share | comment_cocreation | profile_follow`
 - Primary job：
 - 主指标与事件定义：
 - 可用代理及其局限：
@@ -120,3 +153,9 @@ review_status: pending
 - 下一轮只改一个变量：
 - 混杂因素：
 - 结果：`pending | win | loss | inconclusive`
+
+## 逐页视觉 QA
+
+- 若 `visual_delivery_requirement=rendered`，不能以 `brief_only` 交付。
+- 最终图片未实际生成、打开和逐页复核时，只能写 `rendered_needs_review`，不能写 `rendered_pass`。
+- 成人敏感商品 CTA 仅在显式写 `cta_product_scope: adult_product` 时触发精确生产门禁；关系教育本身不产生商品资格。
