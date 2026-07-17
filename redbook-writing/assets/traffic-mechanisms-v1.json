@@ -1705,6 +1705,10 @@
         {
           "ref": "production-grade-evidence:S16",
           "role": "长期叙事轴心生产方法"
+        },
+        {
+          "ref": "academic-multimodal-evidence:S1",
+          "role": "账号历史表达可作候选上下文，但相似度/ROUGE 不得当流量分；每篇保留新信息负载"
         }
       ]
     },
@@ -2658,6 +2662,10 @@
         {
           "ref": "brand-operator-case-playbooks:C07",
           "role": "AI 批量同质化失败观察"
+        },
+        {
+          "ref": "academic-multimodal-evidence:S3/S5",
+          "role": "原生感背后的生产劳动与 AI 草稿的来源/声音/事实 QA；不支持纯人或混合必胜"
         }
       ]
     },
@@ -2828,6 +2836,10 @@
         {
           "ref": "native-traffic-utility:machine-recapture-contract",
           "role": "补采与 matched control 合同"
+        },
+        {
+          "ref": "academic-multimodal-evidence:S2/S4",
+          "role": "帖子年龄、商业状态、估算分母与全模态风险审计边界"
         }
       ]
     }
