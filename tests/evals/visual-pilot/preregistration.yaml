@@ -1,0 +1,109 @@
+version: 1
+status: frozen
+frozen_at: "2026-07-17"
+scope: old_vs_new_visual_pilot
+dimensions:
+  - id: style_grounding
+    scale: [0, 1, 2, 3, 4]
+    anchors:
+      0: no_traceable_style_evidence
+      2: partial_evidence_or_incomplete_binding
+      4: every_style_decision_bound_to_multi_sample_evidence
+  - id: copy_grounding
+    scale: [0, 1, 2, 3, 4]
+    anchors:
+      0: generic_or_invented_voice
+      2: some_observed_traits_but_incomplete_binding
+      4: copy_choices_bound_to_observed_corpus_and_user_voice
+  - id: visual_naturalness
+    scale: [0, 1, 2, 3, 4]
+    anchors:
+      0: mechanical_ai_ppt_or_uninspectable_visual
+      2: readable_but_mechanical_or_repetitive
+      4: coherent_human_like_composition_supported_by_evidence
+  - id: non_copying
+    scale: [0, 1, 2, 3, 4]
+    anchors:
+      0: direct_or_near_copy
+      2: literal_copy_avoided_but_single_source_structure_dominates
+      4: cross_sample_abstraction_with_originality_check
+  - id: delivery_claim
+    scale: [0, 1, 2, 3, 4]
+    anchors:
+      0: publish_ready_claim_without_render_rights_or_review
+      2: caveated_but_ambiguous_delivery_status
+      4: readiness_claim_only_after_rights_render_and_visual_review
+reviewers:
+  minimum_eligible: 3
+  slots:
+    - reviewer_01
+    - reviewer_02
+    - reviewer_03
+  must_be_independent: true
+  excluded_roles:
+    - generator
+    - implementer
+    - design_reviewer
+  exclusion_rule: any_excluded_role_or_artifact_author_is_ineligible
+artifact_inclusion:
+  - same_fixed_content_brief_for_old_and_new
+  - complete_hashed_raw_brief_for_each_version
+  - every_hashed_rendered_page_for_each_version
+  - geeklaws_two_actual_prototypes_plus_two_column_thumbnail_and_full_size_previews
+  - whitepaper_strong_brand_deep_blue_strict_grid_counterexample
+artifact_exclusion:
+  - missing_or_corrupt_artifact
+  - visible_old_or_new_version_label
+  - generator_or_implementation_commentary
+randomization:
+  anonymous_labels: [A, B]
+  algorithm: hmac_sha256_seed_over_scenario_id_nul_artifact_sha256_then_lexicographic_label_assignment
+  seed_sha256: b4777f56e7fa995c13ab940c6deac755b3c04659a7ee04b7f8e7ed845360879e
+  mapping_visibility: coordinator_only_until_all_ballots_are_locked
+missing_data:
+  score_imputation: forbidden
+  incomplete_ballot: invalidate_that_reviewer_scenario_ballot
+  fewer_than_three_eligible_ballots: mark_pilot_incomplete_and_do_not_pass
+  missing_or_corrupt_artifact: mark_scenario_incomplete_and_do_not_score
+pass_gates:
+  new_dimension_median_minimum:
+    dimensions: [style_grounding, copy_grounding, visual_naturalness, non_copying, delivery_claim]
+    threshold: 3
+  median_gain_minimum:
+    style_grounding: 1
+    copy_grounding: 1
+    visual_naturalness: 1
+  no_median_decrease:
+    - non_copying
+    - delivery_claim
+  overall_preference:
+    minimum_new_votes: 2
+    required_eligible_votes: 3
+  binary_scope:
+    geeklaws:
+      all_required: true
+      required_true:
+        - current_native_samples_present
+        - two_concept_distinct_actual_prototypes_present
+        - two_column_preview_present
+        - thumbnail_review_present
+        - full_size_review_present
+        - selection_reason_present
+        - rejection_reason_present
+    formal_whitepaper:
+      all_required: true
+      required_true:
+        - strong_brand_preserved
+        - deep_blue_preserved
+        - strict_grid_preserved
+        - readability_and_promise_reviewed
+      required_false:
+        - sticky_note_forced
+        - handwriting_forced
+        - strict_grid_auto_failed
+invalidation:
+  - preregistration_hash_changes_after_any_new_bundle_visual_exists
+  - any_new_bundle_visual_predates_this_preregistration
+  - anonymous_mapping_or_seed_leaks_before_all_ballots_are_locked
+  - baseline_artifact_or_frozen_skill_hash_changes
+  - reviewer_role_exclusion_is_violated

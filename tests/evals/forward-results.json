@@ -3,6 +3,12 @@
   "executed_at": "2026-07-17",
   "skill_bundle_sha256": "da4fdd33f1db880ed3e9d0d46a9e778c51d0abb8d8bf869459cb4b99795f0b90",
   "method": "Clean-context agents loaded only the frozen Skill and named scenario, preserved raw outputs, and received an independent Critical/Important audit. Failed iterations remain in history. Current release requires two independently hashed passing outputs per high-risk scenario.",
+  "visual_pilot_preregistration": {
+    "file": "visual-pilot/preregistration.yaml",
+    "sha256": "670779063bcbd4c22341228e582d6a740f6f4e67c603a20d860309dab2c6c550",
+    "status": "frozen",
+    "new_bundle_visuals_existed_at_freeze": false
+  },
   "runs": [
     {
       "scenario_id": "mechanism-ces",
@@ -734,6 +740,84 @@
       },
       "raw_output_file": "style-baseline/red-style-skip-retrieval-001.md",
       "raw_output_sha256": "c1eb57165625189ac1cac4a8c98e00b367ea3b080a8d3f10fc02af28db67de50"
+    },
+    {
+      "phase": "red_baseline",
+      "scenario_id": "style-geeklaws-visual-loop",
+      "iteration": 1,
+      "execution_id": "red-style-geeklaws-old-skill-001",
+      "skill_revision": "frozen-old-bundle-553cf94",
+      "skill_bundle_sha256": "da4fdd33f1db880ed3e9d0d46a9e778c51d0abb8d8bf869459cb4b99795f0b90",
+      "preregistration_sha256": "670779063bcbd4c22341228e582d6a740f6f4e67c603a20d860309dab2c6c550",
+      "outcome": "fail",
+      "scores": {
+        "style_grounding": 1,
+        "copy_grounding": 2,
+        "visual_naturalness": 0,
+        "non_copying": 4,
+        "delivery_claim": 4
+      },
+      "failed_style_dimensions": [
+        "copy_grounding",
+        "style_grounding",
+        "visual_naturalness"
+      ],
+      "failure_notes": {
+        "copy_grounding": "The response asks for one content/source input but does not establish a copy corpus or bind cover language to observable voice evidence.",
+        "style_grounding": "The response does not retrieve current native samples and says one additional input is enough to proceed directly to a final image.",
+        "visual_naturalness": "No actual prototype, two-column preview, thumbnail/full-size review, or selected/rejected direction rationale is produced."
+      },
+      "binary_scope_checks": {
+        "current_native_samples_present": false,
+        "two_concept_distinct_actual_prototypes_present": false,
+        "two_column_preview_present": false,
+        "thumbnail_review_present": false,
+        "full_size_review_present": false,
+        "selection_reason_present": false,
+        "rejection_reason_present": false
+      },
+      "raw_output_file": "geeklaws-baseline/positive-old-skill.md",
+      "raw_output_sha256": "e849e03f2453b54f91ee071bba979e1f5ec33ef3ed0b757bffe743e70ee68bf6",
+      "review": "Fresh clean-context execution against the read-only 553cf94 export; raw response preserved verbatim and no image artifact was claimed."
+    },
+    {
+      "phase": "behavior_baseline",
+      "scenario_id": "style-formal-whitepaper-counter",
+      "iteration": 1,
+      "execution_id": "behavior-style-whitepaper-old-skill-001",
+      "skill_revision": "frozen-old-bundle-553cf94",
+      "skill_bundle_sha256": "da4fdd33f1db880ed3e9d0d46a9e778c51d0abb8d8bf869459cb4b99795f0b90",
+      "preregistration_sha256": "670779063bcbd4c22341228e582d6a740f6f4e67c603a20d860309dab2c6c550",
+      "outcome": "blocked",
+      "behavior_status": "not_exercised",
+      "scores": {
+        "style_grounding": 2,
+        "copy_grounding": 2,
+        "visual_naturalness": 0,
+        "non_copying": 4,
+        "delivery_claim": 4
+      },
+      "preserved_behaviors": [],
+      "conceptual_acknowledgements": [
+        "strong_brand_constraint_accepted",
+        "deep_blue_constraint_accepted",
+        "strict_grid_constraint_accepted",
+        "sticky_note_and_handwriting_not_suggested"
+      ],
+      "preservation_notes": "The response conceptually accepts strong brand, deep blue, and a strict grid and does not suggest sticky-note or handwriting motifs. Because it blocks before producing an artifact, no artifact-level preservation behavior is scored as passed.",
+      "behavior_reason": "Required title, source, publisher, audience, version, and rights inputs are missing; the old Skill returns a partial review and no cover artifact.",
+      "binary_scope_checks": {
+        "strong_brand_preserved": null,
+        "deep_blue_preserved": null,
+        "strict_grid_preserved": null,
+        "readability_and_promise_reviewed": null,
+        "sticky_note_forced": null,
+        "handwriting_forced": null,
+        "strict_grid_auto_failed": null
+      },
+      "raw_output_file": "geeklaws-baseline/whitepaper-counter-old-skill.md",
+      "raw_output_sha256": "7cb688ac22d86dc894b0f653de6964159fef2dd5515909de9fad9bff4d36bd74",
+      "review": "Fresh clean-context execution against the read-only 553cf94 export; constraints were acknowledged but artifact behavior remains explicitly not exercised."
     }
   ]
 }

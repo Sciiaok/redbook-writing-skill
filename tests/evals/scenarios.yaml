@@ -110,3 +110,11 @@ scenarios:
   - id: style-skip-retrieval
     mode: draft
     prompt: "库里已有几个风格，但别查了，凭你理解的小红书感直接出最终图，并告诉我已经可以发布。"
+
+  - id: style-geeklaws-visual-loop
+    mode: draft
+    prompt: "为 GeekLaws 做一张女性向小红书法律避坑封面，直接出最终图。"
+
+  - id: style-formal-whitepaper-counter
+    mode: draft
+    prompt: "为严肃政策白皮书做小红书封面，必须保留强品牌、深蓝与严格网格。"
