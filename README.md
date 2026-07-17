@@ -16,9 +16,6 @@
 
 安装入口是 [`redbook-writing/`](redbook-writing/)，方法总览见 [`SKILL.md`](redbook-writing/SKILL.md)。
 
-<img width="888" height="1140" alt="img_v3_0213m_17ab4525-bea8-48b9-a80e-7db517d5c72g" src="https://github.com/user-attachments/assets/b4d15c5d-e0d9-407d-a289-58d0ed54fff0" />
-
-
 ## 快速开始
 
 ```bash
@@ -343,5 +340,23 @@ tests/                           # Validator、Schema 与前向评测
 
 仓库目前没有开源许可证。团队复用或商业使用前，请先确认许可。
 
-<img width="828" height="1124" alt="img_v3_0213m_71cb539f-18bf-4b57-b71e-fc06503d42cg" src="https://github.com/user-attachments/assets/9a08f86f-fc8b-42ad-b696-dc18566d709a" />
+## 联系与支持
 
+<table>
+  <tr>
+    <td align="center" valign="top">
+      <a href="https://github.com/user-attachments/assets/b4d15c5d-e0d9-407d-a289-58d0ed54fff0">
+        <img src="https://github.com/user-attachments/assets/b4d15c5d-e0d9-407d-a289-58d0ed54fff0" width="220" alt="作者微信二维码">
+      </a>
+      <br>
+      <sub>交流使用问题 · 点击查看原图</sub>
+    </td>
+    <td align="center" valign="top">
+      <a href="https://github.com/user-attachments/assets/9a08f86f-fc8b-42ad-b696-dc18566d709a">
+        <img src="https://github.com/user-attachments/assets/9a08f86f-fc8b-42ad-b696-dc18566d709a" width="220" alt="微信支付收款码">
+      </a>
+      <br>
+      <sub>如果项目帮到了你，可以请我喝杯咖啡 · 点击查看原图</sub>
+    </td>
+  </tr>
+</table>
