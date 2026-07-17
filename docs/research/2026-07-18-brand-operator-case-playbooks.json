@@ -1,0 +1,1467 @@
+{
+  "schema_version": 1,
+  "research_id": "brand-operator-case-playbooks-2026-07-18",
+  "snapshot_date": "2026-07-18",
+  "scope": "Public, auditable Xiaohongshu brand-project retrospectives, service-provider/data-provider methods, operator workflows, and current official business pages.",
+  "purpose": "Provide traceable, bounded production inputs for redbook-writing without turning agency claims or case outcomes into platform-algorithm facts.",
+  "verification": {
+    "checked_at": "2026-07-18",
+    "json_parse": "passed",
+    "id_and_cross_reference_integrity": "passed",
+    "url_check": {
+      "html_urls_returning_200_without_login": 11,
+      "pdf_exception": "S01 returns HTTP 403 to command-line requests, but browser retrieval identifies and reads the official URL as a 52-page application/pdf.",
+      "canonicalization": "Two retired xh.newrank.cn help URLs were replaced with accessible www.newrank.cn original-article URLs."
+    }
+  },
+  "method": {
+    "priority_order": [
+      "original joint or official reports",
+      "named brand and agency project retrospectives with production steps",
+      "data-provider studies with sample scope or negative cases",
+      "multi-creator or brand-operator interviews",
+      "operator SOPs used only as workflow hypotheses",
+      "current official commercial pages used only for present-day framing"
+    ],
+    "excluded_source_types": [
+      "course sales pages without course content",
+      "pirated course materials or unverified mirrors",
+      "guaranteed-viral claims without denominator or failure cases",
+      "result screenshots without project conditions",
+      "generic title-template articles without production inputs",
+      "fake-comment, sockpuppet, or fabricated-social-proof tactics"
+    ],
+    "claim_status_values": [
+      "confirmed",
+      "supported_experience",
+      "hypothesis",
+      "contradicted",
+      "unknown"
+    ],
+    "evidence_grades": {
+      "A": "Current official source; supports only the exact public statement or rule scope.",
+      "B": "Original joint report or well-described named case; supports bounded method/case observations, not universal causality.",
+      "C": "Agency self-report, data-provider case, or interview; supports conditional experience requiring local validation.",
+      "D": "Operator prescription, partial report, or under-specified case; supports workflow leads only."
+    }
+  },
+  "source_records": [
+    {
+      "source_id": "S01",
+      "title": "种草营销：第三种营销范式",
+      "url": "https://www.kotler.com.cn/pdf/2023kmg-xhs.pdf",
+      "author_org": "小红书 × 科特勒咨询集团",
+      "published_at": "2023",
+      "captured_at": "2026-07-18",
+      "source_type": "original_joint_report",
+      "access_status": "full_pdf_via_browser_fetch; command_line_http_403",
+      "evidence_grade": "B",
+      "conflict_of_interest": "A platform-commercial and consulting report designed partly to explain/promote seeding methodology.",
+      "can_support": [
+        "the report's audience, demand, content-supply, Feeds/Search, organization, and measurement frameworks",
+        "bounded observations from named Yuze, BeBeBus, AMIRO, Gujia and other cases",
+        "the need to combine search, content, audience, product, and business evidence"
+      ],
+      "cannot_support": [
+        "the current 2026 recommendation algorithm",
+        "a universal fixed KPI or performance threshold",
+        "content-only causality for reported search or sales outcomes",
+        "one visual style as universally native or high-traffic"
+      ],
+      "case_ids": [
+        "C01",
+        "C02",
+        "C03"
+      ]
+    },
+    {
+      "source_id": "S02",
+      "title": "用 KFS 跑通即时零售种草链路：朴朴超市项目复盘",
+      "url": "https://www.digitaling.com/articles/1229598.html",
+      "author_org": "IDEAinside 艾迪因赛 / 数英",
+      "published_at": "2024-06-26",
+      "captured_at": "2026-07-18",
+      "source_type": "agency_named_case",
+      "access_status": "full_article",
+      "evidence_grade": "C",
+      "conflict_of_interest": "Agency case marketing with self-reported outcomes and paid-media involvement.",
+      "can_support": [
+        "the project's product-selection, regional-audience, creator, first-screen, search, test, scale, and review workflow",
+        "the distinction between brand/category defense terms and scene expansion terms",
+        "the project's use of first image/title and early video frames as candidate attention variables"
+      ],
+      "cannot_support": [
+        "a universal CPE, CTR, CPC, or return-search threshold",
+        "natural-traffic causality",
+        "the claim that comment direction should be artificially manufactured"
+      ],
+      "case_ids": [
+        "C04"
+      ]
+    },
+    {
+      "source_id": "S03",
+      "title": "618 投放复盘：有效爆文与无效爆文",
+      "url": "https://www.qian-gua.com/blog/detail/2947.html",
+      "author_org": "千瓜数据",
+      "published_at": "2024-06-20",
+      "captured_at": "2026-07-18",
+      "source_type": "data_provider_case_review",
+      "access_status": "full_article",
+      "evidence_grade": "C",
+      "conflict_of_interest": "Proprietary data-tool provider demonstrating its own analysis framework.",
+      "can_support": [
+        "a bounded distinction between public engagement and product-relevant discussion",
+        "the need to review content fit, creator fit, and paid amplification separately",
+        "anonymous negative cases in which attention leaked to another topic"
+      ],
+      "cannot_support": [
+        "comment keywords as proof of sales causality",
+        "the anonymous cases as representative of all categories",
+        "proprietary metrics as official platform definitions"
+      ],
+      "case_ids": [
+        "C05"
+      ]
+    },
+    {
+      "source_id": "S04",
+      "title": "529 万篇家居内容观察",
+      "url": "https://www.newrank.cn/article/detail/19518",
+      "author_org": "新榜",
+      "published_at": "2022-02-25",
+      "captured_at": "2026-07-18",
+      "source_type": "editorial_sample_and_creator_interviews",
+      "access_status": "full_article",
+      "evidence_grade": "C",
+      "conflict_of_interest": "Industry-media analysis; sample construction and platform data access are not fully disclosed.",
+      "can_support": [
+        "historical home-category observations on product-share, transformation, and how-to carriers",
+        "reported trade-offs between save-friendly object content and creator memorability",
+        "creator-reported production considerations"
+      ],
+      "cannot_support": [
+        "current 2026 cross-category visual rules",
+        "the claim that all 5.29 million notes were manually analyzed",
+        "likes as a complete success metric"
+      ],
+      "case_ids": [
+        "C06"
+      ]
+    },
+    {
+      "source_id": "S05",
+      "title": "零食博主访谈与品牌视角",
+      "url": "https://www.newrank.cn/article/detail/19555",
+      "author_org": "新榜 / 新红",
+      "published_at": "2022-03-02",
+      "captured_at": "2026-07-18",
+      "source_type": "multi_creator_and_brand_interviews",
+      "access_status": "full_article",
+      "evidence_grade": "C",
+      "conflict_of_interest": "Editorial interviews and self-reported creator/brand experience; no controlled comparison.",
+      "can_support": [
+        "food-category production practices involving held/opened products, real tasting, and specific pros and cons",
+        "brand-side consideration of account tone and organic-versus-commercial history",
+        "the potential trade-off between easy-to-copy no-face formats and creator/IP retention"
+      ],
+      "cannot_support": [
+        "a universal preference for handheld, low-production, or no-face imagery",
+        "single-account watch-time observations as cross-platform norms",
+        "causal performance attribution"
+      ],
+      "case_ids": [
+        "C07"
+      ]
+    },
+    {
+      "source_id": "S06",
+      "title": "8840 篇素人种草复盘",
+      "url": "https://www.digitaling.com/articles/1346904.html",
+      "author_org": "舒泽品牌手记 / 数英",
+      "published_at": "2025-04-28",
+      "captured_at": "2026-07-18",
+      "source_type": "operator_self_report",
+      "access_status": "full_article",
+      "evidence_grade": "C",
+      "conflict_of_interest": "Self-reported service experience with lead-generation incentives and incomplete raw data.",
+      "can_support": [
+        "reported failure modes of identical briefs, angles, photos, and AI-batched copy",
+        "conditional experience using real customers, scenes, user-language, and product-relevant interactions",
+        "a negative ethics case showing why source methods require tactic-level review"
+      ],
+      "cannot_support": [
+        "unsupported algorithm or shadow-limiting claims",
+        "the reported unit costs as general acquisition benchmarks",
+        "fake comments, sockpuppet accounts, prepared comparison pictures, or staggered false interactions"
+      ],
+      "case_ids": [
+        "C08"
+      ]
+    },
+    {
+      "source_id": "S07",
+      "title": "品牌种草的叙事轴心",
+      "url": "https://socialbeta.com/article/110933",
+      "author_org": "栗栗橙 × SocialBeta",
+      "published_at": "2026-03-04",
+      "captured_at": "2026-07-18",
+      "source_type": "operator_framework_summary",
+      "access_status": "partial_public_summary",
+      "evidence_grade": "C",
+      "conflict_of_interest": "Operator framework promoted through industry media; full report and performance evidence are not publicly visible on the page.",
+      "can_support": [
+        "the existence and structure of the WHY-HOW-WHAT narrative-axis model",
+        "a hypothesis for checking long-term account and brand consistency"
+      ],
+      "cannot_support": [
+        "single-note traffic causality",
+        "the unviewed full report's case details",
+        "a requirement that every post repeat brand language"
+      ],
+      "case_ids": []
+    },
+    {
+      "source_id": "S08",
+      "title": "家居品牌达人筛选案例",
+      "url": "https://www.newrank.cn/article/detail/27196",
+      "author_org": "新红数据",
+      "published_at": "2024-08-22",
+      "captured_at": "2026-07-18",
+      "source_type": "data_provider_anonymous_client_case",
+      "access_status": "full_article",
+      "evidence_grade": "D",
+      "conflict_of_interest": "Tool-provider client case; client and baseline are anonymous or under-specified.",
+      "can_support": [
+        "a workflow lead for reviewing creator audience, content characteristics, prior collaborations, organic/commercial history, and collection status"
+      ],
+      "cannot_support": [
+        "the reported explosive-note-rate improvement as independently verified",
+        "a universal creator-selection threshold",
+        "content-quality causality"
+      ],
+      "case_ids": [
+        "C09"
+      ]
+    },
+    {
+      "source_id": "S09",
+      "title": "小红书聚光",
+      "url": "https://ad.xiaohongshu.com/",
+      "author_org": "小红书",
+      "published_at": null,
+      "captured_at": "2026-07-18",
+      "source_type": "current_official_commercial_page",
+      "access_status": "public_homepage",
+      "evidence_grade": "A",
+      "conflict_of_interest": "Official commercial product marketing page.",
+      "can_support": [
+        "the exact current public case-card claims and product positioning visible at capture time"
+      ],
+      "cannot_support": [
+        "organic recommendation mechanics",
+        "case production steps not shown on the page",
+        "content-only causality for official case-card outcomes"
+      ],
+      "case_ids": []
+    },
+    {
+      "source_id": "S10",
+      "title": "小红书商业开放平台",
+      "url": "https://e.xiaohongshu.com/",
+      "author_org": "小红书",
+      "published_at": null,
+      "captured_at": "2026-07-18",
+      "source_type": "current_official_commercial_page",
+      "access_status": "public_homepage",
+      "evidence_grade": "A",
+      "conflict_of_interest": "Official commercial platform marketing page.",
+      "can_support": [
+        "the current high-level user-product-demand-content-sharing commercial framing"
+      ],
+      "cannot_support": [
+        "a writing formula",
+        "an algorithm rule",
+        "fixed distribution or conversion thresholds"
+      ],
+      "case_ids": []
+    },
+    {
+      "source_id": "S11",
+      "title": "小红书团队选题会 SOP",
+      "url": "https://www.opp2.com/383706.html",
+      "author_org": "林卿 LinQ / 青瓜传媒",
+      "published_at": "2026-07",
+      "captured_at": "2026-07-18",
+      "source_type": "individual_operator_workflow",
+      "access_status": "full_article",
+      "evidence_grade": "D",
+      "conflict_of_interest": "Individual operator prescription without an auditable client denominator or controlled results.",
+      "can_support": [
+        "a hypothesis for data-prepared topic meetings, funnel diagnosis, scheduling, ownership, and replication-versus-innovation separation"
+      ],
+      "cannot_support": [
+        "fixed meeting cadence, duration, or innovation percentage",
+        "platform algorithm claims",
+        "performance guarantees"
+      ],
+      "case_ids": []
+    },
+    {
+      "source_id": "S12",
+      "title": "小红书种草学",
+      "url": "https://xue.xiaohongshu.com/home?navIndex=1",
+      "author_org": "小红书",
+      "published_at": null,
+      "captured_at": "2026-07-18",
+      "source_type": "current_official_training_index",
+      "access_status": "public_catalog_only",
+      "evidence_grade": "A",
+      "conflict_of_interest": "Official training program and course directory.",
+      "can_support": [
+        "the current existence of the official training portal and its public catalog"
+      ],
+      "cannot_support": [
+        "course methods not visible in the public catalog",
+        "any traffic formula",
+        "claims attributed to a listed instructor without course content"
+      ],
+      "case_ids": []
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "C01",
+      "name": "玉泽敏感肌需求分层与内容供给",
+      "brand": "玉泽",
+      "source_ids": [
+        "S01"
+      ],
+      "production_mechanism": [
+        "identify students as a core audience and repair as a rising demand",
+        "split broad sensitivity into oil-sensitive, dry-sensitive, red-sensitive and other visible states",
+        "map product answers and campus/dorm/exam scenes to each state",
+        "use expert creators plus user content, with a substantial short-video share",
+        "shift from broad category language toward state-specific problem terms"
+      ],
+      "reported_outcomes": [
+        "search volume reported as 17x",
+        "more than 20,000 UGC items and more than 10 million UGC views reported",
+        "e-commerce new-product ranking and GMV above 15 million reported"
+      ],
+      "outcome_status": "source_reported_not_independently_audited",
+      "confounders": [
+        "creator mix",
+        "paid distribution",
+        "product and campaign timing",
+        "e-commerce execution"
+      ],
+      "portable_lessons": [
+        "one broad audience should not receive one undifferentiated answer",
+        "choose a carrier based on the evidence that must be shown"
+      ]
+    },
+    {
+      "case_id": "C02",
+      "name": "BeBeBus 蝴蝶车用户语言共创",
+      "brand": "BeBeBus",
+      "source_ids": [
+        "S01"
+      ],
+      "production_mechanism": [
+        "conduct a prelaunch session with 13 expressive, high-frequency outing mothers",
+        "translate the brand term 保脊 into the visible user problem 宝宝坐车容易歪脖子",
+        "adopt the user-created, memorable nickname 蝴蝶车",
+        "carry scene, age, comfort, durability, content, search, and e-commerce language consistently"
+      ],
+      "reported_outcomes": [
+        "2,200 UGC items reported",
+        "monthly search heat for 蝴蝶车 reported as 20x",
+        "seven-day e-commerce category number-one ranking reported",
+        "the report uses the wording 销量突破450万 for the first month; unit/meaning is ambiguous in the public report"
+      ],
+      "outcome_status": "source_reported_not_independently_audited",
+      "confounders": [
+        "new-product launch",
+        "paid media",
+        "e-commerce operations",
+        "nickname adoption across channels"
+      ],
+      "portable_lessons": [
+        "translate product structure into a visible scene problem before writing",
+        "a nickname is useful only when users understand and naturally reuse it"
+      ]
+    },
+    {
+      "case_id": "C03",
+      "name": "AMIRO 人群产品分层与候选放大",
+      "brand": "AMIRO 觅光",
+      "source_ids": [
+        "S01"
+      ],
+      "production_mechanism": [
+        "use search demand to identify unanswered brand-selection questions",
+        "separate hero products, life stages, and their primary messages",
+        "produce multiple content candidates",
+        "observe candidates through information-feed delivery",
+        "amplify promising content and occupy category/problem search terms"
+      ],
+      "reported_outcomes": [
+        "the report claims leading content/search penetration and strong e-commerce category ranking around the campaign"
+      ],
+      "outcome_status": "source_reported_not_independently_audited",
+      "confounders": [
+        "paid information-feed tests",
+        "product selection",
+        "campaign and retail timing"
+      ],
+      "portable_lessons": [
+        "different products and audiences should not share one broad poster message",
+        "candidate testing is more robust than committing to one concept"
+      ]
+    },
+    {
+      "case_id": "C04",
+      "name": "朴朴超市即时零售 KFS 项目",
+      "brand": "朴朴超市",
+      "source_ids": [
+        "S02"
+      ],
+      "production_mechanism": [
+        "combine internal sales, reputation, seasonality, product quality, platform heat, search, and competition for product selection",
+        "fix core audiences and regional delivery constraints in initial testing",
+        "match creator types and soft-integration formats to audience attention",
+        "use first image/title and early video frames as candidate first-screen variables",
+        "test on a small scale, review click/interaction/comments/region, then scale",
+        "use brand/category terms for defense and scene terms for expansion"
+      ],
+      "reported_outcomes": [
+        "city search indices reported as increasing 20% to 70%",
+        "more than half of notes reportedly had return-search rates above 1%, compared with the agency's stated 0.5% benchmark",
+        "NPS and product/search/sales outcomes were reported as improving"
+      ],
+      "outcome_status": "agency_reported_not_independently_audited",
+      "confounders": [
+        "paid delivery",
+        "product mix",
+        "regional availability",
+        "media budget",
+        "search and e-commerce execution"
+      ],
+      "portable_lessons": [
+        "link the sellable product and regional constraint to audience, scene, creator, content and search",
+        "treat project thresholds as local diagnostics, not universal rules"
+      ]
+    },
+    {
+      "case_id": "C05",
+      "name": "护肤内容有效与无效爆文对照",
+      "brand": "anonymous skincare brands",
+      "source_ids": [
+        "S03"
+      ],
+      "production_mechanism": [
+        "compare public engagement with comment-topic relevance",
+        "distinguish brand/skin/problem discussion from attention centered on another product or creator appearance",
+        "review content fit, creator fit, and amplification together"
+      ],
+      "reported_outcomes": [
+        "one anonymous note's comments were reported as product/problem-relevant",
+        "another anonymous high-engagement note's comments were reported as attention leakage"
+      ],
+      "outcome_status": "anonymous_provider_interpretation",
+      "confounders": [
+        "unknown brands and creative",
+        "unknown sample and paid exposure",
+        "provider-defined relevance taxonomy"
+      ],
+      "portable_lessons": [
+        "high interaction is not sufficient for commercial replication",
+        "comment semantics are an early diagnostic, not proof of conversion"
+      ]
+    },
+    {
+      "case_id": "C06",
+      "name": "家居内容载体与关系目标",
+      "brand": null,
+      "source_ids": [
+        "S04"
+      ],
+      "production_mechanism": [
+        "compare product-share, transformation, and useful-experience carriers",
+        "use clear object-first visuals for product selection",
+        "use visible before/process/after material and serialization for transformations",
+        "use seasonal questions and reusable answers for experience content"
+      ],
+      "reported_outcomes": [
+        "the article references 5.29 million home notes as the category universe",
+        "it describes a focused recent-30-day sample of 384 home notes with more than 10,000 likes and reports product-sharing among the top performers",
+        "creator interviews report high save/like potential but weaker creator memorability for some product-share formats"
+      ],
+      "outcome_status": "historical_editorial_sample_and_interviews",
+      "confounders": [
+        "2022 platform environment",
+        "home-category specificity",
+        "incomplete sample-construction details"
+      ],
+      "portable_lessons": [
+        "carrier selection should follow the user's task and the account's relationship goal",
+        "save-friendly content can still be weak for creator differentiation"
+      ]
+    },
+    {
+      "case_id": "C07",
+      "name": "零食创作者真实使用表达",
+      "brand": "multiple creators and one interviewed brand manager",
+      "source_ids": [
+        "S05"
+      ],
+      "production_mechanism": [
+        "show products held, opened, and in an appetizing state",
+        "use conversational first-person expression and specific pros and cons",
+        "reply to real user questions",
+        "evaluate creator tone and organic/commercial history for brand fit"
+      ],
+      "reported_outcomes": [
+        "one creator self-reported roughly 30-second video dwell versus roughly 10 seconds for an earlier format"
+      ],
+      "outcome_status": "interview_self_report",
+      "confounders": [
+        "single-account comparison",
+        "unknown content/topic/time differences",
+        "food-category visual advantage"
+      ],
+      "portable_lessons": [
+        "native-looking evidence comes from real use and specific judgment, not intentional ugliness",
+        "easy-to-copy no-face formats may generate notes without building durable creator memory"
+      ]
+    },
+    {
+      "case_id": "C08",
+      "name": "8840 篇素人内容复盘与伦理反例",
+      "brand": "five self-reported brand projects across four categories",
+      "source_ids": [
+        "S06"
+      ],
+      "production_mechanism": [
+        "identify identical briefs, angles, photos, and AI rewrites as a failure pattern",
+        "shift toward customer scenes, user-mind words, search-question words, and prior account style",
+        "judge candidates using product-relevant questions, saves, and discussion rather than raw interaction alone"
+      ],
+      "reported_outcomes": [
+        "the author reports 8,840 notes across five brands and four categories over about five months",
+        "a community activity subset is reported as 5,438 notes at a very low average unit cost; incentives, authenticity, and denominator are not sufficiently clear"
+      ],
+      "outcome_status": "operator_self_report_with_material_ethics_conflict",
+      "confounders": [
+        "community incentives",
+        "unknown verification and removal rate",
+        "service-provider marketing interest"
+      ],
+      "portable_lessons": [
+        "batch uniformity is a production failure signal",
+        "tactic-level ethics review is required even when a source reports large volume"
+      ],
+      "forbidden_tactics": [
+        "arranging near-real comments",
+        "using multiple IPs or small accounts to simulate independent users",
+        "preparing false comparison images",
+        "staggering fabricated interactions"
+      ]
+    },
+    {
+      "case_id": "C09",
+      "name": "匿名家居客户达人筛选",
+      "brand": "anonymous home brand",
+      "source_ids": [
+        "S08"
+      ],
+      "production_mechanism": [
+        "review creator audience, content characteristics, prior brand collaborations, average interaction, commercial/organic history, and pricing",
+        "monitor content collection and aggregate reports"
+      ],
+      "reported_outcomes": [
+        "provider reports a 150% increase in its own explosive-note-rate metric and monitoring of 500 notes"
+      ],
+      "outcome_status": "anonymous_tool_provider_claim",
+      "confounders": [
+        "unknown baseline",
+        "unknown explosive-note threshold",
+        "creator, content, paid delivery, and selection changed together"
+      ],
+      "portable_lessons": [
+        "creator historical fit can be one production input",
+        "provider-specific explosive-rate claims must not become Skill thresholds"
+      ]
+    }
+  ],
+  "playbooks": [
+    {
+      "playbook_id": "P01",
+      "name": "用户语言翻译器",
+      "formula": "product fact or parameter × frequent scene × visible user problem → a phrase users naturally say, search, and can verify",
+      "traffic_stage": [
+        "feed_stop",
+        "search_capture",
+        "read_through"
+      ],
+      "applicable_stage": [
+        "new_product_definition",
+        "cold_start",
+        "new_category_education"
+      ],
+      "required_inputs": [
+        "real interviews or trials",
+        "customer-service and comment language",
+        "scene observation",
+        "product evidence and limitations",
+        "current search suggestions/results"
+      ],
+      "title_actions": [
+        "lead with a recognizable user problem or job",
+        "use brand terminology only when the audience already understands it"
+      ],
+      "cover_actions": [
+        "show the visible problem or resulting state",
+        "limit cover copy to one audience and one problem"
+      ],
+      "body_actions": [
+        "scene",
+        "why the old method fails",
+        "how the product fact works",
+        "usage detail",
+        "who it does and does not fit"
+      ],
+      "comment_actions": [
+        "collect natural rephrasing and counterexamples",
+        "never seed a nickname through fake comments"
+      ],
+      "primary_metrics": [
+        "target-problem comment relevance",
+        "query-level search behavior when available"
+      ],
+      "diagnostic_metrics": [
+        "saves",
+        "follow-up questions",
+        "natural reuse of the phrase"
+      ],
+      "failure_conditions": [
+        "no real user input",
+        "parameter replaced only with exaggerated adjectives",
+        "forced nickname",
+        "product cannot fulfill the problem"
+      ],
+      "case_ids": [
+        "C02",
+        "C04"
+      ],
+      "source_ids": [
+        "S01",
+        "S02"
+      ],
+      "claim_status": "supported_experience",
+      "evidence_grade": "B/C",
+      "limitations": [
+        "User language must be recollected for the current category and time window."
+      ]
+    },
+    {
+      "playbook_id": "P02",
+      "name": "人群×状态痛点×产品×载体矩阵",
+      "formula": "one audience segment + one visible state + one matched answer + the carrier best able to show the evidence",
+      "traffic_stage": [
+        "feed_stop",
+        "search_capture",
+        "save_share"
+      ],
+      "applicable_stage": [
+        "demand_segmentation",
+        "topic_library",
+        "product_matrix"
+      ],
+      "required_inputs": [
+        "audience segments",
+        "real problem terms",
+        "use scenes",
+        "product-fit evidence",
+        "current content-supply gaps"
+      ],
+      "title_actions": [
+        "serve one audience/state per note",
+        "avoid all-user claims"
+      ],
+      "cover_actions": [
+        "make the state or result the first visual",
+        "do not stack every selling point on the cover"
+      ],
+      "body_actions": [
+        "explain the state difference",
+        "give a judgment standard",
+        "provide the matching answer and limitations",
+        "use video only when action/process materially improves proof"
+      ],
+      "comment_actions": [
+        "tag real questions by audience and state for the next content cluster"
+      ],
+      "primary_metrics": [
+        "query-specific click/read",
+        "segment-specific qualified questions"
+      ],
+      "diagnostic_metrics": [
+        "saves",
+        "product search",
+        "state-term reuse"
+      ],
+      "failure_conditions": [
+        "one copy for all segments",
+        "problem-product mismatch",
+        "only broad category terms",
+        "carrier supplies no proof"
+      ],
+      "case_ids": [
+        "C01",
+        "C03"
+      ],
+      "source_ids": [
+        "S01"
+      ],
+      "claim_status": "supported_experience",
+      "evidence_grade": "B",
+      "limitations": [
+        "Segmentation labels and product fit require current evidence; do not invent medical or performance claims."
+      ]
+    },
+    {
+      "playbook_id": "P03",
+      "name": "首屏承诺一致性",
+      "formula": "title promise = cover or opening evidence = the job fulfilled immediately in the body",
+      "traffic_stage": [
+        "feed_stop",
+        "search_click",
+        "read_through"
+      ],
+      "applicable_stage": [
+        "drafting",
+        "creative_screening"
+      ],
+      "required_inputs": [
+        "target audience",
+        "scene",
+        "one primary promise",
+        "visible evidence",
+        "body answer"
+      ],
+      "title_actions": [
+        "keep one primary click reason",
+        "remove numbers/results that the body cannot prove"
+      ],
+      "cover_actions": [
+        "image supplies evidence and text supplies the reading task",
+        "video begins with the relevant scene/result rather than a brand intro"
+      ],
+      "body_actions": [
+        "answer why the note matters in the opening",
+        "follow with process, standard, or evidence"
+      ],
+      "comment_actions": [
+        "separate comments about the promised task from comments caused by unrelated attraction"
+      ],
+      "primary_metrics": [
+        "click or opening entry paired with continued reading"
+      ],
+      "diagnostic_metrics": [
+        "saves",
+        "qualified questions",
+        "attention-leakage topics"
+      ],
+      "failure_conditions": [
+        "unrelated beauty bait",
+        "poster-like cover without evidence",
+        "title and body answer different questions",
+        "paid CTR treated as organic law"
+      ],
+      "case_ids": [
+        "C04",
+        "C05"
+      ],
+      "source_ids": [
+        "S02",
+        "S03"
+      ],
+      "claim_status": "supported_experience",
+      "evidence_grade": "C",
+      "limitations": [
+        "No exact first-screen duration or visual layout is universal."
+      ]
+    },
+    {
+      "playbook_id": "P04",
+      "name": "多候选小测→相关性筛选→分面放大",
+      "formula": "produce comparable candidates for one content job, observe bounded natural/small-scale signals and target relevance, then decide recommendation and search amplification separately",
+      "traffic_stage": [
+        "feed_stop",
+        "search_capture",
+        "paid_amplification"
+      ],
+      "applicable_stage": [
+        "creative_cold_start",
+        "pre_amplification_screening",
+        "scaled_production"
+      ],
+      "required_inputs": [
+        "one shared goal/audience",
+        "multiple title/cover/body candidates",
+        "creator-fit evidence",
+        "natural and paid data separated"
+      ],
+      "title_actions": [
+        "change and label one interpretable variable while keeping the content job stable"
+      ],
+      "cover_actions": [
+        "test information order or proof type without simultaneously changing audience, topic, creator, and body"
+      ],
+      "body_actions": [
+        "keep core answer/product facts stable",
+        "record which expression attracts which questions and searches"
+      ],
+      "comment_actions": [
+        "use real comment-topic relevance as one screen, not fake engagement"
+      ],
+      "primary_metrics": [
+        "stage-appropriate performance relative to account/category baseline",
+        "target-semantic relevance"
+      ],
+      "diagnostic_metrics": [
+        "click",
+        "read-through",
+        "save",
+        "search",
+        "commercial action when authorized"
+      ],
+      "failure_conditions": [
+        "one candidate only",
+        "many variables changed together",
+        "natural and paid data mixed",
+        "scale based only on raw interaction",
+        "selection bias"
+      ],
+      "case_ids": [
+        "C03",
+        "C04"
+      ],
+      "source_ids": [
+        "S01",
+        "S02"
+      ],
+      "claim_status": "supported_experience",
+      "evidence_grade": "B/C",
+      "limitations": [
+        "This is not a randomized A/B test unless assignment, timing, exposure, and variables are controlled."
+      ]
+    },
+    {
+      "playbook_id": "P05",
+      "name": "有效爆文门",
+      "formula": "surface performance passes AND target semantics pass AND a relevant next behavior passes before replication or amplification",
+      "traffic_stage": [
+        "comment_cocreation",
+        "save_share",
+        "commercial_conversion"
+      ],
+      "applicable_stage": [
+        "viral_review",
+        "replication_selection",
+        "paid_amplification_selection"
+      ],
+      "required_inputs": [
+        "comment-topic coding",
+        "saves/shares",
+        "search queries",
+        "product/profile actions",
+        "unrelated-attention themes"
+      ],
+      "title_actions": [
+        "do not copy a hook when its performance came from an irrelevant conflict, appearance, prize, or plot"
+      ],
+      "cover_actions": [
+        "audit whether the first visual centers the target problem/evidence or an unrelated attention source"
+      ],
+      "body_actions": [
+        "verify that major comments originate from claims actually supported in the body"
+      ],
+      "comment_actions": [
+        "code genuine questions and use them as future topics",
+        "do not manufacture relevance through seeded comments"
+      ],
+      "primary_metrics": [
+        "target-semantic comment share",
+        "relevant next behavior"
+      ],
+      "diagnostic_metrics": [
+        "raw likes",
+        "saves",
+        "problem/product questions",
+        "related search"
+      ],
+      "failure_conditions": [
+        "high likes treated as sufficient",
+        "keyword hit treated as purchase proof",
+        "prize/anger/appearance traffic ignored",
+        "no comment sample"
+      ],
+      "case_ids": [
+        "C05",
+        "C08"
+      ],
+      "source_ids": [
+        "S03",
+        "S06"
+      ],
+      "claim_status": "supported_experience",
+      "evidence_grade": "C",
+      "limitations": [
+        "Comment semantics are a diagnostic proxy, not causal proof of conversion."
+      ]
+    },
+    {
+      "playbook_id": "P06",
+      "name": "真实使用证据×有边界的不完美细节",
+      "formula": "real use relationship + visible process/condition + specific benefit + specific limitation → content that supports trust and judgment",
+      "traffic_stage": [
+        "read_through",
+        "save_share",
+        "commercial_conversion"
+      ],
+      "applicable_stage": [
+        "trust_building",
+        "product_decision"
+      ],
+      "required_inputs": [
+        "actual-use photos/video",
+        "process or long-term condition",
+        "specific pros and cons",
+        "failure points",
+        "applicability limits",
+        "asset provenance"
+      ],
+      "title_actions": [
+        "state a real task or bounded judgment",
+        "do not disguise commercial content as an invented passerby story"
+      ],
+      "cover_actions": [
+        "show the product in use, opened, worn, consumed, or in its real environment",
+        "do not force blur, low resolution, or deliberate clutter"
+      ],
+      "body_actions": [
+        "why needed",
+        "how used",
+        "what worked",
+        "what was inconvenient",
+        "who should avoid it"
+      ],
+      "comment_actions": [
+        "answer real detail questions and preserve corrections"
+      ],
+      "primary_metrics": [
+        "detail-specific qualified questions",
+        "saves"
+      ],
+      "diagnostic_metrics": [
+        "user counterexamples",
+        "requests for follow-up tests"
+      ],
+      "failure_conditions": [
+        "staged authenticity",
+        "stolen assets",
+        "identical template rewrites",
+        "only praise",
+        "style discontinuity with the account"
+      ],
+      "case_ids": [
+        "C07",
+        "C08"
+      ],
+      "source_ids": [
+        "S05",
+        "S06"
+      ],
+      "claim_status": "supported_experience",
+      "evidence_grade": "C",
+      "limitations": [
+        "Native feel is category- and account-specific; it is not a fixed low-production aesthetic."
+      ]
+    },
+    {
+      "playbook_id": "P07",
+      "name": "载体按任务选择",
+      "formula": "user job × available proof × account relationship goal → carrier",
+      "traffic_stage": [
+        "feed_stop",
+        "read_through",
+        "save_share",
+        "profile_follow"
+      ],
+      "applicable_stage": [
+        "topic_to_draft",
+        "series_design",
+        "visual_production"
+      ],
+      "required_inputs": [
+        "user job",
+        "available image/video/data evidence",
+        "whether there is visible process/change",
+        "whether creator relationship is a goal"
+      ],
+      "title_actions": [
+        "list: decision task",
+        "transformation: constraint and change",
+        "how-to: executable result",
+        "story: conflict and turn with user value"
+      ],
+      "cover_actions": [
+        "list: distinguishable objects",
+        "transformation: before/process/after",
+        "how-to: step preview or result evidence",
+        "person/voice only when it improves trust or identity"
+      ],
+      "body_actions": [
+        "list: standards and trade-offs",
+        "transformation: full process",
+        "how-to: actions and pitfalls",
+        "story: concrete value after narrative"
+      ],
+      "comment_actions": [
+        "ask for real missing cases or next samples, not generic engagement bait"
+      ],
+      "primary_metrics": [
+        "carrier-appropriate metric relative to account baseline"
+      ],
+      "diagnostic_metrics": [
+        "list saves",
+        "transformation read-through/follow",
+        "how-to search/saves",
+        "person-led profile/follow"
+      ],
+      "failure_conditions": [
+        "all posts forced into PPT cards",
+        "all categories forced into handwritten notes",
+        "video without action evidence",
+        "copying a high-like carrier without account fit"
+      ],
+      "case_ids": [
+        "C01",
+        "C06",
+        "C07"
+      ],
+      "source_ids": [
+        "S01",
+        "S04",
+        "S05"
+      ],
+      "claim_status": "supported_experience",
+      "evidence_grade": "B/C",
+      "limitations": [
+        "Historical category observations must be refreshed with current high/low samples."
+      ]
+    },
+    {
+      "playbook_id": "P08",
+      "name": "搜索意图簇",
+      "formula": "brand/product/nickname terms capture existing awareness; category/problem/function/scene terms capture comparison and latent demand; one note answers one primary intent",
+      "traffic_stage": [
+        "search_impression",
+        "search_click",
+        "read_through",
+        "return_search"
+      ],
+      "applicable_stage": [
+        "stable_content_cluster",
+        "new_product_launch",
+        "long_tail_discovery"
+      ],
+      "required_inputs": [
+        "current search suggestions/results",
+        "natural brand/product names",
+        "real user questions",
+        "category comparison and scene terms",
+        "evidence that can answer each query"
+      ],
+      "title_actions": [
+        "express one main question naturally",
+        "if the query asks how to choose, provide a decision standard rather than a slogan"
+      ],
+      "cover_actions": [
+        "show the answer form in search results: comparison, steps, result, scene, or product state"
+      ],
+      "body_actions": [
+        "answer the primary intent immediately",
+        "expand evidence, limitations, and related questions",
+        "do not keyword-stuff"
+      ],
+      "comment_actions": [
+        "capture genuine new query language for future notes"
+      ],
+      "primary_metrics": [
+        "query-level impression/click/read when available",
+        "relevant return search"
+      ],
+      "diagnostic_metrics": [
+        "saves",
+        "product-term search",
+        "follow-up search questions"
+      ],
+      "failure_conditions": [
+        "stale keywords",
+        "keyword stacking",
+        "title does not answer the query",
+        "forced nickname",
+        "paid result treated as organic ranking law"
+      ],
+      "case_ids": [
+        "C01",
+        "C02",
+        "C03",
+        "C04"
+      ],
+      "source_ids": [
+        "S01",
+        "S02"
+      ],
+      "claim_status": "supported_experience",
+      "evidence_grade": "B/C",
+      "limitations": [
+        "Search language and result supply are time-sensitive and require recapture."
+      ]
+    },
+    {
+      "playbook_id": "P09",
+      "name": "证据驱动选题会",
+      "formula": "prior high/low performance + current user search/comments + comparable supply → diagnose one funnel problem → assign one verifiable content job",
+      "traffic_stage": [
+        "production_planning",
+        "all_distribution_surfaces"
+      ],
+      "applicable_stage": [
+        "weekly_or_monthly_planning",
+        "viral_review",
+        "team_coordination"
+      ],
+      "required_inputs": [
+        "recent funnel metrics",
+        "representative high and low notes",
+        "comment semantics",
+        "search questions",
+        "comparable content",
+        "product and asset constraints"
+      ],
+      "title_actions": [
+        "record the one hypothesis each title is testing"
+      ],
+      "cover_actions": [
+        "label whether the tested variable is information order, proof type, or visual object"
+      ],
+      "body_actions": [
+        "specify user job, evidence list, owner, and review point",
+        "separate replication candidates from innovation candidates"
+      ],
+      "comment_actions": [
+        "bring coded real questions, objections, and counterexamples into the next meeting"
+      ],
+      "primary_metrics": [
+        "one metric tied to the chosen surface/job"
+      ],
+      "diagnostic_metrics": [
+        "feed click/read/interaction/follow",
+        "search click/answer consumption",
+        "commercial product click/payment when available"
+      ],
+      "failure_conditions": [
+        "brainstorming without evidence",
+        "no low-performance counterexamples",
+        "many variables changed at once",
+        "fixed meeting cadence or innovation percentage treated as platform law"
+      ],
+      "case_ids": [
+        "C04"
+      ],
+      "source_ids": [
+        "S11",
+        "S01",
+        "S02"
+      ],
+      "claim_status": "hypothesis",
+      "evidence_grade": "B/C/D",
+      "limitations": [
+        "The workflow is supported by mixed evidence; each team's cadence and thresholds must be locally defined."
+      ]
+    },
+    {
+      "playbook_id": "P10",
+      "name": "叙事轴心一致性检查",
+      "formula": "WHY value → HOW scene-based enactment → WHAT recognizable product or identity symbol",
+      "traffic_stage": [
+        "profile_follow",
+        "brand_search",
+        "account_retention"
+      ],
+      "applicable_stage": [
+        "account_positioning",
+        "series_design",
+        "long_term_brand_expression"
+      ],
+      "required_inputs": [
+        "brand/creator value",
+        "real enactment scenes",
+        "repeatable user benefit",
+        "identity language users may choose to adopt"
+      ],
+      "title_actions": [
+        "complete a concrete user job first instead of writing an abstract value manifesto"
+      ],
+      "cover_actions": [
+        "allow different carriers while preserving recognizable people, scenes, judgments, or proof relationships"
+      ],
+      "body_actions": [
+        "let the product play a natural HOW or WHAT role",
+        "do not repeat the same brand line in every post"
+      ],
+      "comment_actions": [
+        "observe stable user associations without leading users to repeat a slogan"
+      ],
+      "primary_metrics": [
+        "profile continuation",
+        "follow",
+        "stable qualitative associations"
+      ],
+      "diagnostic_metrics": [
+        "brand search",
+        "series continuation"
+      ],
+      "failure_conditions": [
+        "all posts become identical brand posters",
+        "value statements without utility",
+        "forced use on every trend",
+        "single-post likes used to validate long-term narrative"
+      ],
+      "case_ids": [],
+      "source_ids": [
+        "S07",
+        "S10"
+      ],
+      "claim_status": "hypothesis",
+      "evidence_grade": "C/D",
+      "limitations": [
+        "This is an account-consistency model, not a single-note traffic formula."
+      ]
+    },
+    {
+      "playbook_id": "P11",
+      "name": "评论区真实需求反馈",
+      "formula": "genuine question/counterexample/use difference → public answer or added evidence → next topic and product feedback",
+      "traffic_stage": [
+        "comment_cocreation",
+        "post_publish_review",
+        "topic_refresh"
+      ],
+      "applicable_stage": [
+        "post_publish",
+        "community_feedback",
+        "error_correction"
+      ],
+      "required_inputs": [
+        "real comments",
+        "question taxonomy",
+        "complaints and objections",
+        "user counterexamples",
+        "facts requiring verification"
+      ],
+      "title_actions": [
+        "turn a frequent genuine question into a new title",
+        "do not claim everyone is asking when the question is fabricated or isolated"
+      ],
+      "cover_actions": [
+        "obtain necessary permission and de-identify quoted comments",
+        "never fabricate comment or chat screenshots"
+      ],
+      "body_actions": [
+        "answer, add conditions, disclose uncertainty, invite genuine counterexamples, and correct the original note when needed"
+      ],
+      "comment_actions": [
+        "reply to genuine questions",
+        "preserve reasonable negative feedback",
+        "ban seeded fake comments and sockpuppet interactions"
+      ],
+      "primary_metrics": [
+        "relevant-question rate",
+        "resolution and correction quality"
+      ],
+      "diagnostic_metrics": [
+        "quality of user additions",
+        "next-topic demand"
+      ],
+      "failure_conditions": [
+        "fake comments",
+        "multiple-IP sockpuppets",
+        "fabricated controversy",
+        "reasonable criticism deleted",
+        "comment count treated as representative demand"
+      ],
+      "case_ids": [
+        "C05",
+        "C08"
+      ],
+      "source_ids": [
+        "S03",
+        "S06"
+      ],
+      "claim_status": "supported_experience",
+      "evidence_grade": "C",
+      "limitations": [
+        "Commenters are not necessarily representative of the full audience."
+      ]
+    }
+  ],
+  "stage_metric_map": [
+    {
+      "stage": "recommendation_feed_stop",
+      "user_job": "decide quickly whether the note is relevant",
+      "primary_inputs": [
+        "audience",
+        "scene",
+        "visible problem or result"
+      ],
+      "primary_metrics": [
+        "click/opening entry paired with continued reading"
+      ],
+      "common_misread": "a beautiful cover or high click is treated as sufficient"
+    },
+    {
+      "stage": "read_or_watch",
+      "user_job": "decide whether the answer is credible",
+      "primary_inputs": [
+        "process",
+        "comparison standard",
+        "specific detail",
+        "limitations"
+      ],
+      "primary_metrics": [
+        "read/watch continuation",
+        "question depth"
+      ],
+      "common_misread": "length is treated as information density"
+    },
+    {
+      "stage": "save_or_share",
+      "user_job": "retain a reusable answer",
+      "primary_inputs": [
+        "steps",
+        "checklist",
+        "standard",
+        "parameter or evidence"
+      ],
+      "primary_metrics": [
+        "saves",
+        "shares",
+        "implementation questions"
+      ],
+      "common_misread": "all useful content is forced into generic PPT cards"
+    },
+    {
+      "stage": "search_capture",
+      "user_job": "resolve a specific query quickly",
+      "primary_inputs": [
+        "current query",
+        "result-supply gap",
+        "user language"
+      ],
+      "primary_metrics": [
+        "query-level click and answer consumption",
+        "relevant return search"
+      ],
+      "common_misread": "keyword stacking or stale hot terms"
+    },
+    {
+      "stage": "profile_follow",
+      "user_job": "decide whether the account remains useful or interesting",
+      "primary_inputs": [
+        "series capability",
+        "identity proof",
+        "narrative consistency"
+      ],
+      "primary_metrics": [
+        "profile continuation",
+        "follow",
+        "stable association"
+      ],
+      "common_misread": "single-post likes are optimized while the account remains interchangeable"
+    },
+    {
+      "stage": "commercial_conversion",
+      "user_job": "decide whether a product fits",
+      "primary_inputs": [
+        "product evidence",
+        "price and conditions",
+        "limitations",
+        "purchase constraints"
+      ],
+      "primary_metrics": [
+        "qualified product questions",
+        "authorized product actions",
+        "conversion when available"
+      ],
+      "common_misread": "irrelevant entertainment traffic is treated as effective seeding"
+    }
+  ],
+  "hard_boundaries": [
+    {
+      "boundary_id": "HB01",
+      "rule": "Do not fabricate first-person experience, user stories, tests, comments, chat logs, search data, or performance data.",
+      "reason": "The production mechanism depends on authentic evidence and user language; fabrication creates false social proof and invalidates evaluation."
+    },
+    {
+      "boundary_id": "HB02",
+      "rule": "Do not use fake comments, sockpuppets, coordinated IP/account patterns, or staged false controversy.",
+      "reason": "These are manipulative tactics, not content-quality mechanisms; S06 is retained as a negative source example."
+    },
+    {
+      "boundary_id": "HB03",
+      "rule": "Do not turn agency/service-provider thresholds into platform-wide constants.",
+      "reason": "Category, account maturity, surface, budget, objective, and measurement all differ."
+    },
+    {
+      "boundary_id": "HB04",
+      "rule": "Do not infer organic recommendation behavior from paid-project outcomes.",
+      "reason": "Paid delivery, product, creator, search, campaign timing, and commerce execution are mixed interventions."
+    },
+    {
+      "boundary_id": "HB05",
+      "rule": "Do not freeze one carrier or visual style into a universal native-aesthetic rule.",
+      "reason": "Carrier effectiveness depends on task, evidence, category, account history, and relationship goal."
+    }
+  ],
+  "excluded_sources": [
+    {
+      "type": "generic search-operation article",
+      "reason": "No named project, denominator, or outcome chain; retained only as a lead and not included in formulas."
+    },
+    {
+      "type": "project-review template without project data",
+      "reason": "Useful as generic management advice but not Xiaohongshu traffic evidence."
+    },
+    {
+      "type": "course sales or preview page",
+      "reason": "A course's existence or claimed number of cases does not expose the method or evidence."
+    },
+    {
+      "type": "unknown-mirror report or pirated PDF",
+      "reason": "Provenance and version cannot be verified."
+    }
+  ],
+  "unresolved_questions": [
+    "Current 2026 baselines by category, account maturity, and distribution surface.",
+    "The separate contribution of content, product, paid media, commerce, and timing in public cases.",
+    "Causal visual-layout effects on click, reading, save, and follow.",
+    "The stable relationship among comment semantics, return search, and conversion.",
+    "Differences between new and mature accounts using the same carrier."
+  ]
+}
