@@ -74,7 +74,7 @@ status: needs_review
 
 ## 风格检索与规则合同
 
-- 当前状态：`needs_style_research` 只交付证据缺口与补采计划；不得写成 ready。
+- 当前状态：`needs_style_research` 不得写成 ready。若下方列出至少 2 个 task-fit `traffic_mechanism_ids`、1 个 `counterexample_id`，且真实性/授权/事实/商业门通过，可交付显著标注的 `candidate_only / needs_review` 候选稿和探索 brief；否则只交付证据缺口与补采计划。
 - `series_constant` / `task_fit` 只说明系列识别或任务适配，必须保持 `not_performance_evidence`。
 - 公开竞品只有 `engagement_proxy`，`traffic_verdict` 必须为 `not_applicable`。
 - starter 当前发布门禁未完成，不得绑定或包装成爆款公式。

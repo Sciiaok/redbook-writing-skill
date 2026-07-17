@@ -180,7 +180,7 @@ style_sample_id,post_id,query_ids,performance_tier,carrier,primary_job_scope,sli
 - `first_party_traffic_validated` 必须来自使用该 rule 的 published binding、自有账号 first-party impressions/reach、24h/72h outcome publications 和 proposition 对齐的预注册 analysis effect。点赞、收藏、评论、搜索位置、CTR 或停留不能替代 exposure primary。
 - Query、archetype、binding、draft frontmatter 和报告必须原样外显 scope，不能在输出层升级措辞。
 
-当前真实 qualified-cell 门禁若记录 `qualified_cells=0`，starter pack 必须不存在或保持禁用，任何 `starter_applied` 都是无效绑定。无合格 library/starter 时唯一合法状态是 `needs_style_research`，不得继续生成稿件或图片。
+当前真实 qualified-cell 门禁若记录 `qualified_cells=0`，starter pack 必须不存在或保持禁用，任何 `starter_applied` 都是无效绑定。无合格 library/starter 时唯一合法绑定状态是 `needs_style_research`，不得生成或宣称 ready 稿。只有同时绑定至少 2 条 task-fit 流量机制、1 条反例/anti-pattern，并通过事实、授权、真实性和商业门，才可生成显著标注的 `candidate_only / needs_review` 文案、结构 brief；有合法素材时图像最多为 `rendered_needs_review`。否则只输出补采计划。
 
 ## topics.csv
 
@@ -292,7 +292,7 @@ status: needs_review
 ---
 ```
 
-V2 成稿还必须写 `style_contract_version: 2`、`style_requirement`、library/query scope、published binding 或 starter 的完整 XOR 字段、`claim_kind`、保守的 `performance_evidence_scope`、`style_binding_status`、visual delivery、brief/prototype/final asset IDs 与 hash。`style_binding_status=needs_style_research` 时 draft 顶层只能 needs_review/blocked，且不得包含生成稿件或资产；`starter_applied` 只允许来自通过 qualified-cell 门禁的当前 pack/prompt publication，不能由自由文本声明。
+V2 成稿还必须写 `style_contract_version: 2`、`style_requirement`、library/query scope、published binding 或 starter 的完整 XOR 字段、`claim_kind`、保守的 `performance_evidence_scope`、`style_binding_status`、visual delivery、brief/prototype/final asset IDs 与 hash。`style_binding_status=needs_style_research` 时 draft 顶层只能 needs_review/blocked；若包含候选稿或探索资产，还必须列 `traffic_mechanism_ids`、`counterexample_ids`、`material_ids` 与候选限定，且视觉状态不得高于 `rendered_needs_review`。`starter_applied` 只允许来自通过 qualified-cell 门禁的当前 pack/prompt publication，不能由自由文本声明。
 
 `truth_label` 只允许：`first_person_documented | authorized_anonymized | authorized_adaptation | composite_cases | fictional_scenario | factual_explainer`。`truth_disclosure_text` 必须使用肯定式合同（如“本内容为明确虚构”“经授权匿名整理”“本人亲历记录”），并在 `truth_disclosure_location=首屏/第一页/首段/开头/标题下` 的实际可见正文里出现；“不是真实虚构”“未经授权”等否定冲突会阻断。HTML 注释、隐藏标签、图片 alt、链接 URL 或只存在元数据中的文字不算可见。`authorization_ids` 必须与标签一致：本人一手材料写 `self_only`；授权匿名/改编引用相应 AUTH；合成案例至少引用两个允许 composite 且对应不同 subject/material/hash 的 AUTH；明确虚构与纯事实解释写 `none`。`source_material_ids` 必须与关联 AUTH 的 `material_id` 完全一致。商业关系是独立维度，`commercial_relationship` 只允许：`none | owned_product | sponsored | gifted | affiliate | commissioned_creator | other_disclosed`；非 `none` 时披露文案必须真实、肯定地写入 `## 成稿`，并与关系类型对应：自有/自营、广告/品牌合作、获赠、佣金/返佣、受委托，或明确的其他利益关系。“不是广告/没有品牌合作”等否认句会阻断。机器可验证位置仅支持首屏/第一页/首段/开头/标题下，或 `CTA前/正文CTA前`；后两者要求同一成稿中披露确实早于精确 `cta_copy`。视频口播与字幕等无法由 Markdown 单独证明的位置先由人工审校，不得伪填成机器 PASS。
 

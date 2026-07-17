@@ -155,7 +155,7 @@ required materials / constraints / contraindications
 
 无完整 receipt 的高赞帖可以启发查询，但不能让 draft 变成 ready。
 
-## 8. Draft 检索与停产规则
+## 8. Draft 检索与 ready 门
 
 检索顺序：
 
@@ -170,7 +170,8 @@ exact category + exact carrier + exact primary_job + constraints/materials
 没有 qualified rule 时：
 
 - 输出缺口、补采 query、需要的真实素材和测试方案；
-- 可以给 `candidate_only / needs_review` 的探索 brief；
+- 只有绑定至少 2 条 task-fit 机制、1 条反例/anti-pattern，且事实、授权和真实性门通过时，才可以给 `candidate_only / needs_review` 的标题、完整候选文案、逐页结构与探索 brief；
+- 若生成图像，真实素材与权利必须满足，且状态最多为 `rendered_needs_review`；不得用 AI 图、伪截图或临时仿版补造证明素材；
 - 不得称 ready、可直接发布或爆款公式；
 - 不得为了交稿跳过检索，或用单篇截图临时造母版。
 

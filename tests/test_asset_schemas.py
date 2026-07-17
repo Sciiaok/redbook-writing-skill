@@ -231,7 +231,11 @@ class AssetSchemaTests(unittest.TestCase):
         )
         self.assertRegex(
             text,
-            r"(?s)needs_style_research.{0,300}(?:STOP|停止生产|不得生成)",
+            r"(?s)needs_style_research.{0,500}停止 ready 生产",
+        )
+        self.assertRegex(
+            text,
+            r"(?s)candidate_only.{0,300}task-fit.{0,300}(?:反例|anti-pattern)",
         )
         self.assertIn("qualified_cells=0", text)
         self.assertRegex(text, r"qualified_cells=0.{0,200}starter_applied")

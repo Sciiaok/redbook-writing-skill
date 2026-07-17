@@ -106,7 +106,7 @@ description: Use when researching, planning, drafting, reviewing, or diagnosing 
 
 按 [draft-quality.md](references/draft-quality.md) 先写一页创作简报。涉及文风或视觉时，先按 [style-research-and-generation.md](references/style-research-and-generation.md) 检索 exact `carrier × primary_job × materials × constraints`，保存候选与拒绝原因，再输出：证据、2–3 个标题、至少两个注意力路径不同的封面/视觉原型、选定载体、完整正文/分镜、关键词、唯一真实性标签、独立商业关系/披露、事实证明、规则风险与观测计划。
 
-风格证据不足时写 `style_binding_status=needs_style_research`，只交付缺口、补采 query、素材需求和明确标注的探索 brief；不得跳过检索、临时照抄单篇帖子或把结果称为 ready。公开互动样本最高只能形成 `public_proxy_association`；只有自有一方 impressions/reach 实验闭环后才能写 `first_party_traffic_validated`。
+风格证据不足时写 `style_binding_status=needs_style_research`，先交付缺口、补采 query 和素材需求。若已绑定至少 2 条 task-fit 流量机制、1 条反例，且真实性/授权/事实/商业门均通过，可继续产出显著标注的 `candidate_only / needs_review` 标题、完整候选稿、逐页结构与探索 brief；图像最多为 `rendered_needs_review`。否则停止生成。任何候选不得称 ready、可直接发布或爆款公式。公开互动样本最高只能形成 `public_proxy_association`；只有自有一方 impressions/reach 实验闭环后才能写 `first_party_traffic_validated`。
 
 两轮审校分开执行：
 
