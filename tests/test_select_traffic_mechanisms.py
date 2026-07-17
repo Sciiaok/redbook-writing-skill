@@ -60,13 +60,13 @@ class SelectTrafficMechanismsTests(unittest.TestCase):
             self.assertIn("activation", match)
             self.assertIn("priority", match)
 
-    def test_library_cards_have_machine_contract_and_atomic_references(self) -> None:
+    def test_library_cards_have_machine_contract_and_typed_references(self) -> None:
         library = json.loads(
             (ROOT / "redbook-writing" / "assets" / "traffic-mechanisms-v1.json").read_text(
                 encoding="utf-8"
             )
         )
-        self.assertEqual(len(library["mechanisms"]), 17)
+        self.assertEqual(len(library["mechanisms"]), 19)
         allowed_kinds = {
             "content",
             "carrier_router",
@@ -94,6 +94,140 @@ class SelectTrafficMechanismsTests(unittest.TestCase):
                 self.assertTrue(ref["evidence_layer"])
                 self.assertTrue(ref["scope"])
                 self.assertTrue(ref["limitation"])
+
+    def test_surface_router_and_topic_opportunity_form_one_three_slot_stack(self) -> None:
+        result = self.run_cli(
+            "--stage",
+            "feed_stop",
+            "--job",
+            "feed_stop",
+            "--carrier",
+            "real_photo_diary",
+            "--materials",
+            (
+                "promise,real_proof,proof_inventory,surface_entry_observation,"
+                "independent_demand_signal,supply_source_audit,freshness_signal"
+            ),
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["status"], "matched")
+        self.assertEqual(len(payload["matches"]), 3)
+        selected = {item["mechanism_id"]: item for item in payload["matches"]}
+        self.assertEqual(set(selected), {"TM01", "TM18", "TM19"})
+        self.assertEqual(selected["TM18"]["mechanism_kind"], "carrier_router")
+        self.assertEqual(selected["TM19"]["mechanism_kind"], "governance")
+        self.assertEqual(
+            {item["selection_slot"] for item in payload["matches"]},
+            {"content", "carrier_or_truth", "learning_or_governance"},
+        )
+
+    def test_new_production_mechanisms_are_bounded_and_four_surface_actionable(self) -> None:
+        library = json.loads(
+            (ROOT / "redbook-writing" / "assets" / "traffic-mechanisms-v1.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        cards = {card["mechanism_id"]: card for card in library["mechanisms"]}
+
+        surface = cards["TM18"]
+        self.assertEqual(surface["mechanism_kind"], "carrier_router")
+        self.assertIn("official-xhs-merchant-course:OX04", {
+            ref["ref"] for ref in surface["source_refs"]
+        })
+        self.assertIn("surface_entry_observation", surface["required_material_codes"])
+        self.assertRegex(
+            " ".join(surface["failure_conditions"] + surface["anti_cargo_cult"]),
+            r"2024|历史|当前|互斥|自然|付费",
+        )
+
+        opportunity = cards["TM19"]
+        self.assertEqual(opportunity["mechanism_kind"], "governance")
+        self.assertIn("hidden-production-artifacts:HP04", {
+            ref["ref"] for ref in opportunity["source_refs"]
+        })
+        self.assertTrue(
+            {
+                "independent_demand_signal",
+                "supply_source_audit",
+                "freshness_signal",
+                "proof_inventory",
+            }.issubset(opportunity["required_material_codes"])
+        )
+        self.assertRegex(opportunity["one_line_formula"], r"需求.*供给.*时效.*证据")
+        self.assertEqual(
+            set(library["material_code_definitions"]),
+            {
+                "surface_entry_observation",
+                "independent_demand_signal",
+                "supply_source_audit",
+                "freshness_signal",
+            },
+        )
+
+        for card in (surface, opportunity):
+            self.assertEqual(set(card["actions"]), {"title", "cover", "body", "comments"})
+            self.assertTrue(all(card["actions"][key] for key in card["actions"]))
+            self.assertTrue(card["inputs"])
+            self.assertTrue(card["failure_conditions"])
+            self.assertTrue(card["organic_applicability"]["not_claimed"])
+            self.assertTrue(card["paid_applicability"]["not_claimed"])
+
+    def test_every_card_separates_exposure_job_and_diagnostic_metrics(self) -> None:
+        library = json.loads(
+            (ROOT / "redbook-writing" / "assets" / "traffic-mechanisms-v1.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        for card in library["mechanisms"]:
+            metrics = card["metrics"]
+            self.assertEqual(
+                set(metrics),
+                {
+                    "traffic_exposure",
+                    "job_outcome",
+                    "diagnostics",
+                    "public_proxy_allowed",
+                    "forbidden_inferences",
+                },
+                card["mechanism_id"],
+            )
+            self.assertEqual(metrics["traffic_exposure"]["evidence_scope"], "first_party_only")
+            self.assertEqual(metrics["job_outcome"]["selection"], "predeclared_primary_job_metric")
+            self.assertEqual(metrics["diagnostics"]["traffic_claim_status"], "diagnostic_only")
+            self.assertIn("not_observed", metrics["traffic_exposure"]["missing_data_rule"])
+            self.assertTrue(metrics["job_outcome"]["metric_candidates"])
+            self.assertTrue(metrics["diagnostics"]["metric_candidates"])
+
+    def test_evidence_layers_and_source_ref_types_are_resolvable(self) -> None:
+        library = json.loads(
+            (ROOT / "redbook-writing" / "assets" / "traffic-mechanisms-v1.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        layer_ids = {layer["id"] for layer in library["evidence_layers"]}
+        ref_types = set(library["source_ref_type_taxonomy"])
+        namespaces = library["source_namespaces"]
+        self.assertNotIn("A", {
+            layer["default_grade"]
+            for layer in library["evidence_layers"]
+            if layer["id"] == "first_party_course_instruction"
+        })
+
+        for card in library["mechanisms"]:
+            for ref in card["source_refs"]:
+                namespace = ref["ref"].split(":", 1)[0]
+                self.assertIn(ref["evidence_layer"], layer_ids, ref["ref"])
+                self.assertIn(ref["ref_type"], ref_types, ref["ref"])
+                self.assertIn(namespace, namespaces, ref["ref"])
+                self.assertTrue(ref["locator"], ref["ref"])
+                self.assertTrue(
+                    ref["locator"].startswith("docs/research/"), ref["ref"]
+                )
+                locator_path = ROOT / ref["locator"].split("#", 1)[0]
+                self.assertTrue(locator_path.exists(), ref["ref"])
+                if ref["ref_type"] != "atomic_record":
+                    self.assertIn("#", ref["locator"], ref["ref"])
 
     def test_missing_materials_returns_explicit_gaps_not_generic_cards(self) -> None:
         result = self.run_cli(

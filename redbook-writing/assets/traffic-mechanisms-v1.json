@@ -43,76 +43,179 @@
   },
   "evidence_layers": [
     {
-      "scope": "official_current_boundary_or_product_scope",
-      "default_grade": "A",
+      "id": "first_party_course_instruction",
+      "scope": "平台主体公开课程中的生产教学；必须保留课程日期、对象和产品语境",
+      "default_grade": "B_contextual_or_lower_if_historical",
       "can_support": [
-        "当前规则、公开能力、角色或付费产品口径",
-        "标题封面与正文不得误导等边界"
+        "平台在该课程与当时产品语境中如何教生产者区分任务",
+        "需要结合当前页面与本账号数据复测的内容假设"
       ],
       "cannot_support": [
-        "自然推荐算法权重",
-        "某种写法一定获得流量",
-        "把付费产品建议外推为自然流公式"
+        "课程发布之后仍有效的当前规则",
+        "自然推荐算法权重、固定生命周期或跨类目因果"
       ]
     },
     {
-      "scope": "production_study_or_joint_report",
-      "default_grade": "B",
+      "id": "production_artifact",
+      "scope": "公开岗位、Brief、采购、组织流程或研究中可定位的生产对象",
+      "default_grade": "record_specific_A_to_C_for_existence_only",
       "can_support": [
-        "来源样本内的生产流程、劳动、组织与重复观察",
-        "需要在当前账号复测的生产假设"
+        "对应记录范围内某种供给、劳动、治理或测量流程存在",
+        "生产字段、审计门与下一轮研究设计"
       ],
       "cannot_support": [
-        "跨类目普遍因果",
-        "固定阈值或 2026 实时算法"
+        "流程本身带来自然流量",
+        "把岗位能力、采购要求或活动供给归纳成算法规则"
       ]
     },
     {
-      "scope": "brand_or_paid_case",
-      "default_grade": "B/C or C",
+      "id": "academic_study",
+      "scope": "具名学术研究的方法、样本和任务边界",
+      "default_grade": "record_specific_usually_B_contextual",
       "can_support": [
-        "有边界的项目链路、素材和复盘方法",
-        "付费创意测试与搜索承接的工作流"
+        "论文样本内观察、方法与可复用审计变量",
+        "需要在当前平台时期重测的生产假设"
       ],
       "cannot_support": [
-        "把选品、达人、预算、渠道和内容混合结果归因给单一文案或封面",
-        "用付费胜出素材证明自然推荐偏好"
+        "跨时期、跨平台或跨类目的普遍因果",
+        "直接证明当前推荐权重"
       ]
     },
     {
-      "scope": "operator_course_experience",
-      "default_grade": "C/D or D",
+      "id": "brand_or_paid_case",
+      "scope": "品牌、服务商或付费项目披露的有边界工作流",
+      "default_grade": "C_unless_primary_methodology_supports_higher",
       "can_support": [
-        "字段设计、查询方向、单账号待测假设"
+        "案例披露范围内的素材、筛选、投放和复盘对象",
+        "付费创意或搜索承接的待测工作流"
+      ],
+      "cannot_support": [
+        "把选品、达人、预算、渠道和内容的混合结果归因给单一文案或封面",
+        "用付费胜出证明自然推荐偏好"
+      ]
+    },
+    {
+      "id": "operator_course_experience",
+      "scope": "操盘课程、一线经验或服务商教学",
+      "default_grade": "C_or_D_contextual",
+      "can_support": [
+        "查询方向、字段设计和单账号待测假设"
       ],
       "cannot_support": [
         "平台事实、稳定效果、固定标题或发布公式"
       ]
     },
     {
-      "scope": "live_public_proxy",
-      "default_grade": "public_proxy_association",
+      "id": "live_public_proxy",
+      "scope": "采集日公开互动与可见内容",
+      "default_grade": "public_proxy_association_only",
       "can_support": [
-        "挑选下一轮研究对象",
-        "task_fit、series_constant、边界样本和待测 feature contrast"
+        "挑选补采对象、识别 task_fit/series_constant 和提出 feature contrast"
       ],
       "cannot_support": [
-        "曝光、CTR、推荐权重或自然流量因果",
-        "starter/reusable 晋级"
+        "曝光、CTR、推荐权重、自然流量因果或机制晋级"
       ]
     },
     {
-      "scope": "first_party_traffic_test",
-      "default_grade": "account_specific",
+      "id": "live_public_proxy_audit",
+      "scope": "对公开样本的任务适配、反例与补采合同审计",
+      "default_grade": "method_only_not_performance_evidence",
       "can_support": [
-        "在同一账号、入口、任务、载体和观察窗内复现的条件性流量结论"
+        "补采字段、匹配对照和失败条件"
       ],
       "cannot_support": [
-        "无复现的跨账号或跨类目保证"
+        "公开互动代理等于一方流量表现"
+      ]
+    },
+    {
+      "id": "mixed_secondary_evidence",
+      "scope": "聚合账本中的二级摘要、规则项或复合结论",
+      "default_grade": "D_until_atomic_source_rechecked",
+      "can_support": [
+        "定位原子来源和形成候选研究问题"
       ],
-      "current_library_status": "no mechanism in this file is first-party traffic validated"
+      "cannot_support": [
+        "绕过原始来源核验、升级证据等级或证明流量因果"
+      ]
     }
   ],
+  "source_ref_type_taxonomy": [
+    "atomic_record",
+    "section_anchor",
+    "section_item",
+    "composite_summary"
+  ],
+  "source_ref_contract": {
+    "atomic_record": "<path>#record=<ID>; ID 必须能在对应 JSON/JSONL 记录或 Markdown 原子条目中定位。",
+    "section_anchor": "<path>#<heading-slug>; 只支持该节明确写出的范围。",
+    "section_item": "<path>#<heading-slug>:item=<n>; 用于没有独立标题的编号规则项。",
+    "composite_summary": "<path>#<heading-slug>; 必须回查该节列出的组成来源，不得把摘要升级成更高证据等级。"
+  },
+  "source_namespaces": {
+    "operator-course-playbooks": {
+      "files": [
+        "docs/research/2026-07-18-operator-course-playbooks.md",
+        "docs/research/2026-07-18-operator-course-playbooks.json"
+      ],
+      "atomic_id_pattern": "^P[0-9]+$"
+    },
+    "brand-operator-case-playbooks": {
+      "files": [
+        "docs/research/2026-07-18-brand-operator-case-playbooks.md",
+        "docs/research/2026-07-18-brand-operator-case-playbooks.json"
+      ],
+      "atomic_id_pattern": "^[PC][0-9]+$"
+    },
+    "hidden-production-artifacts": {
+      "files": [
+        "docs/research/2026-07-18-hidden-production-artifacts.md",
+        "docs/research/2026-07-18-hidden-production-artifacts.json"
+      ],
+      "atomic_id_pattern": "^(HP|HPS)[0-9]+$"
+    },
+    "live-public-proxy-contrast": {
+      "files": [
+        "docs/research/2026-07-18-live-public-proxy-contrast.md",
+        "docs/research/2026-07-18-live-public-proxy-contrast.json"
+      ],
+      "atomic_id_pattern": "^LP[0-9]+$"
+    },
+    "native-traffic-utility": {
+      "files": [
+        "docs/research/2026-07-18-native-traffic-utility.md",
+        "docs/research/2026-07-18-native-traffic-utility.jsonl"
+      ],
+      "atomic_id_pattern": "^O-XHS-[0-9]+$"
+    },
+    "official-xhs-merchant-course": {
+      "files": [
+        "docs/research/2026-07-18-official-xhs-merchant-course-notes.md",
+        "docs/research/2026-07-18-official-xhs-merchant-course-notes.json"
+      ],
+      "atomic_id_pattern": "^OX[0-9]+$"
+    },
+    "academic-multimodal-evidence": {
+      "files": [
+        "docs/research/2026-07-18-academic-multimodal-evidence.md",
+        "docs/research/2026-07-18-academic-multimodal-evidence.json"
+      ],
+      "atomic_id_pattern": "^S[0-9]+$"
+    },
+    "production-grade-evidence": {
+      "files": [
+        "docs/research/2026-07-17-production-grade-xhs-operations-evidence.md"
+      ],
+      "atomic_id_pattern": "^S[0-9]+$",
+      "non_atomic_policy": "section_anchor、section_item 与 composite_summary 必须在每个 source_ref 写出 locator；聚合引用不得升级等级。"
+    }
+  },
+  "metric_contract": {
+    "traffic_exposure": "只接受本账号一方后台在明确 surface/window 下提供的 impressions/reach；不可见写 not_observed。",
+    "job_outcome": "发布前只选一个与 primary_job 对应的事件和分母；它不是曝光的替代值。",
+    "diagnostics": "用于定位承诺、阅读、语义、版本或承接问题；不得单独写成流量结果。",
+    "public_proxy": "公开赞藏评、搜索位置和可见评论只用于找样本、任务适配和提出假设。",
+    "current_library_status": "no mechanism in this file is first-party traffic validated"
+  },
   "traffic_stage_taxonomy": [
     "feed_stop",
     "read_through",
@@ -219,15 +322,30 @@
         ]
       },
       "metrics": {
-        "first_party_primary": [
-          "feed impressions/reach",
-          "feed CTR or valid open rate"
-        ],
-        "first_party_diagnostics": [
-          "first-screen retention",
-          "read-through/completion",
-          "title-mismatch complaints"
-        ],
+        "traffic_exposure": {
+          "evidence_scope": "first_party_only",
+          "metric_candidates": [
+            "surface-specific impressions",
+            "surface-specific reach when the first-party backend exposes it"
+          ],
+          "missing_data_rule": "If the backend does not expose the denominator, record not_observed; never infer it from public engagement or fill zero."
+        },
+        "job_outcome": {
+          "selection": "predeclared_primary_job_metric",
+          "metric_candidates": [
+            "feed CTR or valid open rate"
+          ],
+          "denominator_rule": "Define the event and denominator before publication; compare only within the same account, surface, task and observation policy."
+        },
+        "diagnostics": {
+          "traffic_claim_status": "diagnostic_only",
+          "metric_candidates": [
+            "first-screen retention",
+            "read-through/completion",
+            "title-mismatch complaints"
+          ],
+          "interpretation_rule": "Use to locate a broken stage or evidence gap; a diagnostic alone is not exposure or a causal traffic result."
+        },
         "public_proxy_allowed": [
           "评论是否复述核心矛盾或指出未兑现",
           "公开互动只用于选择补采对象"
@@ -299,49 +417,63 @@
           "role": "承诺—证据距离候选",
           "evidence_layer": "live_public_proxy",
           "scope": "采集日公开互动与可见首屏的研究线索",
-          "limitation": "无曝光/入口分母，未控制账号体量、帖龄、投放和外部分发。"
+          "limitation": "无曝光/入口分母，未控制账号体量、帖龄、投放和外部分发。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-live-public-proxy-contrast.json#record=LP01"
         },
         {
           "ref": "brand-operator-case-playbooks:P03",
           "role": "首屏承诺一致性",
           "evidence_layer": "brand_or_paid_case",
           "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
-          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-brand-operator-case-playbooks.json#record=P03"
         },
         {
           "ref": "operator-course-playbooks:P13",
           "role": "钩子兑现契约",
           "evidence_layer": "operator_course_experience",
           "scope": "操盘者教学中的生产字段和待测假设",
-          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-operator-course-playbooks.json#record=P13"
         },
         {
           "ref": "official-xhs-merchant-course:OX03",
           "role": "官方商家课的一篇一承诺与承诺—证据—答案闭环；仅支持生产教学，不支持流量因果",
           "evidence_layer": "first_party_course_instruction",
           "scope": "2024 年小红书电商学习中心公开商家生产教学",
-          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。"
+          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-official-xhs-merchant-course-notes.json#record=OX03"
         },
         {
           "ref": "official-xhs-merchant-course:OX07",
           "role": "官方商家课的一篇一承诺与承诺—证据—答案闭环；仅支持生产教学，不支持流量因果",
           "evidence_layer": "first_party_course_instruction",
           "scope": "2024 年小红书电商学习中心公开商家生产教学",
-          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。"
+          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-official-xhs-merchant-course-notes.json#record=OX07"
         },
         {
           "ref": "production-grade-evidence:S7",
           "role": "误导点击边界；机器正文证据仍待完善",
           "evidence_layer": "mixed_secondary_evidence",
           "scope": "聚合审计文件中对应条目的限定作用域",
-          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-17-production-grade-xhs-operations-evidence.md#record=S7"
         },
         {
           "ref": "official-xhs-merchant-course:OX06",
           "role": "标题事实底稿后的单一修辞压缩子配方",
           "evidence_layer": "first_party_course_instruction",
           "scope": "2024 年小红书电商学习中心公开商家生产教学",
-          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。"
+          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-official-xhs-merchant-course-notes.json#record=OX06"
         }
       ],
       "mechanism_kind": "content",
@@ -451,14 +583,30 @@
         ]
       },
       "metrics": {
-        "first_party_primary": [
-          "read-through/completion"
-        ],
-        "first_party_diagnostics": [
-          "page-level exits",
-          "save/share",
-          "specific follow-up depth"
-        ],
+        "traffic_exposure": {
+          "evidence_scope": "first_party_only",
+          "metric_candidates": [
+            "surface-specific impressions",
+            "surface-specific reach when the first-party backend exposes it"
+          ],
+          "missing_data_rule": "If the backend does not expose the denominator, record not_observed; never infer it from public engagement or fill zero."
+        },
+        "job_outcome": {
+          "selection": "predeclared_primary_job_metric",
+          "metric_candidates": [
+            "read-through/completion"
+          ],
+          "denominator_rule": "Define the event and denominator before publication; compare only within the same account, surface, task and observation policy."
+        },
+        "diagnostics": {
+          "traffic_claim_status": "diagnostic_only",
+          "metric_candidates": [
+            "page-level exits",
+            "save/share",
+            "specific follow-up depth"
+          ],
+          "interpretation_rule": "Use to locate a broken stage or evidence gap; a diagnostic alone is not exposure or a causal traffic result."
+        },
         "public_proxy_allowed": [
           "评论中的‘没讲答案/标题党/求具体步骤’",
           "评论是否围绕正文交付的同一任务"
@@ -522,28 +670,36 @@
           "role": "钩子兑现契约主来源",
           "evidence_layer": "operator_course_experience",
           "scope": "操盘者教学中的生产字段和待测假设",
-          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-operator-course-playbooks.json#record=P13"
         },
         {
           "ref": "official-xhs-merchant-course:OX07",
           "role": "官方商家课的承诺—证据—答案闭环；历史生产指导",
           "evidence_layer": "first_party_course_instruction",
           "scope": "2024 年小红书电商学习中心公开商家生产教学",
-          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。"
+          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-official-xhs-merchant-course-notes.json#record=OX07"
         },
         {
           "ref": "brand-operator-case-playbooks:P03",
           "role": "首屏—正文一致性",
           "evidence_layer": "brand_or_paid_case",
           "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
-          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-brand-operator-case-playbooks.json#record=P03"
         },
         {
           "ref": "live-public-proxy-contrast:LP01",
           "role": "公开代理边界观察",
           "evidence_layer": "live_public_proxy",
           "scope": "采集日公开互动与可见首屏的研究线索",
-          "limitation": "无曝光/入口分母，未控制账号体量、帖龄、投放和外部分发。"
+          "limitation": "无曝光/入口分母，未控制账号体量、帖龄、投放和外部分发。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-live-public-proxy-contrast.json#record=LP01"
         }
       ],
       "mechanism_kind": "truth_gate",
@@ -649,15 +805,31 @@
         ]
       },
       "metrics": {
-        "first_party_primary": [
-          "task-matched open/click",
-          "query-level consumption when available"
-        ],
-        "first_party_diagnostics": [
-          "target semantic comment share",
-          "save",
-          "product/problem search or qualified action"
-        ],
+        "traffic_exposure": {
+          "evidence_scope": "first_party_only",
+          "metric_candidates": [
+            "surface-specific impressions",
+            "surface-specific reach when the first-party backend exposes it"
+          ],
+          "missing_data_rule": "If the backend does not expose the denominator, record not_observed; never infer it from public engagement or fill zero."
+        },
+        "job_outcome": {
+          "selection": "predeclared_primary_job_metric",
+          "metric_candidates": [
+            "task-matched open/click",
+            "query-level consumption when available"
+          ],
+          "denominator_rule": "Define the event and denominator before publication; compare only within the same account, surface, task and observation policy."
+        },
+        "diagnostics": {
+          "traffic_claim_status": "diagnostic_only",
+          "metric_candidates": [
+            "target semantic comment share",
+            "save",
+            "product/problem search or qualified action"
+          ],
+          "interpretation_rule": "Use to locate a broken stage or evidence gap; a diagnostic alone is not exposure or a causal traffic result."
+        },
         "public_proxy_allowed": [
           "评论是否出现相同处境和自然复述词",
           "搜索结果供给缺口"
@@ -727,49 +899,63 @@
           "role": "用户语言翻译器",
           "evidence_layer": "brand_or_paid_case",
           "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
-          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-brand-operator-case-playbooks.json#record=P01"
         },
         {
           "ref": "brand-operator-case-playbooks:P02",
           "role": "人群状态产品载体矩阵",
           "evidence_layer": "brand_or_paid_case",
           "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
-          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-brand-operator-case-playbooks.json#record=P02"
         },
         {
           "ref": "operator-course-playbooks:P03",
           "role": "人群场景单一理由证据",
           "evidence_layer": "operator_course_experience",
           "scope": "操盘者教学中的生产字段和待测假设",
-          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-operator-course-playbooks.json#record=P03"
         },
         {
           "ref": "official-xhs-merchant-course:OX01",
           "role": "官方商家课的角色—对象—价值与单一主承诺",
           "evidence_layer": "first_party_course_instruction",
           "scope": "2024 年小红书电商学习中心公开商家生产教学",
-          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。"
+          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-official-xhs-merchant-course-notes.json#record=OX01"
         },
         {
           "ref": "official-xhs-merchant-course:OX03",
           "role": "官方商家课的角色—对象—价值与单一主承诺",
           "evidence_layer": "first_party_course_instruction",
           "scope": "2024 年小红书电商学习中心公开商家生产教学",
-          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。"
+          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-official-xhs-merchant-course-notes.json#record=OX03"
         },
         {
           "ref": "operator-course-playbooks:P10",
           "role": "品牌话语到具体场景",
           "evidence_layer": "operator_course_experience",
           "scope": "操盘者教学中的生产字段和待测假设",
-          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-operator-course-playbooks.json#record=P10"
         },
         {
           "ref": "production-grade-evidence:S1",
           "role": "产品×买点×人群方法",
           "evidence_layer": "mixed_secondary_evidence",
           "scope": "聚合审计文件中对应条目的限定作用域",
-          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-17-production-grade-xhs-operations-evidence.md#record=S1"
         }
       ],
       "mechanism_kind": "content",
@@ -869,14 +1055,30 @@
         ]
       },
       "metrics": {
-        "first_party_primary": [
-          "read-through/completion"
-        ],
-        "first_party_diagnostics": [
-          "save/share",
-          "constraint-specific questions",
-          "series continuation"
-        ],
+        "traffic_exposure": {
+          "evidence_scope": "first_party_only",
+          "metric_candidates": [
+            "surface-specific impressions",
+            "surface-specific reach when the first-party backend exposes it"
+          ],
+          "missing_data_rule": "If the backend does not expose the denominator, record not_observed; never infer it from public engagement or fill zero."
+        },
+        "job_outcome": {
+          "selection": "predeclared_primary_job_metric",
+          "metric_candidates": [
+            "read-through/completion"
+          ],
+          "denominator_rule": "Define the event and denominator before publication; compare only within the same account, surface, task and observation policy."
+        },
+        "diagnostics": {
+          "traffic_claim_status": "diagnostic_only",
+          "metric_candidates": [
+            "save/share",
+            "constraint-specific questions",
+            "series continuation"
+          ],
+          "interpretation_rule": "Use to locate a broken stage or evidence gap; a diagnostic alone is not exposure or a causal traffic result."
+        },
         "public_proxy_allowed": [
           "公开评论是否追问过程、费用或复现条件",
           "高低公开代理只能提出 paired-test 候选"
@@ -948,21 +1150,27 @@
           "role": "变化合同公开代理候选",
           "evidence_layer": "live_public_proxy",
           "scope": "采集日公开互动与可见首屏的研究线索",
-          "limitation": "无曝光/入口分母，未控制账号体量、帖龄、投放和外部分发。"
+          "limitation": "无曝光/入口分母，未控制账号体量、帖龄、投放和外部分发。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-live-public-proxy-contrast.json#record=LP04"
         },
         {
           "ref": "native-traffic-utility:O-XHS-008",
           "role": "过程与具体代价研究线索",
           "evidence_layer": "live_public_proxy_audit",
           "scope": "公开样本审计得到的任务适配或补采线索",
-          "limitation": "未形成同账号同窗口的一方流量实验，只能作为候选。"
+          "limitation": "未形成同账号同窗口的一方流量实验，只能作为候选。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-native-traffic-utility.jsonl#record=O-XHS-008"
         },
         {
           "ref": "operator-course-playbooks:P02",
           "role": "限制条件到可见改造",
           "evidence_layer": "operator_course_experience",
           "scope": "操盘者教学中的生产字段和待测假设",
-          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-operator-course-playbooks.json#record=P02"
         }
       ],
       "mechanism_kind": "content",
@@ -1062,14 +1270,30 @@
         ]
       },
       "metrics": {
-        "first_party_primary": [
-          "save/share or search consumption, chosen by primary_job"
-        ],
-        "first_party_diagnostics": [
-          "step-specific questions",
-          "completion",
-          "correction/error rate"
-        ],
+        "traffic_exposure": {
+          "evidence_scope": "first_party_only",
+          "metric_candidates": [
+            "surface-specific impressions",
+            "surface-specific reach when the first-party backend exposes it"
+          ],
+          "missing_data_rule": "If the backend does not expose the denominator, record not_observed; never infer it from public engagement or fill zero."
+        },
+        "job_outcome": {
+          "selection": "predeclared_primary_job_metric",
+          "metric_candidates": [
+            "save/share rate or search consumption, predeclared from primary_job"
+          ],
+          "denominator_rule": "Define the event and denominator before publication; compare only within the same account, surface, task and observation policy."
+        },
+        "diagnostics": {
+          "traffic_claim_status": "diagnostic_only",
+          "metric_candidates": [
+            "step-specific questions",
+            "completion",
+            "correction/error rate"
+          ],
+          "interpretation_rule": "Use to locate a broken stage or evidence gap; a diagnostic alone is not exposure or a causal traffic result."
+        },
         "public_proxy_allowed": [
           "评论是否询问真实使用和版本",
           "收藏高于点赞只能是公开代理现象"
@@ -1133,28 +1357,36 @@
           "role": "工作物首屏 task_fit",
           "evidence_layer": "live_public_proxy",
           "scope": "采集日公开互动与可见首屏的研究线索",
-          "limitation": "无曝光/入口分母，未控制账号体量、帖龄、投放和外部分发。"
+          "limitation": "无曝光/入口分母，未控制账号体量、帖龄、投放和外部分发。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-live-public-proxy-contrast.json#record=LP03"
         },
         {
           "ref": "native-traffic-utility:O-XHS-005",
           "role": "现场工作表研究线索",
           "evidence_layer": "live_public_proxy_audit",
           "scope": "公开样本审计得到的任务适配或补采线索",
-          "limitation": "未形成同账号同窗口的一方流量实验，只能作为候选。"
+          "limitation": "未形成同账号同窗口的一方流量实验，只能作为候选。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-native-traffic-utility.jsonl#record=O-XHS-005"
         },
         {
           "ref": "native-traffic-utility:O-XHS-006",
           "role": "一步一定位截图教程线索",
           "evidence_layer": "live_public_proxy_audit",
           "scope": "公开样本审计得到的任务适配或补采线索",
-          "limitation": "未形成同账号同窗口的一方流量实验，只能作为候选。"
+          "limitation": "未形成同账号同窗口的一方流量实验，只能作为候选。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-native-traffic-utility.jsonl#record=O-XHS-006"
         },
         {
           "ref": "production-grade-evidence:starter-real-process-evidence",
           "role": "真实过程证据候选",
           "evidence_layer": "mixed_secondary_evidence",
           "scope": "聚合审计文件中对应条目的限定作用域",
-          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。",
+          "ref_type": "section_anchor",
+          "locator": "docs/research/2026-07-17-production-grade-xhs-operations-evidence.md#可进入-starter-pack-的候选审美机制"
         }
       ],
       "mechanism_kind": "content",
@@ -1256,14 +1488,30 @@
         ]
       },
       "metrics": {
-        "first_party_primary": [
-          "save/share or query-level consumption"
-        ],
-        "first_party_diagnostics": [
-          "axis-specific discussion",
-          "follow-up candidate requests",
-          "product/problem actions"
-        ],
+        "traffic_exposure": {
+          "evidence_scope": "first_party_only",
+          "metric_candidates": [
+            "surface-specific impressions",
+            "surface-specific reach when the first-party backend exposes it"
+          ],
+          "missing_data_rule": "If the backend does not expose the denominator, record not_observed; never infer it from public engagement or fill zero."
+        },
+        "job_outcome": {
+          "selection": "predeclared_primary_job_metric",
+          "metric_candidates": [
+            "save/share rate or query-level consumption, predeclared from primary_job"
+          ],
+          "denominator_rule": "Define the event and denominator before publication; compare only within the same account, surface, task and observation policy."
+        },
+        "diagnostics": {
+          "traffic_claim_status": "diagnostic_only",
+          "metric_candidates": [
+            "axis-specific discussion",
+            "follow-up candidate requests",
+            "product/problem actions"
+          ],
+          "interpretation_rule": "Use to locate a broken stage or evidence gap; a diagnostic alone is not exposure or a causal traffic result."
+        },
         "public_proxy_allowed": [
           "评论是否讨论比较维度而非只聊外观",
           "公开收藏只作未来复用代理"
@@ -1328,28 +1576,36 @@
           "role": "统一测试协议比较矩阵",
           "evidence_layer": "operator_course_experience",
           "scope": "操盘者教学中的生产字段和待测假设",
-          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-operator-course-playbooks.json#record=P04"
         },
         {
           "ref": "native-traffic-utility:O-XHS-004",
           "role": "比较轴研究线索",
           "evidence_layer": "live_public_proxy_audit",
           "scope": "公开样本审计得到的任务适配或补采线索",
-          "limitation": "未形成同账号同窗口的一方流量实验，只能作为候选。"
+          "limitation": "未形成同账号同窗口的一方流量实验，只能作为候选。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-native-traffic-utility.jsonl#record=O-XHS-004"
         },
         {
           "ref": "live-public-proxy-contrast:BEAUTY-COMPARISON",
           "role": "样本范围公开代理边界",
           "evidence_layer": "live_public_proxy",
           "scope": "采集日公开互动与可见首屏的研究线索",
-          "limitation": "无曝光/入口分母，未控制账号体量、帖龄、投放和外部分发。"
+          "limitation": "无曝光/入口分母，未控制账号体量、帖龄、投放和外部分发。",
+          "ref_type": "section_anchor",
+          "locator": "docs/research/2026-07-18-live-public-proxy-contrast.md#5-敏感肌面霜样本范围与使用关系先于统一美术"
         },
         {
           "ref": "brand-operator-case-playbooks:P07",
           "role": "载体按任务选择",
           "evidence_layer": "brand_or_paid_case",
           "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
-          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-brand-operator-case-playbooks.json#record=P07"
         }
       ],
       "mechanism_kind": "content",
@@ -1451,15 +1707,30 @@
         ]
       },
       "metrics": {
-        "first_party_primary": [
-          "query-level impressions/reach and consumption when available"
-        ],
-        "first_party_diagnostics": [
-          "query CTR/open",
-          "save",
-          "profile continuation",
-          "product/problem re-search"
-        ],
+        "traffic_exposure": {
+          "evidence_scope": "first_party_only",
+          "metric_candidates": [
+            "query-level impressions/reach when the first-party backend exposes them"
+          ],
+          "missing_data_rule": "If the backend does not expose the denominator, record not_observed; never infer it from public engagement or fill zero."
+        },
+        "job_outcome": {
+          "selection": "predeclared_primary_job_metric",
+          "metric_candidates": [
+            "query-level consumption or valid answer open, when first-party data is available"
+          ],
+          "denominator_rule": "Define the event and denominator before publication; compare only within the same account, surface, task and observation policy."
+        },
+        "diagnostics": {
+          "traffic_claim_status": "diagnostic_only",
+          "metric_candidates": [
+            "query CTR/open",
+            "save",
+            "profile continuation",
+            "product/problem re-search"
+          ],
+          "interpretation_rule": "Use to locate a broken stage or evidence gap; a diagnostic alone is not exposure or a causal traffic result."
+        },
         "public_proxy_allowed": [
           "当前结果供给、标题语义和评论问题",
           "搜索位置只记录入口、时间和账号环境"
@@ -1532,42 +1803,54 @@
           "role": "搜索意图阶梯",
           "evidence_layer": "operator_course_experience",
           "scope": "操盘者教学中的生产字段和待测假设",
-          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-operator-course-playbooks.json#record=P05"
         },
         {
           "ref": "official-xhs-merchant-course:OX04",
           "role": "官方商家课的推荐流/搜索流任务区分；固定时长主张已排除",
           "evidence_layer": "first_party_course_instruction",
           "scope": "2024 年小红书电商学习中心公开商家生产教学",
-          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。"
+          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-official-xhs-merchant-course-notes.json#record=OX04"
         },
         {
           "ref": "brand-operator-case-playbooks:P08",
           "role": "搜索意图簇",
           "evidence_layer": "brand_or_paid_case",
           "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
-          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-brand-operator-case-playbooks.json#record=P08"
         },
         {
           "ref": "production-grade-evidence:S1",
           "role": "推荐与搜索任务差异",
           "evidence_layer": "mixed_secondary_evidence",
           "scope": "聚合审计文件中对应条目的限定作用域",
-          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-17-production-grade-xhs-operations-evidence.md#record=S1"
         },
         {
           "ref": "production-grade-evidence:S19",
           "role": "信搜分工的付费案例",
           "evidence_layer": "mixed_secondary_evidence",
           "scope": "聚合审计文件中对应条目的限定作用域",
-          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-17-production-grade-xhs-operations-evidence.md#record=S19"
         },
         {
           "ref": "production-grade-evidence:S31",
           "role": "人×场景×趋势查询矩阵",
           "evidence_layer": "mixed_secondary_evidence",
           "scope": "聚合审计文件中对应条目的限定作用域",
-          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-17-production-grade-xhs-operations-evidence.md#record=S31"
         }
       ],
       "mechanism_kind": "content",
@@ -1673,14 +1956,30 @@
         ]
       },
       "metrics": {
-        "first_party_primary": [
-          "metric selected by primary_job"
-        ],
-        "first_party_diagnostics": [
-          "carrier-specific completion",
-          "save for reusable tasks",
-          "profile continuation for series/relationship tasks"
-        ],
+        "traffic_exposure": {
+          "evidence_scope": "first_party_only",
+          "metric_candidates": [
+            "surface-specific impressions",
+            "surface-specific reach when the first-party backend exposes it"
+          ],
+          "missing_data_rule": "If the backend does not expose the denominator, record not_observed; never infer it from public engagement or fill zero."
+        },
+        "job_outcome": {
+          "selection": "predeclared_primary_job_metric",
+          "metric_candidates": [
+            "one predeclared metric matching primary_job"
+          ],
+          "denominator_rule": "Define the event and denominator before publication; compare only within the same account, surface, task and observation policy."
+        },
+        "diagnostics": {
+          "traffic_claim_status": "diagnostic_only",
+          "metric_candidates": [
+            "carrier-specific completion",
+            "save for reusable tasks",
+            "profile continuation for series/relationship tasks"
+          ],
+          "interpretation_rule": "Use to locate a broken stage or evidence gap; a diagnostic alone is not exposure or a causal traffic result."
+        },
         "public_proxy_allowed": [
           "高低样本中共同载体只能标 task_fit/series_constant",
           "评论是否显示载体帮助完成任务"
@@ -1750,56 +2049,72 @@
           "role": "载体按任务选择",
           "evidence_layer": "brand_or_paid_case",
           "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
-          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-brand-operator-case-playbooks.json#record=P07"
         },
         {
           "ref": "official-xhs-merchant-course:OX05",
           "role": "官方商家课的常见封面载体族；只作任务适配，不作爆款版式",
           "evidence_layer": "first_party_course_instruction",
           "scope": "2024 年小红书电商学习中心公开商家生产教学",
-          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。"
+          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-official-xhs-merchant-course-notes.json#record=OX05"
         },
         {
           "ref": "production-grade-evidence:rule-1",
           "role": "机制沉淀与概念原型生产门",
           "evidence_layer": "mixed_secondary_evidence",
           "scope": "聚合审计文件中对应条目的限定作用域",
-          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。",
+          "ref_type": "section_item",
+          "locator": "docs/research/2026-07-17-production-grade-xhs-operations-evidence.md#应进入-skill-的规则:item=1"
         },
         {
           "ref": "production-grade-evidence:rule-2",
           "role": "机制沉淀与概念原型生产门",
           "evidence_layer": "mixed_secondary_evidence",
           "scope": "聚合审计文件中对应条目的限定作用域",
-          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。",
+          "ref_type": "section_item",
+          "locator": "docs/research/2026-07-17-production-grade-xhs-operations-evidence.md#应进入-skill-的规则:item=2"
         },
         {
           "ref": "production-grade-evidence:rule-3",
           "role": "机制沉淀与概念原型生产门",
           "evidence_layer": "mixed_secondary_evidence",
           "scope": "聚合审计文件中对应条目的限定作用域",
-          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。",
+          "ref_type": "section_item",
+          "locator": "docs/research/2026-07-17-production-grade-xhs-operations-evidence.md#应进入-skill-的规则:item=3"
         },
         {
           "ref": "production-grade-evidence:rule-4",
           "role": "机制沉淀与概念原型生产门",
           "evidence_layer": "mixed_secondary_evidence",
           "scope": "聚合审计文件中对应条目的限定作用域",
-          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。",
+          "ref_type": "section_item",
+          "locator": "docs/research/2026-07-17-production-grade-xhs-operations-evidence.md#应进入-skill-的规则:item=4"
         },
         {
           "ref": "native-traffic-utility:cross-sample-hypotheses",
           "role": "任务先于装饰、页面单一认知动作",
           "evidence_layer": "live_public_proxy_audit",
           "scope": "公开样本审计得到的任务适配或补采线索",
-          "limitation": "未形成同账号同窗口的一方流量实验，只能作为候选。"
+          "limitation": "未形成同账号同窗口的一方流量实验，只能作为候选。",
+          "ref_type": "composite_summary",
+          "locator": "docs/research/2026-07-18-native-traffic-utility.md#跨样本可保留的生产假设"
         },
         {
           "ref": "live-public-proxy-contrast:conclusion",
           "role": "形式不是充分条件",
           "evidence_layer": "live_public_proxy",
           "scope": "采集日公开互动与可见首屏的研究线索",
-          "limitation": "无曝光/入口分母，未控制账号体量、帖龄、投放和外部分发。"
+          "limitation": "无曝光/入口分母，未控制账号体量、帖龄、投放和外部分发。",
+          "ref_type": "composite_summary",
+          "locator": "docs/research/2026-07-18-live-public-proxy-contrast.md#结论先行"
         }
       ],
       "mechanism_kind": "carrier_router",
@@ -1903,15 +2218,31 @@
         ]
       },
       "metrics": {
-        "first_party_primary": [
-          "read-through or qualified product/problem action, chosen by primary_job"
-        ],
-        "first_party_diagnostics": [
-          "detail-specific questions",
-          "save",
-          "relevant comment share",
-          "complaint/correction"
-        ],
+        "traffic_exposure": {
+          "evidence_scope": "first_party_only",
+          "metric_candidates": [
+            "surface-specific impressions",
+            "surface-specific reach when the first-party backend exposes it"
+          ],
+          "missing_data_rule": "If the backend does not expose the denominator, record not_observed; never infer it from public engagement or fill zero."
+        },
+        "job_outcome": {
+          "selection": "predeclared_primary_job_metric",
+          "metric_candidates": [
+            "read-through or qualified product/problem action, predeclared from primary_job"
+          ],
+          "denominator_rule": "Define the event and denominator before publication; compare only within the same account, surface, task and observation policy."
+        },
+        "diagnostics": {
+          "traffic_claim_status": "diagnostic_only",
+          "metric_candidates": [
+            "detail-specific questions",
+            "save",
+            "relevant comment share",
+            "complaint/correction"
+          ],
+          "interpretation_rule": "Use to locate a broken stage or evidence gap; a diagnostic alone is not exposure or a causal traffic result."
+        },
         "public_proxy_allowed": [
           "评论是否围绕使用细节和取舍",
           "真实使用关系只作内容证据，不作表现证明"
@@ -1983,28 +2314,36 @@
           "role": "真实使用证据与有边界不完美",
           "evidence_layer": "brand_or_paid_case",
           "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
-          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-brand-operator-case-playbooks.json#record=P06"
         },
         {
           "ref": "production-grade-evidence:S15",
           "role": "KOC 原生劳动研究",
           "evidence_layer": "mixed_secondary_evidence",
           "scope": "聚合审计文件中对应条目的限定作用域",
-          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-17-production-grade-xhs-operations-evidence.md#record=S15"
         },
         {
           "ref": "production-grade-evidence:S32",
           "role": "内容资产来源与人感边界",
           "evidence_layer": "mixed_secondary_evidence",
           "scope": "聚合审计文件中对应条目的限定作用域",
-          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-17-production-grade-xhs-operations-evidence.md#record=S32"
         },
         {
           "ref": "live-public-proxy-contrast:BEAUTY-COMPARISON",
           "role": "产品实拍高低共存边界",
           "evidence_layer": "live_public_proxy",
           "scope": "采集日公开互动与可见首屏的研究线索",
-          "limitation": "无曝光/入口分母，未控制账号体量、帖龄、投放和外部分发。"
+          "limitation": "无曝光/入口分母，未控制账号体量、帖龄、投放和外部分发。",
+          "ref_type": "section_anchor",
+          "locator": "docs/research/2026-07-18-live-public-proxy-contrast.md#5-敏感肌面霜样本范围与使用关系先于统一美术"
         }
       ],
       "mechanism_kind": "truth_gate",
@@ -2106,14 +2445,30 @@
         ]
       },
       "metrics": {
-        "first_party_primary": [
-          "profile visit and follow rate"
-        ],
-        "first_party_diagnostics": [
-          "series continuation",
-          "returning audience",
-          "semantic echo quality"
-        ],
+        "traffic_exposure": {
+          "evidence_scope": "first_party_only",
+          "metric_candidates": [
+            "surface-specific impressions",
+            "surface-specific reach when the first-party backend exposes it"
+          ],
+          "missing_data_rule": "If the backend does not expose the denominator, record not_observed; never infer it from public engagement or fill zero."
+        },
+        "job_outcome": {
+          "selection": "predeclared_primary_job_metric",
+          "metric_candidates": [
+            "profile visit rate or follow rate, predeclared before publishing"
+          ],
+          "denominator_rule": "Define the event and denominator before publication; compare only within the same account, surface, task and observation policy."
+        },
+        "diagnostics": {
+          "traffic_claim_status": "diagnostic_only",
+          "metric_candidates": [
+            "series continuation",
+            "returning audience",
+            "semantic echo quality"
+          ],
+          "interpretation_rule": "Use to locate a broken stage or evidence gap; a diagnostic alone is not exposure or a causal traffic result."
+        },
         "public_proxy_allowed": [
           "同账号系列高低样本识别共同常量与潜在差异",
           "评论是否沿同一矛盾补写"
@@ -2184,35 +2539,45 @@
           "role": "身份张力和系列延展",
           "evidence_layer": "operator_course_experience",
           "scope": "操盘者教学中的生产字段和待测假设",
-          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-operator-course-playbooks.json#record=P12"
         },
         {
           "ref": "brand-operator-case-playbooks:P10",
           "role": "长期叙事轴心",
           "evidence_layer": "brand_or_paid_case",
           "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
-          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-brand-operator-case-playbooks.json#record=P10"
         },
         {
           "ref": "live-public-proxy-contrast:DOG-SERIES",
           "role": "同模板系列边界与视觉反证候选",
           "evidence_layer": "live_public_proxy",
           "scope": "采集日公开互动与可见首屏的研究线索",
-          "limitation": "无曝光/入口分母，未控制账号体量、帖龄、投放和外部分发。"
+          "limitation": "无曝光/入口分母，未控制账号体量、帖龄、投放和外部分发。",
+          "ref_type": "section_anchor",
+          "locator": "docs/research/2026-07-18-live-public-proxy-contrast.md#1-同账号连续系列视觉笑点是否兑现标题"
         },
         {
           "ref": "production-grade-evidence:S16",
           "role": "长期叙事轴心生产方法",
           "evidence_layer": "mixed_secondary_evidence",
           "scope": "聚合审计文件中对应条目的限定作用域",
-          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-17-production-grade-xhs-operations-evidence.md#record=S16"
         },
         {
           "ref": "academic-multimodal-evidence:S1",
           "role": "账号历史表达可作候选上下文，但相似度/ROUGE 不得当流量分；每篇保留新信息负载",
           "evidence_layer": "academic_study",
           "scope": "论文研究设计所定义的平台、样本与任务",
-          "limitation": "平台、时期、抽样和代理标签限制迁移，不证明当前推荐因果。"
+          "limitation": "平台、时期、抽样和代理标签限制迁移，不证明当前推荐因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-academic-multimodal-evidence.json#record=S1"
         }
       ],
       "mechanism_kind": "content",
@@ -2316,14 +2681,30 @@
         ]
       },
       "metrics": {
-        "first_party_primary": [
-          "read-through or profile follow, chosen before publishing"
-        ],
-        "first_party_diagnostics": [
-          "same-situation comments",
-          "save of practical exit",
-          "series continuation"
-        ],
+        "traffic_exposure": {
+          "evidence_scope": "first_party_only",
+          "metric_candidates": [
+            "surface-specific impressions",
+            "surface-specific reach when the first-party backend exposes it"
+          ],
+          "missing_data_rule": "If the backend does not expose the denominator, record not_observed; never infer it from public engagement or fill zero."
+        },
+        "job_outcome": {
+          "selection": "predeclared_primary_job_metric",
+          "metric_candidates": [
+            "read-through or profile follow, predeclared before publishing"
+          ],
+          "denominator_rule": "Define the event and denominator before publication; compare only within the same account, surface, task and observation policy."
+        },
+        "diagnostics": {
+          "traffic_claim_status": "diagnostic_only",
+          "metric_candidates": [
+            "same-situation comments",
+            "save of practical exit",
+            "series continuation"
+          ],
+          "interpretation_rule": "Use to locate a broken stage or evidence gap; a diagnostic alone is not exposure or a causal traffic result."
+        },
         "public_proxy_allowed": [
           "评论是否出现同处境与过程追问",
           "公开收藏只能辅助判断实用出口"
@@ -2388,21 +2769,27 @@
           "role": "共同阻力到更好生活",
           "evidence_layer": "operator_course_experience",
           "scope": "操盘者教学中的生产字段和待测假设",
-          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-operator-course-playbooks.json#record=P01"
         },
         {
           "ref": "operator-course-playbooks:P07",
           "role": "场景情绪入口与实用出口",
           "evidence_layer": "operator_course_experience",
           "scope": "操盘者教学中的生产字段和待测假设",
-          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-operator-course-playbooks.json#record=P07"
         },
         {
           "ref": "production-grade-evidence:S4",
           "role": "兴趣、生活融入和利他公开表述",
           "evidence_layer": "mixed_secondary_evidence",
           "scope": "聚合审计文件中对应条目的限定作用域",
-          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-17-production-grade-xhs-operations-evidence.md#record=S4"
         }
       ],
       "mechanism_kind": "content",
@@ -2503,14 +2890,30 @@
         ]
       },
       "metrics": {
-        "first_party_primary": [
-          "read-through or query-level consumption"
-        ],
-        "first_party_diagnostics": [
-          "mechanism understanding questions",
-          "save",
-          "problem-to-category search progression"
-        ],
+        "traffic_exposure": {
+          "evidence_scope": "first_party_only",
+          "metric_candidates": [
+            "surface-specific impressions",
+            "surface-specific reach when the first-party backend exposes it"
+          ],
+          "missing_data_rule": "If the backend does not expose the denominator, record not_observed; never infer it from public engagement or fill zero."
+        },
+        "job_outcome": {
+          "selection": "predeclared_primary_job_metric",
+          "metric_candidates": [
+            "read-through or query-level consumption, predeclared before publishing"
+          ],
+          "denominator_rule": "Define the event and denominator before publication; compare only within the same account, surface, task and observation policy."
+        },
+        "diagnostics": {
+          "traffic_claim_status": "diagnostic_only",
+          "metric_candidates": [
+            "mechanism understanding questions",
+            "save",
+            "problem-to-category search progression"
+          ],
+          "interpretation_rule": "Use to locate a broken stage or evidence gap; a diagnostic alone is not exposure or a causal traffic result."
+        },
         "public_proxy_allowed": [
           "评论是否从问题词转向机制/选择标准",
           "公开代理不能证明教育造成购买"
@@ -2574,21 +2977,27 @@
           "role": "陌生类目先问题教育",
           "evidence_layer": "operator_course_experience",
           "scope": "操盘者教学中的生产字段和待测假设",
-          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-operator-course-playbooks.json#record=P06"
         },
         {
           "ref": "brand-operator-case-playbooks:P01",
           "role": "用户语言翻译输入",
           "evidence_layer": "brand_or_paid_case",
           "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
-          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-brand-operator-case-playbooks.json#record=P01"
         },
         {
           "ref": "production-grade-evidence:S22",
           "role": "功能、动机、场景和可感知结果分层",
           "evidence_layer": "mixed_secondary_evidence",
           "scope": "聚合审计文件中对应条目的限定作用域",
-          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-17-production-grade-xhs-operations-evidence.md#record=S22"
         }
       ],
       "mechanism_kind": "content",
@@ -2689,15 +3098,31 @@
         ]
       },
       "metrics": {
-        "first_party_primary": [
-          "target semantic comment share or resolved-question rate"
-        ],
-        "first_party_diagnostics": [
-          "follow-up depth",
-          "user-supplied counterexamples",
-          "correction response",
-          "profile continuation"
-        ],
+        "traffic_exposure": {
+          "evidence_scope": "first_party_only",
+          "metric_candidates": [
+            "surface-specific impressions",
+            "surface-specific reach when the first-party backend exposes it"
+          ],
+          "missing_data_rule": "If the backend does not expose the denominator, record not_observed; never infer it from public engagement or fill zero."
+        },
+        "job_outcome": {
+          "selection": "predeclared_primary_job_metric",
+          "metric_candidates": [
+            "target semantic comment share or resolved-question rate"
+          ],
+          "denominator_rule": "Define the event and denominator before publication; compare only within the same account, surface, task and observation policy."
+        },
+        "diagnostics": {
+          "traffic_claim_status": "diagnostic_only",
+          "metric_candidates": [
+            "follow-up depth",
+            "user-supplied counterexamples",
+            "correction response",
+            "profile continuation"
+          ],
+          "interpretation_rule": "Use to locate a broken stage or evidence gap; a diagnostic alone is not exposure or a causal traffic result."
+        },
         "public_proxy_allowed": [
           "逐条主题编码",
           "评论是否复述核心矛盾或补充任务"
@@ -2768,35 +3193,45 @@
           "role": "评论语义校验",
           "evidence_layer": "operator_course_experience",
           "scope": "操盘者教学中的生产字段和待测假设",
-          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-operator-course-playbooks.json#record=P08"
         },
         {
           "ref": "official-xhs-merchant-course:OX08",
           "role": "官方商家课的真实答疑、异议回收与下一题闭环",
           "evidence_layer": "first_party_course_instruction",
           "scope": "2024 年小红书电商学习中心公开商家生产教学",
-          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。"
+          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-official-xhs-merchant-course-notes.json#record=OX08"
         },
         {
           "ref": "brand-operator-case-playbooks:P11",
           "role": "真问题反馈闭环",
           "evidence_layer": "brand_or_paid_case",
           "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
-          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-brand-operator-case-playbooks.json#record=P11"
         },
         {
           "ref": "live-public-proxy-contrast:DOG-SERIES",
           "role": "语义回声候选",
           "evidence_layer": "live_public_proxy",
           "scope": "采集日公开互动与可见首屏的研究线索",
-          "limitation": "无曝光/入口分母，未控制账号体量、帖龄、投放和外部分发。"
+          "limitation": "无曝光/入口分母，未控制账号体量、帖龄、投放和外部分发。",
+          "ref_type": "section_anchor",
+          "locator": "docs/research/2026-07-18-live-public-proxy-contrast.md#1-同账号连续系列视觉笑点是否兑现标题"
         },
         {
           "ref": "brand-operator-case-playbooks:C07",
           "role": "伪评论危险反例",
           "evidence_layer": "brand_or_paid_case",
           "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
-          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-brand-operator-case-playbooks.json#record=C07"
         }
       ],
       "mechanism_kind": "feedback",
@@ -2905,14 +3340,30 @@
         ]
       },
       "metrics": {
-        "first_party_primary": [
-          "primary_job-specific metric relative to account baseline"
-        ],
-        "first_party_diagnostics": [
-          "target semantic share",
-          "attention leakage share",
-          "profile/search/product or qualified business action"
-        ],
+        "traffic_exposure": {
+          "evidence_scope": "first_party_only",
+          "metric_candidates": [
+            "surface-specific impressions",
+            "surface-specific reach when the first-party backend exposes it"
+          ],
+          "missing_data_rule": "If the backend does not expose the denominator, record not_observed; never infer it from public engagement or fill zero."
+        },
+        "job_outcome": {
+          "selection": "predeclared_primary_job_metric",
+          "metric_candidates": [
+            "one primary_job metric relative to an auditable same-account task baseline"
+          ],
+          "denominator_rule": "Define the event and denominator before publication; compare only within the same account, surface, task and observation policy."
+        },
+        "diagnostics": {
+          "traffic_claim_status": "diagnostic_only",
+          "metric_candidates": [
+            "target semantic share",
+            "attention leakage share",
+            "profile/search/product or qualified business action"
+          ],
+          "interpretation_rule": "Use to locate a broken stage or evidence gap; a diagnostic alone is not exposure or a causal traffic result."
+        },
         "public_proxy_allowed": [
           "总互动只作发现候选的表面信号",
           "评论主题帮助识别注意力跑偏"
@@ -2984,28 +3435,36 @@
           "role": "有效爆文门",
           "evidence_layer": "brand_or_paid_case",
           "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
-          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-brand-operator-case-playbooks.json#record=P05"
         },
         {
           "ref": "brand-operator-case-playbooks:C05",
           "role": "高互动注意力泄漏反例",
           "evidence_layer": "brand_or_paid_case",
           "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
-          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-brand-operator-case-playbooks.json#record=C05"
         },
         {
           "ref": "operator-course-playbooks:P08",
           "role": "评论语义校验",
           "evidence_layer": "operator_course_experience",
           "scope": "操盘者教学中的生产字段和待测假设",
-          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-operator-course-playbooks.json#record=P08"
         },
         {
           "ref": "production-grade-evidence:rule-10",
           "role": "按任务选指标",
           "evidence_layer": "mixed_secondary_evidence",
           "scope": "聚合审计文件中对应条目的限定作用域",
-          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。",
+          "ref_type": "section_item",
+          "locator": "docs/research/2026-07-17-production-grade-xhs-operations-evidence.md#应进入-skill-的规则:item=10"
         }
       ],
       "mechanism_kind": "measurement",
@@ -3120,15 +3579,31 @@
         ]
       },
       "metrics": {
-        "first_party_primary": [
-          "one predeclared metric matching primary_job"
-        ],
-        "first_party_diagnostics": [
-          "stage-specific funnel metrics",
-          "target semantic share",
-          "production cost and revision",
-          "win/loss/inconclusive"
-        ],
+        "traffic_exposure": {
+          "evidence_scope": "first_party_only",
+          "metric_candidates": [
+            "surface-specific impressions",
+            "surface-specific reach when the first-party backend exposes it"
+          ],
+          "missing_data_rule": "If the backend does not expose the denominator, record not_observed; never infer it from public engagement or fill zero."
+        },
+        "job_outcome": {
+          "selection": "predeclared_primary_job_metric",
+          "metric_candidates": [
+            "one predeclared metric matching primary_job"
+          ],
+          "denominator_rule": "Define the event and denominator before publication; compare only within the same account, surface, task and observation policy."
+        },
+        "diagnostics": {
+          "traffic_claim_status": "diagnostic_only",
+          "metric_candidates": [
+            "stage-specific funnel metrics",
+            "target semantic share",
+            "production cost and revision",
+            "win/loss/inconclusive"
+          ],
+          "interpretation_rule": "Use to locate a broken stage or evidence gap; a diagnostic alone is not exposure or a causal traffic result."
+        },
         "public_proxy_allowed": [
           "公开代理只能帮助选样和建立研究问题",
           "同账号基线成员必须可重算"
@@ -3201,42 +3676,54 @@
           "role": "多候选筛选与分面放大",
           "evidence_layer": "brand_or_paid_case",
           "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
-          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-brand-operator-case-playbooks.json#record=P04"
         },
         {
           "ref": "brand-operator-case-playbooks:P09",
           "role": "证据驱动选题会",
           "evidence_layer": "brand_or_paid_case",
           "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
-          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-brand-operator-case-playbooks.json#record=P09"
         },
         {
           "ref": "operator-course-playbooks:P11",
           "role": "漏斗诊断与资产循环",
           "evidence_layer": "operator_course_experience",
           "scope": "操盘者教学中的生产字段和待测假设",
-          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。"
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务条件下复测。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-operator-course-playbooks.json#record=P11"
         },
         {
           "ref": "official-xhs-merchant-course:OX09",
           "role": "官方商家课的固定观察窗与自账号样本库；七天仅为可配置示例",
           "evidence_layer": "first_party_course_instruction",
           "scope": "2024 年小红书电商学习中心公开商家生产教学",
-          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。"
+          "limitation": "只证明平台当时这样教商家，不证明 2026 自然推荐权重或跨类目因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-official-xhs-merchant-course-notes.json#record=OX09"
         },
         {
           "ref": "hidden-production-artifacts:HP05",
           "role": "付费实验指标合同",
           "evidence_layer": "production_artifact",
           "scope": "公开岗位、流程、研究或生产文档中的组织做法",
-          "limitation": "支持生产流程设计，不支持流量效果。"
+          "limitation": "支持生产流程设计，不支持流量效果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-hidden-production-artifacts.json#record=HP05"
         },
         {
           "ref": "production-grade-evidence:closed-loop",
           "role": "生产级闭环",
           "evidence_layer": "mixed_secondary_evidence",
           "scope": "聚合审计文件中对应条目的限定作用域",
-          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。",
+          "ref_type": "composite_summary",
+          "locator": "docs/research/2026-07-17-production-grade-xhs-operations-evidence.md#从资料中提炼的生产级闭环"
         }
       ],
       "mechanism_kind": "measurement",
@@ -3349,17 +3836,33 @@
         ]
       },
       "metrics": {
-        "first_party_primary": [
-          "quality gate pass; traffic metric remains the selected primary_job metric"
-        ],
-        "first_party_diagnostics": [
-          "source completeness",
-          "fact/time errors",
-          "fabricated-experience blocks",
-          "revision reasons",
-          "re-record count",
-          "post-publication corrections/complaints"
-        ],
+        "traffic_exposure": {
+          "evidence_scope": "first_party_only",
+          "metric_candidates": [
+            "surface-specific impressions",
+            "surface-specific reach when the first-party backend exposes it"
+          ],
+          "missing_data_rule": "If the backend does not expose the denominator, record not_observed; never infer it from public engagement or fill zero."
+        },
+        "job_outcome": {
+          "selection": "predeclared_primary_job_metric",
+          "metric_candidates": [
+            "one predeclared metric matching primary_job; quality-gate pass remains diagnostic"
+          ],
+          "denominator_rule": "Define the event and denominator before publication; compare only within the same account, surface, task and observation policy."
+        },
+        "diagnostics": {
+          "traffic_claim_status": "diagnostic_only",
+          "metric_candidates": [
+            "source completeness",
+            "fact/time errors",
+            "fabricated-experience blocks",
+            "revision reasons",
+            "re-record count",
+            "post-publication corrections/complaints"
+          ],
+          "interpretation_rule": "Use to locate a broken stage or evidence gap; a diagnostic alone is not exposure or a causal traffic result."
+        },
         "public_proxy_allowed": [
           "公开反馈只能帮助发现模板化、事实和语气问题"
         ],
@@ -3423,42 +3926,54 @@
           "role": "AI 初稿下游修复",
           "evidence_layer": "production_artifact",
           "scope": "公开岗位、流程、研究或生产文档中的组织做法",
-          "limitation": "支持生产流程设计，不支持流量效果。"
+          "limitation": "支持生产流程设计，不支持流量效果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-hidden-production-artifacts.json#record=HP08"
         },
         {
           "ref": "hidden-production-artifacts:HPS18",
           "role": "16 位创作者访谈研究",
           "evidence_layer": "production_artifact",
           "scope": "公开岗位、流程、研究或生产文档中的组织做法",
-          "limitation": "支持生产流程设计，不支持流量效果。"
+          "limitation": "支持生产流程设计，不支持流量效果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-hidden-production-artifacts.json#record=HPS18"
         },
         {
           "ref": "production-grade-evidence:S15",
           "role": "原生劳动与真实性边界",
           "evidence_layer": "mixed_secondary_evidence",
           "scope": "聚合审计文件中对应条目的限定作用域",
-          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-17-production-grade-xhs-operations-evidence.md#record=S15"
         },
         {
           "ref": "brand-operator-case-playbooks:C07",
           "role": "AI 批量同质化失败观察",
           "evidence_layer": "brand_or_paid_case",
           "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
-          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。"
+          "limitation": "多变量混合，不可归因单一内容动作，也不可外推自然推荐。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-brand-operator-case-playbooks.json#record=C07"
         },
         {
           "ref": "academic-multimodal-evidence:S3",
           "role": "原生感背后的生产劳动与 AI 草稿的来源/声音/事实 QA；不支持纯人或混合必胜",
           "evidence_layer": "academic_study",
           "scope": "论文研究设计所定义的平台、样本与任务",
-          "limitation": "平台、时期、抽样和代理标签限制迁移，不证明当前推荐因果。"
+          "limitation": "平台、时期、抽样和代理标签限制迁移，不证明当前推荐因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-academic-multimodal-evidence.json#record=S3"
         },
         {
           "ref": "academic-multimodal-evidence:S5",
           "role": "原生感背后的生产劳动与 AI 草稿的来源/声音/事实 QA；不支持纯人或混合必胜",
           "evidence_layer": "academic_study",
           "scope": "论文研究设计所定义的平台、样本与任务",
-          "limitation": "平台、时期、抽样和代理标签限制迁移，不证明当前推荐因果。"
+          "limitation": "平台、时期、抽样和代理标签限制迁移，不证明当前推荐因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-academic-multimodal-evidence.json#record=S5"
         }
       ],
       "mechanism_kind": "truth_gate",
@@ -3572,16 +4087,32 @@
         ]
       },
       "metrics": {
-        "first_party_primary": [
-          "data completeness and the selected primary_job metric"
-        ],
-        "first_party_diagnostics": [
-          "source unknown rate",
-          "version missing rate",
-          "natural/paid split completeness",
-          "observation-window gaps",
-          "rights and evidence blockers"
-        ],
+        "traffic_exposure": {
+          "evidence_scope": "first_party_only",
+          "metric_candidates": [
+            "surface-specific impressions",
+            "surface-specific reach when the first-party backend exposes it"
+          ],
+          "missing_data_rule": "If the backend does not expose the denominator, record not_observed; never infer it from public engagement or fill zero."
+        },
+        "job_outcome": {
+          "selection": "predeclared_primary_job_metric",
+          "metric_candidates": [
+            "one predeclared metric matching primary_job; data completeness remains diagnostic"
+          ],
+          "denominator_rule": "Define the event and denominator before publication; compare only within the same account, surface, task and observation policy."
+        },
+        "diagnostics": {
+          "traffic_claim_status": "diagnostic_only",
+          "metric_candidates": [
+            "source unknown rate",
+            "version missing rate",
+            "natural/paid split completeness",
+            "observation-window gaps",
+            "rights and evidence blockers"
+          ],
+          "interpretation_rule": "Use to locate a broken stage or evidence gap; a diagnostic alone is not exposure or a causal traffic result."
+        },
         "public_proxy_allowed": [
           "原样保存 UI 字符串、入口和采集时间",
           "超出追踪窗口标 not_observed"
@@ -3652,77 +4183,99 @@
           "role": "开写前生产合同",
           "evidence_layer": "production_artifact",
           "scope": "公开岗位、流程、研究或生产文档中的组织做法",
-          "limitation": "支持生产流程设计，不支持流量效果。"
+          "limitation": "支持生产流程设计，不支持流量效果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-hidden-production-artifacts.json#record=HP01"
         },
         {
           "ref": "hidden-production-artifacts:HP04",
           "role": "话题供给来源标签",
           "evidence_layer": "production_artifact",
           "scope": "公开岗位、流程、研究或生产文档中的组织做法",
-          "limitation": "支持生产流程设计，不支持流量效果。"
+          "limitation": "支持生产流程设计，不支持流量效果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-hidden-production-artifacts.json#record=HP04"
         },
         {
           "ref": "hidden-production-artifacts:HP09",
           "role": "数据血缘与观察窗",
           "evidence_layer": "production_artifact",
           "scope": "公开岗位、流程、研究或生产文档中的组织做法",
-          "limitation": "支持生产流程设计，不支持流量效果。"
+          "limitation": "支持生产流程设计，不支持流量效果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-hidden-production-artifacts.json#record=HP09"
         },
         {
           "ref": "production-grade-evidence:rule-8",
           "role": "自然/付费、生产门、指标与复现约束",
           "evidence_layer": "mixed_secondary_evidence",
           "scope": "聚合审计文件中对应条目的限定作用域",
-          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。",
+          "ref_type": "section_item",
+          "locator": "docs/research/2026-07-17-production-grade-xhs-operations-evidence.md#应进入-skill-的规则:item=8"
         },
         {
           "ref": "production-grade-evidence:rule-9",
           "role": "自然/付费、生产门、指标与复现约束",
           "evidence_layer": "mixed_secondary_evidence",
           "scope": "聚合审计文件中对应条目的限定作用域",
-          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。",
+          "ref_type": "section_item",
+          "locator": "docs/research/2026-07-17-production-grade-xhs-operations-evidence.md#应进入-skill-的规则:item=9"
         },
         {
           "ref": "production-grade-evidence:rule-10",
           "role": "自然/付费、生产门、指标与复现约束",
           "evidence_layer": "mixed_secondary_evidence",
           "scope": "聚合审计文件中对应条目的限定作用域",
-          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。",
+          "ref_type": "section_item",
+          "locator": "docs/research/2026-07-17-production-grade-xhs-operations-evidence.md#应进入-skill-的规则:item=10"
         },
         {
           "ref": "production-grade-evidence:rule-11",
           "role": "自然/付费、生产门、指标与复现约束",
           "evidence_layer": "mixed_secondary_evidence",
           "scope": "聚合审计文件中对应条目的限定作用域",
-          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。",
+          "ref_type": "section_item",
+          "locator": "docs/research/2026-07-17-production-grade-xhs-operations-evidence.md#应进入-skill-的规则:item=11"
         },
         {
           "ref": "production-grade-evidence:rule-12",
           "role": "自然/付费、生产门、指标与复现约束",
           "evidence_layer": "mixed_secondary_evidence",
           "scope": "聚合审计文件中对应条目的限定作用域",
-          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。"
+          "limitation": "必须回查原条目的证据等级；聚合引用不得升级为因果。",
+          "ref_type": "section_item",
+          "locator": "docs/research/2026-07-17-production-grade-xhs-operations-evidence.md#应进入-skill-的规则:item=12"
         },
         {
           "ref": "native-traffic-utility:machine-recapture-contract",
           "role": "补采与 matched control 合同",
           "evidence_layer": "live_public_proxy_audit",
           "scope": "公开样本审计得到的任务适配或补采线索",
-          "limitation": "未形成同账号同窗口的一方流量实验，只能作为候选。"
+          "limitation": "未形成同账号同窗口的一方流量实验，只能作为候选。",
+          "ref_type": "section_anchor",
+          "locator": "docs/research/2026-07-18-native-traffic-utility.md#机器补采合同"
         },
         {
           "ref": "academic-multimodal-evidence:S2",
           "role": "帖子年龄、商业状态、估算分母与全模态风险审计边界",
           "evidence_layer": "academic_study",
           "scope": "论文研究设计所定义的平台、样本与任务",
-          "limitation": "平台、时期、抽样和代理标签限制迁移，不证明当前推荐因果。"
+          "limitation": "平台、时期、抽样和代理标签限制迁移，不证明当前推荐因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-academic-multimodal-evidence.json#record=S2"
         },
         {
           "ref": "academic-multimodal-evidence:S4",
           "role": "帖子年龄、商业状态、估算分母与全模态风险审计边界",
           "evidence_layer": "academic_study",
           "scope": "论文研究设计所定义的平台、样本与任务",
-          "limitation": "平台、时期、抽样和代理标签限制迁移，不证明当前推荐因果。"
+          "limitation": "平台、时期、抽样和代理标签限制迁移，不证明当前推荐因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-academic-multimodal-evidence.json#record=S4"
         }
       ],
       "mechanism_kind": "governance",
@@ -3760,6 +4313,497 @@
         "note": "仅在任务、载体和素材门同时满足时激活；公开代理不能替代素材或一方指标。"
       },
       "priority": 100
+    },
+    {
+      "mechanism_id": "TM18",
+      "name": "获客入口路由：推荐发现 × 搜索承接",
+      "one_line_formula": "当前入口证据 × 用户当下状态 × primary_job → recommendation_discovery、search_resolution 或 dual_entry；两种入口可接力，但不得假设固定占比、固定寿命或互相替代。",
+      "categories": [
+        "all_categories_conditional"
+      ],
+      "traffic_stage": {
+        "primary": "feed_stop",
+        "secondary": [
+          "read_through",
+          "save_share",
+          "profile_follow"
+        ]
+      },
+      "primary_jobs": [
+        "feed_stop",
+        "search_answer",
+        "explain",
+        "trust_build",
+        "decision_support",
+        "relationship_build",
+        "conversion",
+        "authority_statement"
+      ],
+      "carrier_task_fit": {
+        "preferred": [
+          "real_photo_diary",
+          "photo_annotation",
+          "screenshot_markup",
+          "text_card",
+          "checklist_steps",
+          "comparison_warning",
+          "collage_journal",
+          "single_image_reminder",
+          "process_video",
+          "screen_recording",
+          "talking_head_or_field_video"
+        ],
+        "compatible": [
+          "chat_dramatization",
+          "unknown",
+          "other"
+        ],
+        "fit_test": "同一真实素材能否分别完成‘让我发现这与我有关’和‘直接回答我正在搜的问题’；若不能，拆成两个入口版本而不是折中成一张万能封面。",
+        "avoid_when": [
+          "没有带时间、入口和账号环境的 surface 观察",
+          "用历史课程中的具体时长推断当前分发寿命",
+          "把推荐和搜索当成必须二选一或固定比例"
+        ]
+      },
+      "inputs": [
+        "本次 primary_job 与用户所处问题/决策阶段",
+        "带 captured_at、surface、query/entry 和账号环境的当前入口观察；自账号有后台时保留 traffic_source，公开研究时只记可见入口",
+        "当前搜索联想、结果构成和自然语言查询；没有时明确 unknown",
+        "可交付的答案、证据、场景与边界清单",
+        "自然、平台活动、品牌合作、外部分发与付费的分账标签"
+      ],
+      "actions": {
+        "title": [
+          "recommendation_discovery：先让未主动搜索的人识别身份、场景、变化或证据缺口，再给一个可兑现承诺；不为‘推荐感’制造无关争议。",
+          "search_resolution：使用用户自然说出的实体—问题—场景—答案表达，标题直接说明对象、版本或判断范围；不堆同义词。",
+          "dual_entry：只在同一正文能完整服务两种入口时共用；否则保留同一事实底稿，分别重写入口标题。"
+        ],
+        "cover": [
+          "推荐入口让场景/矛盾与第一份证据在两秒内可识别；搜索入口预览答案形态、对象范围或操作路径。",
+          "共用视觉资产时仍为不同入口保留独立 cover variant 与版本号，不把漂亮品牌海报当搜索答案。"
+        ],
+        "body": [
+          "推荐版本先完成相关性识别，再用证据关闭承诺；搜索版本首段先给答案，再展开依据、步骤、限制与相邻问题。",
+          "正文标记入口假设与兑现位置；两种入口都不得把关键答案藏到评论、私信或主页。"
+        ],
+        "comments": [
+          "按 discovery_question、active_search_query、condition、counterexample 编码真实问题，回写下一轮入口观察。",
+          "公开回答条件与更正；评论数量不用于反推推荐或搜索权重。"
+        ]
+      },
+      "metrics": {
+        "traffic_exposure": {
+          "evidence_scope": "first_party_only",
+          "metric_candidates": [
+            "feed impressions/reach and search impressions/reach recorded as separate surfaces when the backend exposes them"
+          ],
+          "missing_data_rule": "If a surface denominator or traffic_source is unavailable, record not_observed or unknown; never estimate it from public engagement or search position."
+        },
+        "job_outcome": {
+          "selection": "predeclared_primary_job_metric",
+          "metric_candidates": [
+            "feed valid open/CTR for a discovery entry",
+            "query-level answer consumption for a search entry",
+            "one downstream primary_job event shared only when its definition is identical"
+          ],
+          "denominator_rule": "Declare the route, event and denominator before publication; compare recommendation and search as separate surfaces unless the backend provides a valid common cohort."
+        },
+        "diagnostics": {
+          "traffic_claim_status": "diagnostic_only",
+          "metric_candidates": [
+            "route-specific title mismatch",
+            "search answer completion",
+            "discovery-to-profile continuation",
+            "query or surface marked unknown",
+            "natural/paid split completeness"
+          ],
+          "interpretation_rule": "Use to decide whether the route or fulfillment broke; none of these fields alone proves an algorithm preference."
+        },
+        "public_proxy_allowed": [
+          "当前搜索联想、可见结果语义、评论问题和采集入口可用于形成 route hypothesis",
+          "公开搜索位置只保留时间、入口和账号环境"
+        ],
+        "forbidden_inferences": [
+          "2024 商家课中的具体时长仍是 2026 当前规则",
+          "推荐流一定短、搜索流一定长",
+          "付费搜索或信息流表现证明自然入口偏好",
+          "公开互动可以估算任一 surface 的 impressions/reach"
+        ]
+      },
+      "evidence": {
+        "claim_status": "historical_first_party_instruction_plus_production_hypothesis",
+        "traffic_validation": "not_first_party_validated",
+        "layers": [
+          {
+            "scope": "first_party_course_instruction",
+            "grade": "B_contextual",
+            "supports": "2024 年平台商家公开课把推荐发现与主动搜索作为不同生产任务，并提醒不要把两者当互斥。",
+            "does_not_support": "2026 当前自然分发权重、入口比例、固定生命周期或流量保证。"
+          },
+          {
+            "scope": "operator_course_experience",
+            "grade": "C",
+            "supports": "按搜索意图和用户阶段拆内容的生产字段。",
+            "does_not_support": "跨类目固定词表或自然排名因果。"
+          },
+          {
+            "scope": "brand_or_paid_case",
+            "grade": "C",
+            "supports": "案例披露范围内的推荐/搜索分工和素材版本管理。",
+            "does_not_support": "把预算、受众与投放混合结果外推为自然入口机制。"
+          }
+        ]
+      },
+      "organic_applicability": {
+        "status": "candidate_surface_planning_method",
+        "conditions": [
+          "每次运行刷新入口和查询观察",
+          "同账号按 surface 分开记录一方曝光与任务结果",
+          "没有后台来源时保留 unknown，不伪造流量来源"
+        ],
+        "not_claimed": [
+          "自然推荐与搜索的固定比例或寿命",
+          "某种标题稳定获得任一入口流量"
+        ]
+      },
+      "paid_applicability": {
+        "status": "usable_only_inside_separate_paid_measurement_contract",
+        "conditions": [
+          "信息流与搜索广告分别锁定目标、受众、预算、素材版本、归因和退款口径",
+          "自然与付费结果分账"
+        ],
+        "not_claimed": [
+          "付费路线胜出可外推自然分发",
+          "付费 traffic_source 可填补自然后台缺失"
+        ]
+      },
+      "failure_conditions": [
+        "把 2024 历史课程中的具体时长写成 2026 当前规则",
+        "没有当前 surface 观察却宣称主要流量来自推荐或搜索",
+        "一条标题同时堆发现钩子、品牌词、品类词和场景词",
+        "推荐标题抢到无关注意力，正文却要求高意图决策",
+        "把自然、平台活动、品牌合作、外部分发和付费混在一个结果里"
+      ],
+      "anti_cargo_cult": [
+        "不是‘推荐做情绪、搜索埋关键词’；两边都必须完成同一个真实用户任务并兑现证据。",
+        "不是二选一：同一主题可以由推荐建立发现、由搜索长期承接，但是否接力必须看当前入口证据。",
+        "课程来自 2024 年商家生产教学，只提供任务区分，不提供 2026 自然算法公式。"
+      ],
+      "source_refs": [
+        {
+          "ref": "official-xhs-merchant-course:OX04",
+          "role": "推荐发现与主动搜索的任务区分、实体—问题—场景—答案表达及非互斥边界",
+          "evidence_layer": "first_party_course_instruction",
+          "scope": "2024 年小红书电商学习中心公开商家生产教学",
+          "limitation": "只证明平台当时这样教商家；具体时长已作为历史例子排除，不证明 2026 自然推荐权重、入口比例或跨类目因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-official-xhs-merchant-course-notes.json#record=OX04"
+        },
+        {
+          "ref": "operator-course-playbooks:P05",
+          "role": "搜索意图阶梯的生产字段",
+          "evidence_layer": "operator_course_experience",
+          "scope": "操盘者教学中的生产字段和待测假设",
+          "limitation": "课程经验不是平台事实，必须在本账号、同任务和当前入口条件下复测。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-operator-course-playbooks.json#record=P05"
+        },
+        {
+          "ref": "brand-operator-case-playbooks:P08",
+          "role": "项目范围内的搜索意图簇和入口分工",
+          "evidence_layer": "brand_or_paid_case",
+          "scope": "案例披露范围内的生产链路、素材筛选或付费工作流",
+          "limitation": "多变量混合，不可归因单一标题/封面，也不可外推自然推荐。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-brand-operator-case-playbooks.json#record=P08"
+        }
+      ],
+      "mechanism_kind": "carrier_router",
+      "required_material_codes": [
+        "surface_entry_observation",
+        "proof_inventory"
+      ],
+      "forbidden_material_codes": [
+        "paid_organic_mixed",
+        "unverifiable_claim"
+      ],
+      "requires": [],
+      "conflicts_with": [],
+      "activation": {
+        "phase": "surface_routing",
+        "eligible_traffic_stages": [
+          "feed_stop",
+          "read_through",
+          "save_share",
+          "profile_follow"
+        ],
+        "eligible_primary_jobs": [
+          "feed_stop",
+          "search_answer",
+          "explain",
+          "trust_build",
+          "decision_support",
+          "relationship_build",
+          "conversion",
+          "authority_statement"
+        ],
+        "material_match": "all_required_and_no_forbidden",
+        "note": "仅在当前入口观察与真实证据清单存在时激活；课程边界和自然/付费分账不可放宽。"
+      },
+      "priority": 99
+    },
+    {
+      "mechanism_id": "TM19",
+      "name": "话题机会闸门：需求 × 供给 × 时效 × 证据",
+      "one_line_formula": "独立需求信号 × 可审计供给缺口 × 当前时效 × 可交付真实证据 → topic_candidate；任一项 unknown 就补采或降级，不把内容密度直接叫需求。",
+      "categories": [
+        "all_categories_conditional"
+      ],
+      "traffic_stage": {
+        "primary": "feed_stop",
+        "secondary": [
+          "read_through",
+          "save_share",
+          "comment_cocreation",
+          "profile_follow"
+        ]
+      },
+      "primary_jobs": [
+        "feed_stop",
+        "search_answer",
+        "explain",
+        "trust_build",
+        "decision_support",
+        "relationship_build",
+        "conversion",
+        "authority_statement"
+      ],
+      "carrier_task_fit": {
+        "preferred": [
+          "real_photo_diary",
+          "photo_annotation",
+          "screenshot_markup",
+          "text_card",
+          "checklist_steps",
+          "comparison_warning",
+          "collage_journal",
+          "single_image_reminder",
+          "unknown",
+          "process_video",
+          "screen_recording",
+          "talking_head_or_field_video"
+        ],
+        "compatible": [
+          "chat_dramatization",
+          "other"
+        ],
+        "fit_test": "选题批准前能否说清谁在何时持续提出什么问题、现有供给为何不足/同质/过期，以及本账号有什么真实证据能补上；载体稍后再按任务选择。",
+        "avoid_when": [
+          "只有单一活动、同一 Brief 或同一机构批量内容",
+          "没有当前事实/产品/规则检查",
+          "有热度但没有本账号可交付证据"
+        ]
+      },
+      "inputs": [
+        "需求：跨作者关系、跨入口或跨时间的独立用户问题/查询，保留原文、来源、captured_at 与去重规则",
+        "供给：样本级 spontaneous、brand_campaign、platform_program、paid_distribution、unknown 标签及其依据",
+        "时效：问题是否仍存在、哪些事实/界面/价格/规则已变化、last_verified_at 与下一次失效条件；不使用固定天数",
+        "证据：本账号可授权的事实、经验、过程、工作物、比较或数据及其能证明和不能证明什么",
+        "一条 topic decision：approve_candidate、needs_research、reject，以及四项各自的证据引用"
+      ],
+      "actions": {
+        "title": [
+          "从独立用户问题中提取一个具体任务；若供给主要来自活动/邀约，只借用真实任务，不复制统一口号、热词或恐慌框架。",
+          "写出当前对象、版本或变化点；没有新事实/新证据时不靠‘最新’制造时效。"
+        ],
+        "cover": [
+          "让本账号独有的工作物、过程、比较轴、现场或第一份证据成为主体，明确这篇填补哪个答案缺口。",
+          "重复模板、活动标识和同素材只作为供给来源线索，不作为用户审美偏好的充分证据。"
+        ],
+        "body": [
+          "按‘需求原句/场景 → 现有答案缺口 → 本次证据 → 可执行答案 → 适用与失效边界’交付。",
+          "事实、体验、推断和活动/商业关系分层；过期信息标历史，不把新鲜感当准确性。"
+        ],
+        "comments": [
+          "公开追问条件、反例和仍未解决的子问题，并给更正；把新评论先记为 demand_candidate，不立即写成‘大家都在问’。",
+          "按独立来源与语义去重回写需求库；不伪造评论、不去竞品评论区截流。"
+        ]
+      },
+      "metrics": {
+        "traffic_exposure": {
+          "evidence_scope": "first_party_only",
+          "metric_candidates": [
+            "surface-specific impressions",
+            "surface-specific reach when the first-party backend exposes it"
+          ],
+          "missing_data_rule": "If the backend does not expose the denominator, record not_observed; public post volume, likes or search position are not substitutes."
+        },
+        "job_outcome": {
+          "selection": "predeclared_primary_job_metric",
+          "metric_candidates": [
+            "one event and denominator matching the approved topic's primary_job"
+          ],
+          "denominator_rule": "Declare the primary_job event before publication and compare only within the same account, surface, task and observation policy; no universal threshold."
+        },
+        "diagnostics": {
+          "traffic_claim_status": "diagnostic_only",
+          "metric_candidates": [
+            "independent demand source count after semantic deduplication",
+            "unknown supply-source rate",
+            "shared Brief/template trace rate",
+            "outside-program persistence recorded without a fixed time threshold",
+            "stale or unverified fact count",
+            "proof-asset coverage and rights blockers",
+            "target-semantic questions and counterexamples"
+          ],
+          "interpretation_rule": "These fields decide whether a topic is research-ready and explain failure; they are not exposure, ranking factors or proof of demand size."
+        },
+        "public_proxy_allowed": [
+          "公开搜索联想、评论问题、内容样本与活动标识可用于需求/供给/时效审计",
+          "内容量和公开互动只用于发现候选及反例"
+        ],
+        "forbidden_inferences": [
+          "同一活动的一百篇等于一百个独立需求",
+          "模板密度证明用户偏好或平台奖励",
+          "付费曝光等于搜索需求",
+          "新发布等于信息新鲜或准确",
+          "机会分高就一定获得自然流量"
+        ]
+      },
+      "evidence": {
+        "claim_status": "supported_production_audit_plus_topic_hypothesis",
+        "traffic_validation": "not_first_party_validated",
+        "layers": [
+          {
+            "scope": "production_artifact",
+            "grade": "A/B_for_bounded_existence_C_for_transfer",
+            "supports": "公开岗位与研究样本证明话题供给可以被社区、活动、邀约和激励组织，因此内容密度需要来源审计。",
+            "does_not_support": "任一具体话题由平台或品牌组织、被邀约内容必获流量、或四因子造成自然分发。"
+          },
+          {
+            "scope": "first_party_course_instruction",
+            "grade": "B_contextual",
+            "supports": "2024 商家课把 problem、scene、freshness 和入口任务列为生产输入。",
+            "does_not_support": "固定时效窗口、当前算法或话题机会得分。"
+          }
+        ]
+      },
+      "organic_applicability": {
+        "status": "required_topic_research_gate_candidate",
+        "conditions": [
+          "需求信号完成语义去重并保留独立来源",
+          "样本供给来源逐条标注且 unknown 不被填成 spontaneous",
+          "时效和证据均有 last_verified_at/来源/权利/失效条件",
+          "通过后仍用本账号一方曝光与 job metric 验证"
+        ],
+        "not_claimed": [
+          "四项相乘是平台算法",
+          "某个机会分或内容量阈值普遍有效",
+          "活动后持续多久才算真实需求"
+        ]
+      },
+      "paid_applicability": {
+        "status": "usable_for_brief_and_supply_audit_with_paid_separated",
+        "conditions": [
+          "平台活动、品牌活动、达人合作与 paid_distribution 分标签",
+          "付费目标、预算、受众、素材版本和归因另有测量合同"
+        ],
+        "not_claimed": [
+          "投放规模证明自然需求",
+          "付费素材胜出证明自然推荐偏好",
+          "活动供给可以隐藏成自发用户内容"
+        ]
+      },
+      "failure_conditions": [
+        "把同一活动/Brief/机构批量供给当成多个独立需求",
+        "只看内容量、热榜或公开互动，不审计作者关系与分发来源",
+        "看到官方岗位或研究便指控某个具体话题、账号或创作者被操纵",
+        "旧问题仍有人搜，但正文使用过期规则、界面、价格或产品事实",
+        "需求存在但本账号没有真实、可授权、能交付的证据",
+        "自然、平台活动、品牌合作、外部分发和付费未分账"
+      ],
+      "anti_cargo_cult": [
+        "不是‘低供给词就有蓝海’；低供给也可能是低需求、敏感、难生产或答案已在别处解决。",
+        "不是给四项随意打分相乘；不知道就写 unknown，并列最小补采动作。",
+        "不是追最新：时效指问题和证据仍有效，老问题出现新变化也可成立。",
+        "HP04 支持先审计供给来源，不支持这套四因子会提升自然流量。"
+      ],
+      "source_refs": [
+        {
+          "ref": "hidden-production-artifacts:HP04",
+          "role": "话题供给来源标签与独立需求审计的主机制来源",
+          "evidence_layer": "production_artifact",
+          "scope": "趋势发现、热点选题、竞品采样和需求判断的生产审计方法",
+          "limitation": "A/B 只支持样本内供给组织方式存在；方法仍为 hypothesis，不支持自然流量效果或指认具体话题。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-hidden-production-artifacts.json#record=HP04"
+        },
+        {
+          "ref": "hidden-production-artifacts:HPS09",
+          "role": "平台可通过创作者社区、活动和定向邀约组织话题供给的当前官方岗位证据",
+          "evidence_layer": "production_artifact",
+          "scope": "2026-07-18 抓取的一条小红书官方热点创作者社区岗位",
+          "limitation": "只证明岗位描述的能力与意图；不证明任何具体话题被组织、被邀约内容获流量或算法规则。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-hidden-production-artifacts.json#record=HPS09"
+        },
+        {
+          "ref": "hidden-production-artifacts:HPS17",
+          "role": "限定样本内 Brief—群内生产—报备—人工选择—激励链路",
+          "evidence_layer": "academic_study",
+          "scope": "2026 发表的邀请制主题创作者群民族志研究样本",
+          "limitation": "不代表所有创作者群；参与者估算的比例/阈值不进入规则，也不证明任一具体趋势来源。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-hidden-production-artifacts.json#record=HPS17"
+        },
+        {
+          "ref": "official-xhs-merchant-course:OX04",
+          "role": "problem、scene、freshness 与分发任务作为历史生产输入",
+          "evidence_layer": "first_party_course_instruction",
+          "scope": "2024 年小红书电商学习中心公开商家生产教学",
+          "limitation": "只支持当时的生产教学字段；固定时长已排除，不证明 2026 当前时效窗口或自然推荐因果。",
+          "ref_type": "atomic_record",
+          "locator": "docs/research/2026-07-18-official-xhs-merchant-course-notes.json#record=OX04"
+        }
+      ],
+      "mechanism_kind": "governance",
+      "required_material_codes": [
+        "independent_demand_signal",
+        "supply_source_audit",
+        "freshness_signal",
+        "proof_inventory"
+      ],
+      "forbidden_material_codes": [
+        "fabricated_evidence",
+        "unverifiable_claim",
+        "paid_organic_mixed",
+        "fabricated_comment"
+      ],
+      "requires": [],
+      "conflicts_with": [],
+      "activation": {
+        "phase": "topic_approval",
+        "eligible_traffic_stages": [
+          "feed_stop",
+          "read_through",
+          "save_share",
+          "comment_cocreation",
+          "profile_follow"
+        ],
+        "eligible_primary_jobs": [
+          "feed_stop",
+          "search_answer",
+          "explain",
+          "trust_build",
+          "decision_support",
+          "relationship_build",
+          "conversion",
+          "authority_statement"
+        ],
+        "material_match": "all_required_and_no_forbidden",
+        "note": "四项输入都可追溯才批准 topic_candidate；unknown 返回补采，不用通用热词或治理卡假装通过。"
+      },
+      "priority": 99
     }
   ],
   "material_code_taxonomy": [
@@ -3797,8 +4841,18 @@
     "current_interface_capture",
     "privacy_redaction",
     "real_person_authorized",
-    "spoken_claim_sources"
+    "spoken_claim_sources",
+    "surface_entry_observation",
+    "independent_demand_signal",
+    "supply_source_audit",
+    "freshness_signal"
   ],
+  "material_code_definitions": {
+    "surface_entry_observation": "带 captured_at、surface、query/entry、账号环境和自然/活动/付费标签的入口观察；无后台时不得补写 traffic_source。",
+    "independent_demand_signal": "经语义去重、保留原文/来源/时间的独立用户问题或查询；同一 Brief、活动或转载不重复计为需求。",
+    "supply_source_audit": "逐样本标记 spontaneous、brand_campaign、platform_program、paid_distribution 或 unknown，并保存判断依据。",
+    "freshness_signal": "问题与证据的 last_verified_at、当前变化、失效条件和 unknown；不使用通用固定天数。"
+  },
   "forbidden_material_code_taxonomy": [
     "fabricated_evidence",
     "unverifiable_claim",
