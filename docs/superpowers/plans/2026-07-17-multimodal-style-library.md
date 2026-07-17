@@ -66,7 +66,9 @@
 **Files:**
 - Modify: `tests/evals/scenarios.yaml`
 - Modify: `tests/evals/rubric.md`
+- Modify: `tests/evals/forward-results.json`
 - Create: `tests/evals/style-baseline/<execution-id>.md`
+- Create: `tests/evals/visual-pilot/baseline/*` using only synthetic/user-owned visual material
 - Create: `tests/test_style_eval_contract.py`
 
 **Interfaces:**
@@ -91,7 +93,7 @@ Append scenario IDs and prompts:
 
 - [ ] **Step 2: Execute each scenario once against the unchanged Skill bundle**
 
-Preserve the exact raw response under `tests/evals/style-baseline/`. Record the current bundle hash using:
+Preserve the exact raw response under `tests/evals/style-baseline/`. Append one `phase: red_baseline` metadata object per scenario to `tests/evals/forward-results.json`, including `scenario_id`, `execution_id`, `raw_output_file`, `raw_output_sha256`, `skill_bundle_sha256`, all five style scores, outcome, and failure notes. Record the current bundle hash using:
 
 ```bash
 python3 - <<'PY'
@@ -133,6 +135,8 @@ def test_red_style_baselines_are_preserved(self):
         self.assertTrue(STYLE_DIMENSIONS.issubset(run["scores"]))
         self.assertTrue(any(int(run["scores"][d]) < 3 for d in STYLE_DIMENSIONS))
 ```
+
+Also preserve one actual baseline carousel from a fixed six-page relationship-education brief. A fresh agent uses the current Skill to create the page brief; render it with synthetic shapes/text or user-owned material only, store PNGs plus the raw brief, and record file SHA-256 values. Do not tune the baseline after seeing the new flow.
 
 - [ ] **Step 4: Run the contract test and make the artifacts pass**
 
@@ -229,12 +233,40 @@ Taxonomy JSON top-level keys are exact:
 {
   "taxonomy_version": 1,
   "carrier": ["real_photo_diary", "photo_annotation", "screenshot_markup", "chat_dramatization", "text_card", "checklist_steps", "comparison_warning", "collage_journal", "single_image_reminder", "unknown", "other"],
+  "slide_role": ["cover", "scene", "context", "evidence", "comparison", "step", "boundary", "transition", "summary", "cta", "other"],
   "composition": ["single_focus", "split", "grid", "layered_collage", "full_bleed", "interface_capture", "unknown", "other"],
+  "dominant_material": ["real_photo", "screenshot", "chat_ui", "paper_note", "illustration", "type_only", "mixed", "unknown", "other"],
   "background_type": ["photo", "paper", "screenshot", "solid", "texture", "interface", "mixed", "unknown", "other"],
+  "subject_presence": ["person", "hand", "object", "environment", "interface_only", "none", "unknown", "other"],
+  "layout_structure": ["freeform", "stacked", "split", "grid", "full_bleed_overlay", "chat_flow", "list", "unknown", "other"],
   "text_density": ["sparse", "medium", "dense", "variable", "unknown"],
+  "hierarchy_levels": ["one", "two", "three_plus", "variable", "unknown"],
+  "alignment": ["left", "center", "right", "mixed", "organic", "unknown", "other"],
+  "spacing_pattern": ["tight", "even", "variable", "edge_to_edge", "unknown", "other"],
+  "font_feel": ["system", "editorial", "handwritten", "display", "mixed", "unknown", "other"],
+  "decoration_types": ["none", "sticker", "tape", "doodle", "shape", "emoji", "mixed", "unknown", "other"],
+  "annotation_style": ["none", "circle", "arrow", "underline", "highlight", "handwritten", "mixed", "unknown", "other"],
+  "imperfection_signals": ["none", "uneven_crop", "off_grid", "natural_shadow", "hand_mark", "mixed", "unknown", "other"],
+  "image_text_relationship": ["image_leads", "text_leads", "complementary", "redundant", "unknown", "other"],
+  "text_surface": ["title", "cover", "slide", "caption", "cta", "unknown", "other"],
+  "point_of_view": ["first_person", "second_person", "third_person", "mixed", "unknown", "other"],
+  "audience_address": ["direct", "collective", "implicit", "none", "unknown", "other"],
+  "register": ["spoken", "plain_explanatory", "professional", "diary", "playful", "sales", "mixed", "unknown", "other"],
+  "sentence_length_pattern": ["short", "medium", "long", "mixed", "unknown", "other"],
+  "line_break_pattern": ["sentence", "phrase", "dense_paragraph", "mixed", "unknown", "other"],
+  "punctuation_pattern": ["light", "standard", "expressive", "fragmented", "mixed", "unknown", "other"],
+  "emoji_pattern": ["none", "sparse", "structural", "dense", "mixed", "unknown", "other"],
+  "hook_move": ["name_scene", "state_conflict", "give_answer", "show_evidence", "ask_question", "unknown", "other"],
+  "narrative_moves": ["setup", "turn", "contrast", "reveal", "reflection", "none", "unknown", "other"],
+  "evidence_move": ["show_process", "show_example", "compare", "cite_source", "state_limit", "none", "unknown", "other"],
+  "payoff_move": ["answer", "framework", "script", "decision", "boundary", "none", "unknown", "other"],
+  "cta_move": ["none", "question", "save", "follow", "native_action", "commercial", "unknown", "other"],
+  "image_caption_division": ["image_core_caption_context", "image_summary_caption_detail", "image_evidence_caption_interpretation", "redundant", "unknown", "other"],
   "rule_type": ["cover", "rhythm", "visual", "copy", "material", "anti_pattern"]
 }
 ```
+
+Add a test that every controlled column in `visual_observations` and `copy_observations` has a taxonomy key, and every key except version contains `unknown` plus `other` when open-ended.
 
 - [ ] **Step 4: Implement init and taxonomy loading**
 
@@ -283,7 +315,7 @@ git commit -m "feat: add versioned local style library schema"
 **Interfaces:**
 - Consumes: `style-records.jsonl`, `style-samples.csv`, `posts.csv`, and `query-log.csv` from one run directory.
 - Produces: `ingest_run(db_path: Path, run_dir: Path) -> dict`, `validate_asset_record(record, library_root)`, `validate_no_binary(value) -> None`, and CLI commands `ingest-run`, `upsert-asset`, `upsert-slide`, `upsert-visual`, `upsert-copy`.
-- Test helpers: `self.make_run(run_id="RUN-A", broken_reference=False, capture_status="complete", source_note="observed") -> Path` writes a complete synthetic run with one account, one post, one image asset, one visible slide, one visual observation, one copy observation, and matching manifest/query rows; `self.record_file(record) -> Path` writes one JSON command record; `self.asset_record(asset_path) -> dict` returns a valid synthetic asset except for the requested path; `run_cli_expect_error(*args) -> dict` parses the CLI's JSON error from stderr.
+- Test helpers: `self.make_run(run_id="RUN-A", broken_reference=False, capture_status="complete", source_note="observed") -> Path` writes a complete synthetic run with one account, one post, one image asset, one visible slide, one visual observation, one copy observation, and matching manifest/query rows; `self.record_file(record) -> Path` writes one JSON command record; `self.asset_record(asset_path) -> dict` returns a valid synthetic asset except for the requested path; `self.rewrite_post_metric(run_dir, metric_value) -> None` updates both posts data and its corresponding journal metric; `run_cli_expect_error(*args) -> dict` parses the CLI's JSON error from stderr.
 
 - [ ] **Step 1: Write failing transaction and safety tests**
 
@@ -325,10 +357,22 @@ def test_complete_sample_requires_every_visible_slide_and_required_observation(s
     failed = run_cli_expect_error("ingest-run", self.db, run_dir)
     self.assertEqual(failed["error"], "style_manifest_incomplete")
 
-def test_partial_sample_cannot_be_archetype_support(self):
+def test_partial_sample_is_preserved_for_resume(self):
     run_dir = self.make_run(run_id="RUN-PARTIAL", capture_status="partial")
-    failed = run_cli_expect_error("ingest-run", self.db, run_dir)
-    self.assertEqual(failed["error"], "partial_sample_cannot_support_rule")
+    result = run_cli("ingest-run", self.db, run_dir)
+    self.assertEqual(result["status"], "partial")
+    con = sqlite3.connect(self.db)
+    self.assertEqual(con.execute("SELECT count(*) FROM style_posts").fetchone()[0], 1)
+
+def test_changed_csv_creates_new_receipt_and_appends_observation(self):
+    run_dir = self.make_run(run_id="RUN-UPDATE")
+    first = run_cli("ingest-run", self.db, run_dir)
+    self.rewrite_post_metric(run_dir, metric_value=240)
+    second = run_cli("ingest-run", self.db, run_dir)
+    self.assertNotEqual(first["input_bundle_sha256"], second["input_bundle_sha256"])
+    con = sqlite3.connect(self.db)
+    self.assertEqual(con.execute("SELECT count(*) FROM ingest_receipts").fetchone()[0], 2)
+    self.assertEqual(con.execute("SELECT count(*) FROM style_post_observations").fetchone()[0], 2)
 
 def test_source_instruction_is_stored_as_untrusted_data_not_executed(self):
     marker = self.tmp / "must-not-exist"
@@ -340,7 +384,7 @@ def test_source_instruction_is_stored_as_untrusted_data_not_executed(self):
     self.assertFalse(marker.exists())
 ```
 
-The rollback test asserts row counts remain zero after a record references a nonexistent `slide_id`. The idempotency test imports the same `run_id + journal_sha256` twice and expects `second["inserted"] == 0`.
+The rollback test asserts row counts remain zero after a record references a nonexistent `slide_id`. The idempotency test imports the same `run_id + input_bundle_sha256` twice and expects `second["inserted"] == 0`; changing any normalized accounts/posts/query/style file must create a new receipt and append an observation.
 
 - [ ] **Step 2: Run tests and verify RED**
 
@@ -368,12 +412,15 @@ RECORD_HANDLERS = {
 
 def ingest_run(db_path: Path, run_dir: Path) -> dict[str, object]:
     records = read_jsonl(run_dir / "style-records.jsonl")
-    journal_sha = sha256_file(run_dir / "style-records.jsonl")
+    input_bundle_sha = hash_normalized_inputs(
+        run_dir,
+        ("accounts.csv", "posts.csv", "query-log.csv", "style-samples.csv", "style-records.jsonl"),
+    )
     validate_run_graph(run_dir, records)
     with connect_db(db_path) as con:
         prior = con.execute(
-            "SELECT 1 FROM ingest_receipts WHERE run_id=? AND journal_sha256=?",
-            (read_run_id(run_dir), journal_sha),
+            "SELECT 1 FROM ingest_receipts WHERE run_id=? AND input_bundle_sha256=?",
+            (read_run_id(run_dir), input_bundle_sha),
         ).fetchone()
         if prior:
             return {"status": "ok", "inserted": 0, "idempotent": True}
@@ -381,8 +428,9 @@ def ingest_run(db_path: Path, run_dir: Path) -> dict[str, object]:
             RECORD_HANDLERS[record["record_type"]](con, record, run_dir)
         reconcile_manifest(con, run_dir)
         con.execute("INSERT INTO ingest_receipts VALUES (?, ?, CURRENT_TIMESTAMP)",
-                    (read_run_id(run_dir), journal_sha))
-    return {"status": "ok", "inserted": len(records), "idempotent": False}
+                    (read_run_id(run_dir), input_bundle_sha))
+    return {"status": manifest_status(run_dir), "inserted": len(records),
+            "idempotent": False, "input_bundle_sha256": input_bundle_sha}
 ```
 
 - [ ] **Step 4: Enforce asset and prompt-injection boundaries**
@@ -414,7 +462,7 @@ git commit -m "feat: ingest traceable page-level style observations"
 - Produces: `calculate_archetype_status`, `add_rule_evidence`, `query_archetypes`, `bind_draft`, `compare_text_overlap`, `check_overlap`, `purge_assets`, `record_outcome`, `validate_library` and corresponding CLI commands.
 - Query input: category, carrier, primary job, optional audience state, JSON constraints, JSON materials.
 - Query output: `status`, matched archetype/version/snapshot, selected rules with evidence IDs, references, counterexamples, limitations, and match tier.
-- Test helpers: `self.seed_archetype(status, account_ids, cluster_ids, query_contexts, rule_types=("visual",), with_counter=True) -> dict` creates synthetic observations, rules, and evidence and returns IDs/snapshot; `self.query(**overrides) -> dict` runs the query CLI with defaults `category=care`, `carrier=photo_annotation`, and `primary_job=search_capture`; `self.create_expired_asset(relative_path, retention_until) -> Path` creates a safe synthetic asset row/file; `self.outcome_record(observed_at, decision) -> dict` returns a complete outcome record with nonempty confounds and next variable.
+- Test helpers: `self.seed_archetype(status, account_ids, cluster_ids, query_contexts, rule_types=("visual",), with_counter=True, performance_tiers=None, baseline_valid=True, major_conflict=False, capture_status="complete") -> dict` creates synthetic metrics, baselines, observations, rules, and evidence and returns IDs/snapshot; omitted performance tiers default to `high`; `self.query(**overrides) -> dict` runs the query CLI with defaults `category=care`, `carrier=photo_annotation`, and `primary_job=search_capture`; `self.create_expired_asset(relative_path, retention_until) -> Path` creates a safe synthetic asset row/file; `self.outcome_record(observed_at, decision) -> dict` returns a complete outcome record with nonempty confounds and next variable.
 
 - [ ] **Step 1: Write failing rule and retrieval tests**
 
@@ -429,6 +477,24 @@ def test_reusable_requires_three_accounts_two_query_contexts(self):
     seeded = self.seed_archetype("supported", ["A", "B", "C"], ["C1", "C2", "C3"],
                                  [("notes", "hot"), ("notes", "latest")])
     self.assertEqual(calculate_archetype_status(self.con, seeded["archetype_id"]), "reusable")
+
+def test_absolute_popularity_or_unknown_baseline_stays_candidate(self):
+    unknown = self.seed_archetype("candidate", ["A", "B"], ["C1", "C2"], [("notes", "hot")],
+                                  baseline_valid=False)
+    self.assertEqual(calculate_archetype_status(self.con, unknown["archetype_id"]), "candidate")
+    ordinary = self.seed_archetype("candidate", ["D", "E"], ["C3", "C4"], [("notes", "hot")],
+                                   performance_tiers=("ordinary", "ordinary"))
+    self.assertEqual(calculate_archetype_status(self.con, ordinary["archetype_id"]), "candidate")
+
+def test_major_unexplained_conflict_blocks_reusable(self):
+    seeded = self.seed_archetype("supported", ["A", "B", "C"], ["C1", "C2", "C3"],
+                                 [("notes", "hot"), ("notes", "latest")], major_conflict=True)
+    self.assertNotEqual(calculate_archetype_status(self.con, seeded["archetype_id"]), "reusable")
+
+def test_partial_sample_is_not_counted_as_support(self):
+    partial = self.seed_archetype("candidate", ["A", "B"], ["C1", "C2"], [("notes", "hot")],
+                                  capture_status="partial")
+    self.assertEqual(calculate_archetype_status(self.con, partial["archetype_id"]), "candidate")
 
 def test_same_observation_may_support_rule_a_and_counter_rule_b(self):
     ids = self.seed_archetype("supported", ["A", "B"], ["C1", "C2"], [("notes", "hot")])
@@ -445,7 +511,9 @@ def test_same_rule_observation_pair_cannot_have_opposite_roles(self):
 def test_query_fallback_order_and_no_match_status(self):
     self.seed_archetype("supported", ["A", "B"], ["C1", "C2"], [("notes", "hot")])
     self.assertEqual(self.query()["match_tier"], "category_carrier_job")
-    empty = self.query(category="unrepresented-category")
+    fallback = self.query(category="unrepresented-category")
+    self.assertEqual(fallback["match_tier"], "cross_category_carrier_job")
+    empty = self.query(carrier="unrepresented-carrier", primary_job="unrepresented-job")
     self.assertEqual(empty["status"], "needs_style_research")
 
 def test_copy_visual_and_both_bindings_require_matching_rule_types(self):
@@ -493,7 +561,7 @@ Expected: FAIL on missing commands and status logic.
 
 - [ ] **Step 3: Implement status calculation and immutable snapshots**
 
-`calculate_archetype_status` counts distinct `library_account_id`, distinct nonduplicate `cluster_id`, and distinct `(search_surface, sort_or_filter)` support contexts; it also requires at least one counterexample or boundary observation from an independent cluster. `snapshot_sha256` hashes canonical JSON containing archetype ID, version, sorted rule IDs/payloads, taxonomy version, and status.
+`calculate_archetype_status` counts only complete support observations with `performance_tier=high`, a same-metric baseline snapshot, a finite recomputable multiple, no duplicate cluster, and no major unexplained confound. It counts distinct `library_account_id`, distinct nonduplicate `cluster_id`, and distinct `(search_surface, sort_or_filter)` contexts; it also requires at least one counterexample or boundary observation from an independent cluster. Unknown baseline, absolute-only popularity, ordinary/low support, partial capture, and major unresolved conflict cannot upgrade an archetype. `snapshot_sha256` hashes canonical JSON containing archetype ID, version, sorted rule IDs/payloads, taxonomy version, and status.
 
 - [ ] **Step 4: Implement ordered retrieval and fail-closed result**
 
@@ -568,7 +636,7 @@ git commit -m "feat: ground drafts in versioned style rules"
 **Interfaces:**
 - Adds SCHEMAS entries/columns exactly as specified in the design.
 - Adds `validate_style_contract()`, `validate_style_manifest()`, `validate_draft_style_binding()`, and `validate_draft_assets()` to the existing validator flow.
-- Legacy runs without style fields remain valid as historical checkpoints; new complete/ready runs fail closed.
+- Default validation requires `run_contract_version: 2`; legacy runs require explicit CLI `--allow-legacy-contract` and cannot produce a current complete/ready release verdict.
 
 - [ ] **Step 1: Update test headers and write failing validator cases**
 
@@ -588,7 +656,7 @@ DRAFT_ASSET_HEADER = ["draft_asset_id", "draft_id", "slide_index", "asset_path",
                       "style_rule_ids", "review_status", "revision_of", "notes"]
 ```
 
-Tests must cover: complete discovery missing style capture; partial high/control sample; run-local/library ID mismatch; candidate primary; stale snapshot; copy/visual type mismatch; `needs_style_research` paired with ready; rendered request without assets; bad asset hash; one page not PASS; actual rendered PASS; and unchanged legacy run validation.
+Tests must cover: version-2 complete discovery missing style capture; a new run omitting `run_contract_version`; explicit legacy validation; an edited legacy ready run that must migrate; partial high/control sample; run-local/library ID mismatch; candidate primary; stale snapshot; copy/visual type mismatch; `needs_style_research` paired with ready; rendered request without assets; bad asset hash; missing middle slide; duplicate `slide_index`; generated ID omitted from the frontmatter set; one page not PASS; and exact full-set rendered PASS.
 
 - [ ] **Step 2: Run focused validator tests and verify RED**
 
@@ -598,9 +666,12 @@ Expected: FAIL because fields and validation methods are absent.
 
 - [ ] **Step 3: Update templates and frontmatter contract**
 
+Set `run_contract_version: 2` in `run-template.yaml`; discovery/refresh use `style_requirement: both`, mechanism uses `none`, and draft derives `copy | visual | both` from the requested deliverable.
+
 Draft metadata includes exact keys:
 
 ```yaml
+style_contract_version: 1
 style_requirement: both
 style_library_path: ../_style_library/style-library.sqlite
 style_taxonomy_version: 1
@@ -615,13 +686,14 @@ style_binding_status: needs_style_research
 visual_delivery_requirement: brief
 visual_delivery_status: brief_only
 generated_asset_ids: none
+expected_visual_slide_indexes: none
 ```
 
 Add `## 风格检索与规则合同` and `## 逐页视觉 QA` headings with explicit rule/evidence and page review fields.
 
 - [ ] **Step 4: Implement validator gates**
 
-Resolve `style_library_path` relative to the run directory. For new runs, require style files based on mode/requirement. For ready drafts, open SQLite read-only, verify primary/secondary counts, archetype version/snapshot, selected rule existence/evidence, type coverage, reference/counterexample IDs, and matching draft binding. If `visual_delivery_requirement=rendered`, verify every generated asset row, file, SHA, rule IDs, and PASS review; otherwise reject ready.
+Resolve `style_library_path` relative to the run directory. Default validation rejects missing/unknown `run_contract_version`; `--allow-legacy-contract` reports a legacy checkpoint but never current `VALID_COMPLETE`. For version 2 runs, require style files based on mode/requirement. For ready drafts, open SQLite read-only, verify `style_contract_version`, primary/secondary counts, archetype version/snapshot, selected rule existence/evidence, type coverage, reference/counterexample IDs, and matching draft binding. If `visual_delivery_requirement=rendered`, require `generated_asset_ids` to resolve to exactly one current asset for every unique index in `expected_visual_slide_indexes`; reject missing/extra/duplicate indexes, old revisions, missing files, bad SHA, absent rule IDs, or non-PASS review.
 
 - [ ] **Step 5: Run validator and asset tests**
 
@@ -755,13 +827,19 @@ git commit -m "docs: explain evidence-grounded visual workflow"
 - Modify: `tests/evals/rubric.md`
 - Modify: `tests/evals/forward-results.json`
 - Create: `tests/evals/raw/<execution-id>.md`
+- Create: `tests/evals/visual-pilot/new/*` using only synthetic/user-owned visual material
+- Create: `tests/evals/visual-pilot/blind-review.md`
 - Modify: `tests/test_eval_artifacts.py`
 - Modify: `tests/test_style_eval_contract.py`
 
 **Interfaces:**
 - Produces: two independently generated passing raw outputs for each existing high-risk release scenario and each of the three new style scenarios, all pinned to the final Skill bundle SHA-256.
 
-- [ ] **Step 1: Extend release-gate dimensions and scenarios**
+- [ ] **Step 1: Run a pre-eval whole-branch code and methodology review**
+
+Generate a review package from merge base through current HEAD. The reviewer checks cross-run IDs, high-performance/baseline eligibility, partial resume semantics, rule evidence/versioning, current-contract migration, exact rendered-page coverage, asset privacy, and Skill behavior. Fix every confirmed Critical/Important issue and rerun the affected suites before freezing the bundle.
+
+- [ ] **Step 2: Extend release-gate dimensions and scenarios**
 
 Add the five style dimensions to the rubric with 0–4 anchors. Require two current-bundle passing runs for `style-zero-evidence-pressure`, `style-single-post-copy`, and `style-skip-retrieval`. Semantic checks require:
 
@@ -773,21 +851,25 @@ STYLE_PATTERNS = {
 }
 ```
 
-- [ ] **Step 2: Compute the final Skill bundle hash**
+- [ ] **Step 3: Run the actual visual pilot and blind review**
+
+Using the same fixed six-page brief and synthetic/user-owned material as Task 1, query a local style library built from ordinary-login-visible current-category high/control observations, generate the new carousel, and actually open every PNG. Keep third-party source images/private text outside Git; the committed report may retain only library IDs/hashes and abstract rules. Give baseline/new images anonymous A/B labels to a fresh reviewer and record page-specific scores for `style_grounding`, `copy_grounding`, `visual_naturalness`, `non_copying`, and `delivery_claim`. If the required private observations or actual rendered images cannot be obtained, write `status: incomplete` with the exact missing input and do not claim the visual-effect acceptance criterion passed.
+
+- [ ] **Step 4: Compute the final Skill bundle hash**
 
 Use the exact hash script from Task 1 after every `redbook-writing/**` change is complete. Do not edit the Skill bundle after generating current-bundle artifacts; if it changes, regenerate all current-bundle runs.
 
-- [ ] **Step 3: Generate independent raw outputs**
+- [ ] **Step 5: Generate independent raw outputs**
 
 Use separate agent executions with unique IDs. Preserve raw output verbatim; score each assertion with literal evidence fragments found in that raw output. Do not duplicate one answer and rename it.
 
-- [ ] **Step 4: Run eval artifact tests**
+- [ ] **Step 6: Run eval artifact tests**
 
 Run: `python3 -m unittest tests.test_eval_artifacts tests.test_style_eval_contract -v`
 
 Expected: PASS with two unique execution IDs and two unique raw hashes for every required scenario.
 
-- [ ] **Step 5: Commit evaluation evidence**
+- [ ] **Step 7: Commit evaluation evidence**
 
 ```bash
 git add tests/evals tests/test_eval_artifacts.py tests/test_style_eval_contract.py
@@ -819,7 +901,7 @@ python3 redbook-writing/scripts/style_library.py init /tmp/redbook-style-review.
 python3 redbook-writing/scripts/style_library.py validate /tmp/redbook-style-review.sqlite
 git diff --check
 git status --short
-git ls-files | rg '/_style_library/|style-library\.sqlite|/raw/.*\.(png|jpe?g|webp)$' && exit 1 || true
+if git ls-files | rg -q '/_style_library/|style-library\.sqlite|/raw/.*\.(png|jpe?g|webp)$'; then exit 1; fi
 ```
 
 Expected: compile succeeds; CLI returns JSON `status=ok`; diff check is clean; no private runtime asset is tracked.
@@ -840,7 +922,7 @@ Expected: no implementation placeholder or obsolete contract field remains.
 
 - [ ] **Step 5: Request independent code and methodology review**
 
-Reviewer checks P0: cross-run IDs, rule-to-observation traceability, ready fail-closed, real-image delivery claims, metric reproducibility, capture completeness, asset/privacy safety, and RED→GREEN eval integrity. Fix every confirmed P0/P1 and rerun Steps 1–4.
+Reviewer checks P0: cross-run IDs, rule-to-observation traceability, ready fail-closed, real-image delivery claims, metric reproducibility, capture completeness, asset/privacy safety, and RED→GREEN eval integrity. Fix every confirmed P0/P1 and rerun Steps 1–4. If any fix changes `redbook-writing/**`, return to Task 8 Step 3, recompute the bundle hash, regenerate every required current-bundle raw run, and rerun eval artifact tests before publishing.
 
 - [ ] **Step 6: Commit any review fixes and push**
 
@@ -857,5 +939,5 @@ Expected: push succeeds and local HEAD equals the remote feature branch HEAD.
 
 - Spec coverage: storage, cross-run identity, page capture, metric baselines, controlled taxonomy, rule evidence/versioning, retrieval, binding, actual visual delivery, anti-PPT, privacy, prompt injection, overlap limits, retention, feedback outcomes, compatibility, RED/GREEN evaluation, and README are each mapped to a task.
 - Placeholder scan: every test step names concrete inputs and assertions; no deferred implementation or unspecified error-handling step remains.
-- Type consistency: run-local IDs use `run_*_id`; long-lived IDs use `library_*_id`; draft binds `selected_style_rule_ids`, `style_archetype_version`, and `style_archetype_snapshot_sha256`; visual delivery uses `visual_delivery_requirement` and `visual_delivery_status` consistently across schema, validator, Skill, and tests.
+- Type consistency: run-local IDs use `run_*_id`; long-lived IDs use `library_*_id`; current runs/drafts use `run_contract_version: 2` and `style_contract_version: 1`; draft binds `selected_style_rule_ids`, `style_archetype_version`, and `style_archetype_snapshot_sha256`; visual delivery uses an exact `expected_visual_slide_indexes ↔ generated_asset_ids ↔ draft-assets.csv` set relationship.
 - Execution choice: user explicitly authorized direct execution and self-review, so use subagent-driven implementation with non-overlapping file ownership and root review after each task; do not pause for another approval checkpoint.

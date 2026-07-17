@@ -139,6 +139,7 @@ style_sample_id,post_id,query_ids,performance_tier,carrier,primary_job_scope,sli
 - 每个被 `query-log.csv.selected_post_ids` 选中的图文/轮播高表现样本和同账号对照，必须有且只有一行 manifest；
 - `complete` 必须能在 SQLite 中解析到帖子、所有可见页以及所需 visual/copy observation；
 - `partial/blocked` 必须写真实限制，不能被用于升级原型或放行 ready draft；
+- `partial/blocked` 仍要事务性入库并保存续跑点；禁止的是充当 support，不是丢弃失败现场；
 - `query-log.csv` 追加 `selected_style_sample_ids,new_style_patterns,style_capture_result`，以便区分“发现了帖子”和“完成了风格学习”；旧 run 不追溯补造。
 
 `posts.csv` 追加以下硬门字段：
@@ -364,6 +365,8 @@ taxonomy_version
 
 这些数量是 Skill 的研究门槛，不是平台规律。独立证据还必须来自不同内容 cluster；三个搬运账号不计三个独立样本。
 
+原型晋级还要求每条 support 能连接到 `performance_tier=high`、同指标可复算 baseline/multiple 与无重大未解释混杂的 post observation。只有绝对互动、baseline unknown、账号/内容 cluster 不独立或存在重大未解释冲突时，最多保持 `candidate`。普通/低表现样本只能作为 counterexample/boundary，不能凑 support 数量。
+
 ### `archetype_rules` 与 `rule_evidence`
 
 风格规则逐条版本化，不能把整包 JSON 和自由文本当作证据链：
@@ -487,7 +490,7 @@ posts.csv 内容身份与表现快照
 
 ### 受控词表与未知值
 
-`composition`、`background_type`、`text_density`、`layout_structure`、`register`、`hook_move`、`carrier` 等可检索字段由 `assets/style-taxonomy-v1.json` 提供版本化枚举；`notes` 只补充例外，不承载核心筛选逻辑。观察不到时写 `unknown`，发现新模式先以 `other + notes` 进入候选，经过独立复核后再升级 taxonomy 版本，不能临场创造同义词导致库无法聚类。
+`carrier`、`slide_role` 以及 visual/copy observation 中除自由 `notes` 外的所有分类特征，都由 `assets/style-taxonomy-v1.json` 提供版本化枚举，包括 `composition`、`dominant_material`、`background_type`、`subject_presence`、`layout_structure`、`text_density`、`hierarchy_levels`、`alignment`、`spacing_pattern`、`font_feel`、`decoration_types`、`annotation_style`、`imperfection_signals`、`image_text_relationship`、`text_surface`、`point_of_view`、`audience_address`、`register`、句长/换行/标点/emoji 模式、`hook_move`、叙事/证据/payoff/CTA move 与图文分工。`notes` 只补充例外，不承载核心筛选逻辑。观察不到时写 `unknown`，发现新模式先以 `other + notes` 进入候选，经过独立复核后再升级 taxonomy 版本，不能临场创造同义词导致库无法聚类。
 
 ## 生成时的检索合同
 
@@ -535,16 +538,20 @@ anti_patterns
 `run.yaml` 增加：
 
 ```yaml
+run_contract_version: 2
 style_requirement: both  # none | copy | visual | both
 style_library_path: ../_style_library/style-library.sqlite
 style_taxonomy_version: 1
 ```
 
-所有相对路径统一相对 run 目录解析，避免依赖调用脚本时的当前工作目录。`mechanism` 默认 `none`；新 discovery/refresh 默认 `both`；只交付标题/正文的 draft 为 `copy`；封面、轮播或图片交付使用 `visual` 或 `both`。旧 run 缺字段按 legacy 处理，但一旦修改为 complete/ready 就必须迁移。
+所有相对路径统一相对 run 目录解析，避免依赖调用脚本时的当前工作目录。`mechanism` 默认 `none`；新 discovery/refresh 默认 `both`；只交付标题/正文的 draft 为 `copy`；封面、轮播或图片交付使用 `visual` 或 `both`。
+
+验证器默认要求 `run_contract_version: 2`；历史 run 只有显式使用 `--allow-legacy-contract` 才能按旧合同检查，且这种结果不能升级为当前 `VALID_COMPLETE/ready`。新 run 省略 version 不能自动冒充 legacy。一旦编辑旧 run 并希望按当前完整状态交付，必须迁移版本和风格合同。
 
 Draft frontmatter 增加：
 
 ```yaml
+style_contract_version: 1
 style_requirement: both
 style_library_path: ../_style_library/style-library.sqlite
 style_taxonomy_version: 1
@@ -559,6 +566,7 @@ style_binding_status: grounded
 visual_delivery_requirement: rendered
 visual_delivery_status: rendered_pass
 generated_asset_ids: DRAFT-ASSET-001;DRAFT-ASSET-002
+expected_visual_slide_indexes: 1;2
 ```
 
 `style_binding_status` 只允许 `grounded | needs_style_research | needs_revision`。Draft 顶层 `status` 继续只允许现有的 `needs_review | ready | blocked`；`needs_style_research` 只出现在 style binding，不新增第四种 draft status。
@@ -578,6 +586,8 @@ draft_asset_id,draft_id,slide_index,asset_path,asset_sha256,width,height,render_
 ```
 
 只有每一页文件存在、哈希匹配、实际打开检查、逐页 QA 为 PASS，draft 才能写 `visual_delivery_status=rendered_pass`。无法稳定排长中文、没有图片能力或未实际查看时降级 `brief_only/rendered_needs_review`，draft 不得以最终图片“可发布”名义 ready。`rendered_pass` 证明已按合同审查，不承诺审美结果或流量。
+
+`expected_visual_slide_indexes` 是本稿当前版本预期页面的唯一集合；`generated_asset_ids` 必须在 `draft-assets.csv` 中恰好解析为每个 index 一张当前资产。缺中间页、重复 index、额外未声明页、旧 revision 冒充当前页或 ID 漏列均阻断 `rendered_pass`。
 
 ## Draft 生成行为
 
@@ -680,7 +690,7 @@ style_library.py upsert-slide <db> --record <json>
 style_library.py upsert-visual <db> --record <json>
 style_library.py upsert-copy <db> --record <json>
 style_library.py upsert-archetype <db> --record <json>
-style_library.py query <db> --category ... --carrier ... --primary-job ... [--audience-state ...] [--constraints-json ...] [--materials-json ...]
+style_library.py query <db> --category <category> --carrier <carrier> --primary-job <job> [--audience-state <state>] [--constraints-json <json>] [--materials-json <json>]
 style_library.py bind-draft <db> --draft <path> --record <json>
 style_library.py check-overlap <db> --draft <path>
 style_library.py record-outcome <db> --record <json>
@@ -691,7 +701,7 @@ style_library.py validate <db>
 
 所有写入接收 JSON 文件或标准输入，不把自由文本拼进 SQL。命令返回结构化 JSON 和非零错误码，便于 Skill 与测试复用。`query` 返回匹配理由、支持样本、反例、规则和限制，不只返回 style ID。
 
-`ingest-run` 必须先校验 `style-records.jsonl`、`style-samples.csv` 与 query/post 引用图，再在单个事务中写入；任何断链都回滚。重复导入同一 `run_id + source_csv_sha256` 为幂等操作；同一帖子后续重新采集则追加 observation，不覆盖历史快照。
+`ingest-run` 必须先校验 `style-records.jsonl`、`style-samples.csv` 与 query/post 引用图，再在单个事务中写入；任何断链都回滚。幂等 receipt 使用 `run_id + input_bundle_sha256`，后者覆盖 style journal、style manifest、posts、accounts 与 query log 的规范化内容。完全相同输入重复导入为幂等；任一 CSV 或 journal 改变都生成新 receipt并追加 observation，不覆盖历史快照。
 
 ## 验证策略
 
