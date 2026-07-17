@@ -1320,12 +1320,6 @@ class RunValidator:
                 "run.yaml",
                 f"invalid objective_primary_job: {primary_job}",
             )
-        if objective == "traffic_first" and primary_job != "feed_stop":
-            self.error(
-                "objective_job_mismatch",
-                "run.yaml",
-                "business_objective=traffic_first requires objective_primary_job=feed_stop",
-            )
         visibility = self.run.get("performance_visibility_scope", "")
         if visibility not in V2_PERFORMANCE_VISIBILITY_SCOPES:
             self.error(

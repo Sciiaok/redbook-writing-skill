@@ -3475,6 +3475,19 @@ class StyleContractFastPathTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("invalid_v2_style_enum", result.stdout)
 
+    def test_traffic_first_allows_a_non_feed_content_job(self) -> None:
+        self.fixture.set_run_field("objective_primary_job", "search_answer")
+        write_csv(
+            self.fixture.path / "topics.csv",
+            [base_topic(primary_job="search_answer")],
+        )
+        self.write_v2_draft(
+            primary_job="search_answer",
+            style_query_primary_job="search_answer",
+        )
+        result = self.run_validator()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def test_ready_style_draft_cannot_stop_at_needs_style_research(self) -> None:
         self.write_v2_draft(status="ready")
         result = self.run_validator()
