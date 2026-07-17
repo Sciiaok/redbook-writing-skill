@@ -163,7 +163,7 @@
 - 可迁移假设：可以测试 `固定的非真人代理 IP → 一个广泛但具体的关系/身份矛盾 → 可连续扩写的同一隐喻语义场 → 单图只负责停留、长文负责兑现`。对成人亲密关系内容，可迁移的是“低防御代理人”和系列语法，例如由一个虚构物件或身体感受代替营销号讲道理；不得直接复制 `屁股`、原句、同款封面或作者的隐喻资产。
 - 关键反证：同一个账号、同一发布时间段、同一模板、同一篇幅、同一代理词仍出现 50—180 倍以上的点赞差异。`屁股`、纯色大字、千字长文都不是充分条件；题目命中、首句、叙事兑现、账号历史、未知分发和外部传播仍可能混杂。
 - 商业边界：该账号证明的是文化/随笔内容能够形成高互动离群值，不证明受众具有成人用品购买意图，也不证明字卡适合商业承接。关系教育与 SKU 销售必须分别验证；不得用性暗示或身体局部把文化样本粗暴改成商品流量钩子。
-- 当前资格：强 `candidate-high + matched controls`。它可进入 `feed_stop / long_caption_reading / serial_identity` 的候选原型与反例库；在独立账号、不同代理 IP 与实际曝光数据复现前，不得升级为“流量公式”。
+- 当前资格：`same-template public-proxy control candidate`，不是 matched control。纯色字卡、大字、`屁股` 代理词和千字 caption 在高低样本中共同存在，只能标为 `series_constant / not_performance_evidence`；当前真正可检验的只是“选题/推进在稳定模板内仍产生巨大公开互动差异”。在 matched feature contrast、独立账号与一方曝光数据出现前，不得升级为 performance rule 或“流量公式”。
 
 ### O-XHS-012｜关系档案的视觉资产是“时间证据”，不是统一精修
 
@@ -176,7 +176,7 @@
 - 同载体边界对照：同账号 `Plog碎碎念｜max执行力后生活chillchill的👌`（note ID `680fb4510000000023003a3c`）为 17 页真实照片轮播，约 1805 赞、137 收藏、122 评论；它证明“大量真实照片 + 多页 PLOG”本身不足以解释目标表现。该帖 primary job 不是关系信任，因此只能作为 carrier 边界对照，不能冒充严格的同题 matched control。
 - 可迁移假设：当 primary job 是 `relationship_build / trust_build` 时，可优先寻找作者本人或经授权的真实时间档案，并让每一页回答“这张图证明了关系的哪个变化”；页面之间允许材质不一致，只需保持叙事顺序和轻量文字规则。若没有真实档案，应改用明确虚构、插画或物件代理载体，不能用 AI 人像合成一段“共同生活史”。
 - 关键反证：账号阶段、人物吸引力、跨文化伴侣、周年节点、旧帖持续累积和外部传播都可能抬高互动；当前没有第二个账号的相同结构、也没有同题低表现轮播。不得把 18 页、情侣合照、白色小字、旅行照片或周年标题写成通用流量公式。
-- 当前资格：强 `candidate-high + carrier boundary control`。可进入 `trust_build / chronological_proof / archive_carousel` 的候选原型；在独立账号和同题低对照出现前，不能晋级为可复用规则。
+- 当前资格：`public-proxy candidate-high + carrier boundary`。时间档案机制当前只能作为 `task_fit / not_performance_evidence` 生产假设；在独立账号和同题低对照出现前，不能晋级为 performance rule 或可复用流量规则。
 
 ## 目前可以写进一次性 prompt 的内容
 
