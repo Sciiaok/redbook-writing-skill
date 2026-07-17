@@ -11,30 +11,32 @@
   "non_guarantee": "这些卡是任务适配与视觉生产候选，不是 starter、爆款公式、推荐算法结论或表现证据。公开互动样本只用于发现问题与反例；没有具体账号的一方 impressions/reach 实验，不得声称某张卡更容易获得流量。",
   "selection_contract": {
     "required_filters": [
+      "exact category",
       "exact primary_job",
       "exact carrier",
       "all required materials backed by valid asset_manifest_refs",
       "material count gates",
       "no active contraindication",
-      "exact published style binding in production"
+      "SQLite-reconciled exact published style binding in production"
     ],
     "selection_order": [
-      "验证 manifest 的 hash、权利、授权/许可、变换、隐私、商业披露与有效期",
-      "按 primary_job 和 carrier 精确匹配",
+      "解析 manifest-root 下真实文件并验证 path、hash、适用尺寸、权利、授权/许可、变换、隐私、商业披露与有效期",
+      "按 category、primary_job 和 carrier 精确匹配",
       "按 required_materials、count gate 和 contraindication 淘汰",
-      "生产态绑定 exact published style binding；探索态保留 prototype_only",
+      "生产态从 v2 SQLite 回链 exact published binding/archetype/rules 并重算 publication hashes；探索态保留 prototype_only",
       "只迁移证据/注意力骨架，审美由 binding 决定"
     ],
     "failure_statuses": {
       "no_eligible_card": "任务、载体、素材数量或禁忌条件不满足",
-      "prototype_gap": "候选骨架存在，但缺 published style binding 或基础方向"
+      "prototype_gap": "候选骨架存在，但缺 SQLite 可回链的 exact published style binding 或基础方向"
     },
     "forbidden_shortcuts": [
       "不得因参考帖公开互动高就把方向标为高表现",
-      "不得为了套卡改变 primary_job 或 carrier",
+      "不得为了套卡改变 category、primary_job 或 carrier",
       "不得用 AI 图、伪截图、伪聊天、借图或合成前后对比补证据",
       "不得复制作者原句、人物、代理 IP、独特构图、配色或页面顺序",
-      "不得让候选卡或系列卡在生产态成为唯一方向"
+      "不得让候选卡或系列卡在生产态成为唯一方向",
+      "不得把 standalone JSON 或裸 URL + 自报 hash 当 publication/asset receipt"
     ]
   },
   "source_namespace_map": {
@@ -5764,8 +5766,10 @@
     "container_field": "asset_manifest_refs",
     "required_fields": [
       "asset_id",
+      "asset_path",
       "material_codes",
       "sha256",
+      "media_dimensions",
       "rights_basis",
       "authorization_ref",
       "license_ref",
@@ -5777,7 +5781,8 @@
     "nullable_fields": {
       "authorization_ref": "only_when_rights_basis_does_not_require_it",
       "license_ref": "only_when_rights_basis_is_not_licensed",
-      "expires_at": "only_for_non_expiring_rights_or_currentness"
+      "expires_at": "only_for_non_expiring_rights_or_currentness",
+      "media_dimensions": "only_for_non_visual_files"
     },
     "rights_basis_allowed": [
       "owned",
@@ -5796,24 +5801,66 @@
       "reviewed_no_relationship"
     ],
     "hash_contract": "sha256_lowercase_hex_64",
-    "count_unit": "distinct_asset_id_per_material_code"
+    "count_unit": "distinct_asset_id_per_material_code",
+    "locator_contract": {
+      "mode": "local_file_only",
+      "manifest_root": "directory_containing_manifest",
+      "asset_path": "relative_path_below_manifest_root",
+      "reject": [
+        "absolute_path",
+        "parent_path_segment",
+        "missing_or_non_regular_file",
+        "resolved_path_outside_manifest_root",
+        "symlink_resolving_outside_manifest_root"
+      ],
+      "non_file_source_policy": "not accepted by this selector; add a distinct verified_private_locator plus an independent verification_receipt contract before enabling any provider"
+    },
+    "media_dimensions_contract": {
+      "required_for_extensions": [
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".gif",
+        ".webp",
+        ".mp4",
+        ".mov",
+        ".m4v",
+        ".webm"
+      ],
+      "fields": [
+        "width_px",
+        "height_px"
+      ],
+      "verification": "detect visual media by file signature as well as extension, then read dimensions from the located file after sha256 verification; video requires ffprobe"
+    }
   },
   "style_binding_contract": {
     "required_in_production": true,
-    "required_fields": [
-      "binding_id",
-      "status",
-      "primary_job",
-      "carrier",
-      "snapshot_id",
-      "style_rule_ids",
-      "aesthetic_contract"
+    "source": "sqlite_publication_reconciliation_only",
+    "required_cli_inputs": [
+      "style_library",
+      "draft_binding_id"
     ],
-    "status_required": "published",
+    "sqlite_user_version": 2,
+    "required_publication_tables": [
+      "style_archetypes",
+      "archetype_publications",
+      "archetype_rules",
+      "archetype_rule_publications",
+      "draft_style_bindings",
+      "draft_binding_publications"
+    ],
     "exact_match_fields": [
+      "category",
       "primary_job",
       "carrier"
     ],
+    "hash_reconciliation": [
+      "archetype_snapshot_sha256",
+      "binding_sha256",
+      "selected_rule_rule_sha256"
+    ],
+    "standalone_json_policy": "rejected_self_declared_not_publication_evidence",
     "aesthetic_fields_required": [
       "palette",
       "typography",

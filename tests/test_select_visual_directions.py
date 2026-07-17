@@ -3,9 +3,11 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import sqlite3
 import subprocess
 import tempfile
 import unittest
+from base64 import b64decode
 from pathlib import Path
 
 
@@ -18,11 +20,18 @@ def receipt(
     asset_id: str,
     *material_codes: str,
     expires_at: str | None = None,
+    asset_path: str | None = None,
+    media_dimensions: dict[str, int] | None = None,
+    test_content: bytes | None = None,
+    test_symlink_outside: bool = False,
 ) -> dict[str, object]:
-    return {
+    content = test_content if test_content is not None else asset_id.encode()
+    payload: dict[str, object] = {
         "asset_id": asset_id,
+        "asset_path": asset_path or f"assets/{asset_id}.txt",
         "material_codes": list(material_codes),
-        "sha256": hashlib.sha256(asset_id.encode()).hexdigest(),
+        "sha256": hashlib.sha256(content).hexdigest(),
+        "media_dimensions": media_dimensions,
         "rights_basis": "owned",
         "authorization_ref": None,
         "license_ref": None,
@@ -31,25 +40,216 @@ def receipt(
         "commercial_disclosure": "not_applicable",
         "expires_at": expires_at,
     }
+    if test_content is not None:
+        payload["_test_content_hex"] = content.hex()
+    if test_symlink_outside:
+        payload["_test_symlink_outside"] = True
+    return payload
 
 
-def binding(job: str, carrier: str) -> dict[str, object]:
+def canonical_json(value: object) -> str:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def canonical_row_sha256(*values: object) -> str:
+    normalized = [float(value) if isinstance(value, float) else value for value in values]
+    return hashlib.sha256(canonical_json(normalized).encode()).hexdigest()
+
+
+def binding(
+    job: str,
+    carrier: str,
+    category: str = "test-category",
+    *,
+    tamper_binding_hash: bool = False,
+) -> dict[str, object]:
     return {
-        "binding_id": "DSB-TEST-001",
-        "status": "published",
+        "draft_binding_id": "DSB-TEST-001",
+        "category": category,
         "primary_job": job,
         "carrier": carrier,
-        "snapshot_id": "SNAP-TEST-001",
-        "style_rule_ids": ["RULE-TEST-001"],
-        "aesthetic_contract": {
-            "palette": "from published binding",
-            "typography": "from published binding",
-            "image_treatment": "from published binding",
-            "density": "from published binding",
-            "annotation_language": "from published binding",
-            "crop_logic": "from published binding",
-        },
+        "tamper_binding_hash": tamper_binding_hash,
     }
+
+
+def write_style_library(path: Path, spec: dict[str, object]) -> None:
+    category = str(spec["category"])
+    job = str(spec["primary_job"])
+    carrier = str(spec["carrier"])
+    draft_binding_id = str(spec["draft_binding_id"])
+    archetype_id = "ARCH-TEST-001"
+    archetype_version = 1
+    confidence = 0.9
+    archetype_values = (
+        archetype_id,
+        "Test published archetype",
+        category,
+        carrier,
+        job,
+        "test audience",
+        "test description",
+        "medium",
+        confidence,
+        "supported",
+        archetype_version,
+        2,
+    )
+    snapshot_sha256 = canonical_row_sha256(*archetype_values)
+    rule_id = "RULE-TEST-001"
+    rule_payload = {
+        "palette": {"source": "published observation"},
+        "typography": {"source": "published observation"},
+        "image_treatment": {"source": "published observation"},
+        "density": {"source": "published observation"},
+        "annotation_language": {"source": "published observation"},
+        "crop_logic": {"source": "published observation"},
+    }
+    rule_payload_json = canonical_json(rule_payload)
+    rule_hash = canonical_row_sha256(
+        rule_id,
+        archetype_id,
+        archetype_version,
+        "visual",
+        rule_payload_json,
+        "exact category/job/carrier",
+        "active",
+    )
+    selected_rule_ids = canonical_json([rule_id])
+    reference_posts = canonical_json(["POST-REF"])
+    counter_posts = canonical_json(["POST-COUNTER"])
+    material_plan = canonical_json({"asset_manifest_required": True})
+    deviations = canonical_json([])
+    anti_patterns = canonical_json(["generic-ai-ppt"])
+    draft_id = "DRAFT-TEST-001"
+    binding_hash = canonical_row_sha256(
+        draft_binding_id,
+        draft_id,
+        "library",
+        archetype_id,
+        archetype_version,
+        snapshot_sha256,
+        None,
+        None,
+        None,
+        None,
+        selected_rule_ids,
+        reference_posts,
+        counter_posts,
+        material_plan,
+        deviations,
+        anti_patterns,
+        "PASS",
+    )
+    if spec.get("tamper_binding_hash"):
+        binding_hash = "0" * 64
+
+    con = sqlite3.connect(path)
+    try:
+        con.executescript(
+            """
+            PRAGMA user_version = 2;
+            CREATE TABLE style_archetypes (
+                archetype_id TEXT PRIMARY KEY, name TEXT, category_scope TEXT,
+                carrier TEXT, primary_job_scope TEXT, audience_state TEXT,
+                description TEXT, production_cost TEXT, confidence REAL,
+                status TEXT, current_version INTEGER, snapshot_sha256 TEXT,
+                taxonomy_version INTEGER
+            );
+            CREATE TABLE archetype_publications (
+                archetype_id TEXT, archetype_version INTEGER,
+                archetype_snapshot_sha256 TEXT, published_at TEXT
+            );
+            CREATE TABLE archetype_rules (
+                rule_id TEXT PRIMARY KEY, archetype_id TEXT,
+                archetype_version INTEGER, rule_type TEXT,
+                rule_payload_json TEXT, applicability_scope TEXT, status TEXT
+            );
+            CREATE TABLE archetype_rule_publications (
+                rule_id TEXT, archetype_id TEXT, archetype_version INTEGER,
+                archetype_snapshot_sha256 TEXT, rule_sha256 TEXT,
+                evidence_set_sha256 TEXT, evidence_count INTEGER, published_at TEXT
+            );
+            CREATE TABLE draft_style_bindings (
+                draft_binding_id TEXT PRIMARY KEY, draft_id TEXT,
+                binding_source TEXT, archetype_id TEXT, binding_role TEXT,
+                archetype_version INTEGER, archetype_snapshot_sha256 TEXT,
+                starter_pack_id TEXT, starter_pack_version INTEGER,
+                starter_pack_sha256 TEXT, starter_prompt_id TEXT,
+                selected_rule_ids TEXT, reference_library_post_ids TEXT,
+                counterexample_library_post_ids TEXT, material_plan_json TEXT,
+                intentional_deviations_json TEXT, anti_patterns_checked_json TEXT,
+                retrieved_at TEXT, review_status TEXT
+            );
+            CREATE TABLE draft_binding_publications (
+                draft_binding_id TEXT, draft_id TEXT, binding_sha256 TEXT,
+                published_at TEXT
+            );
+            """
+        )
+        con.execute(
+            "INSERT INTO style_archetypes VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (*archetype_values[:-1], snapshot_sha256, archetype_values[-1]),
+        )
+        con.execute(
+            "INSERT INTO archetype_publications VALUES (?,?,?,?)",
+            (archetype_id, archetype_version, snapshot_sha256, "2026-07-18T00:00:00Z"),
+        )
+        con.execute(
+            "INSERT INTO archetype_rules VALUES (?,?,?,?,?,?,?)",
+            (
+                rule_id,
+                archetype_id,
+                archetype_version,
+                "visual",
+                rule_payload_json,
+                "exact category/job/carrier",
+                "active",
+            ),
+        )
+        con.execute(
+            "INSERT INTO archetype_rule_publications VALUES (?,?,?,?,?,?,?,?)",
+            (
+                rule_id,
+                archetype_id,
+                archetype_version,
+                snapshot_sha256,
+                rule_hash,
+                "1" * 64,
+                2,
+                "2026-07-18T00:00:00Z",
+            ),
+        )
+        con.execute(
+            "INSERT INTO draft_style_bindings VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (
+                draft_binding_id,
+                draft_id,
+                "library",
+                archetype_id,
+                "primary",
+                archetype_version,
+                snapshot_sha256,
+                None,
+                None,
+                None,
+                None,
+                selected_rule_ids,
+                reference_posts,
+                counter_posts,
+                material_plan,
+                deviations,
+                anti_patterns,
+                "2026-07-18T00:00:00Z",
+                "PASS",
+            ),
+        )
+        con.execute(
+            "INSERT INTO draft_binding_publications VALUES (?,?,?,?)",
+            (draft_binding_id, draft_id, binding_hash, "2026-07-18T00:00:00Z"),
+        )
+        con.commit()
+    finally:
+        con.close()
 
 
 class SelectVisualDirectionsTests(unittest.TestCase):
@@ -62,13 +262,18 @@ class SelectVisualDirectionsTests(unittest.TestCase):
         style_binding: dict[str, object] | None = None,
         mode: str = "production",
         contraindications: tuple[str, ...] = (),
+        category: str = "test-category",
     ) -> subprocess.CompletedProcess[str]:
         with tempfile.TemporaryDirectory() as temporary_directory:
+            manifest_directory = Path(temporary_directory) / "run"
+            manifest_directory.mkdir()
             args = [
                 "python3",
                 str(SCRIPT),
                 "--job",
                 job,
+                "--category",
+                category,
                 "--carrier",
                 carrier,
                 "--mode",
@@ -76,18 +281,49 @@ class SelectVisualDirectionsTests(unittest.TestCase):
                 "--json",
             ]
             if assets is not None:
-                manifest = Path(temporary_directory) / "assets.json"
+                serialized_assets = []
+                for source in assets:
+                    asset = dict(source)
+                    content = bytes.fromhex(
+                        str(
+                            asset.pop(
+                                "_test_content_hex",
+                                str(asset.get("asset_id", "missing")).encode().hex(),
+                            )
+                        )
+                    )
+                    symlink_outside = bool(asset.pop("_test_symlink_outside", False))
+                    relative_path = asset.get(
+                        "asset_path", f"assets/{asset.get('asset_id', 'missing')}.txt"
+                    )
+                    local_path = manifest_directory / str(relative_path)
+                    local_path.parent.mkdir(parents=True, exist_ok=True)
+                    if symlink_outside:
+                        outside = Path(temporary_directory) / f"outside-{asset['asset_id']}"
+                        outside.write_bytes(content)
+                        local_path.symlink_to(outside)
+                    else:
+                        local_path.write_bytes(content)
+                    serialized_assets.append(asset)
+                manifest = manifest_directory / "assets.json"
                 manifest.write_text(
-                    json.dumps({"asset_manifest_refs": assets}, ensure_ascii=False),
+                    json.dumps(
+                        {"asset_manifest_refs": serialized_assets}, ensure_ascii=False
+                    ),
                     encoding="utf-8",
                 )
                 args.extend(["--asset-manifest", str(manifest)])
             if style_binding is not None:
-                style = Path(temporary_directory) / "style-binding.json"
-                style.write_text(
-                    json.dumps(style_binding, ensure_ascii=False), encoding="utf-8"
+                style = Path(temporary_directory) / "style-library.sqlite"
+                write_style_library(style, style_binding)
+                args.extend(
+                    [
+                        "--style-library",
+                        str(style),
+                        "--draft-binding-id",
+                        str(style_binding["draft_binding_id"]),
+                    ]
                 )
-                args.extend(["--style-binding", str(style)])
             for code in contraindications:
                 args.extend(["--contraindication", code])
             return subprocess.run(
@@ -158,7 +394,10 @@ class SelectVisualDirectionsTests(unittest.TestCase):
                     required_proofs.update(
                         role["required_proof"] for role in plan["roles"]
                     )
-                self.assertTrue(required_proofs.issubset(variables), required_proofs - variables.keys())
+                self.assertTrue(
+                    required_proofs.issubset(variables),
+                    required_proofs - variables.keys(),
+                )
                 for proof in required_proofs:
                     self.assertTrue(variables[proof]["required"], proof)
                 placeholders = set(re.findall(r"\{([a-zA-Z0-9_]+)\}", card["prompt_template"]))
@@ -177,8 +416,10 @@ class SelectVisualDirectionsTests(unittest.TestCase):
             required,
             {
                 "asset_id",
+                "asset_path",
                 "material_codes",
                 "sha256",
+                "media_dimensions",
                 "rights_basis",
                 "authorization_ref",
                 "license_ref",
@@ -194,7 +435,17 @@ class SelectVisualDirectionsTests(unittest.TestCase):
                 "authorization_ref": "only_when_rights_basis_does_not_require_it",
                 "license_ref": "only_when_rights_basis_is_not_licensed",
                 "expires_at": "only_for_non_expiring_rights_or_currentness",
+                "media_dimensions": "only_for_non_visual_files",
             },
+        )
+        style_contract = payload["style_binding_contract"]
+        self.assertEqual(
+            style_contract["source"], "sqlite_publication_reconciliation_only"
+        )
+        self.assertIn("category", style_contract["exact_match_fields"])
+        self.assertEqual(
+            style_contract["standalone_json_policy"],
+            "rejected_self_declared_not_publication_evidence",
         )
 
     def test_exact_job_carrier_material_and_binding_returns_skeleton(self) -> None:
@@ -218,6 +469,7 @@ class SelectVisualDirectionsTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         payload = json.loads(result.stdout)
         self.assertEqual(payload["status"], "matched")
+        self.assertEqual(payload["query"]["category"], "test-category")
         self.assertTrue(payload["matches"])
         for match in payload["matches"]:
             self.assertEqual(match["query_fit"]["primary_job"], "exact")
@@ -228,6 +480,26 @@ class SelectVisualDirectionsTests(unittest.TestCase):
             self.assertEqual(
                 match["aesthetic_control"]["binding_id"], "DSB-TEST-001"
             )
+            self.assertEqual(
+                match["aesthetic_control"]["category"], "test-category"
+            )
+            self.assertRegex(
+                match["aesthetic_control"]["binding_sha256"], r"^[0-9a-f]{64}$"
+            )
+            for field in (
+                "palette",
+                "typography",
+                "image_treatment",
+                "density",
+                "annotation_language",
+                "crop_logic",
+            ):
+                self.assertEqual(
+                    match["aesthetic_control"]["aesthetic_contract"][field][0][
+                        "rule_id"
+                    ],
+                    "RULE-TEST-001",
+                )
             self.assertFalse(match["direction_card_controls_aesthetics"])
             self.assertTrue(match["carrier_role_plan"]["roles"])
 
@@ -315,6 +587,67 @@ class SelectVisualDirectionsTests(unittest.TestCase):
         self.assertEqual(payload["matches"], [])
         self.assertIn("exact_published_style_binding", payload["missing_requirements"])
 
+    def test_standalone_style_binding_json_is_not_a_supported_cli_input(self) -> None:
+        result = subprocess.run(
+            [
+                "python3",
+                str(SCRIPT),
+                "--category",
+                "test-category",
+                "--job",
+                "search_answer",
+                "--carrier",
+                "screenshot_markup",
+                "--style-binding",
+                "self-declared.json",
+                "--json",
+            ],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("unrecognized arguments: --style-binding", result.stderr)
+
+    def test_category_mismatch_and_tampered_db_receipt_are_rejected(self) -> None:
+        assets = [
+            receipt(
+                "screen-1",
+                "current_owned_screen_captures",
+                "device_or_app_version",
+                "redacted_private_data",
+                "verified_path",
+            ),
+            receipt("screen-2", "current_owned_screen_captures"),
+        ]
+        result = self.run_cli(
+            job="search_answer",
+            carrier="screenshot_markup",
+            category="test-category",
+            assets=assets,
+            style_binding=binding(
+                "search_answer", "screenshot_markup", category="other-category"
+            ),
+        )
+        self.assertEqual(result.returncode, 2)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["status"], "prototype_gap")
+        self.assertIn("category", payload["message"])
+
+        result = self.run_cli(
+            job="search_answer",
+            carrier="screenshot_markup",
+            assets=assets,
+            style_binding=binding(
+                "search_answer", "screenshot_markup", tamper_binding_hash=True
+            ),
+        )
+        self.assertEqual(result.returncode, 2)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["status"], "prototype_gap")
+        self.assertIn("binding publication hash mismatch", payload["message"])
+
     def test_explicit_exploration_can_use_candidate_as_prototype_direction(self) -> None:
         assets = [
             receipt(
@@ -380,6 +713,144 @@ class SelectVisualDirectionsTests(unittest.TestCase):
         payload = json.loads(result.stdout)
         self.assertEqual(payload["status"], "invalid_asset_manifest")
         self.assertIn("expired", payload["message"])
+
+    def test_missing_asset_path_and_hash_mismatch_are_rejected(self) -> None:
+        missing_path = receipt(
+            "screen-1",
+            "current_owned_screen_captures",
+            "device_or_app_version",
+            "redacted_private_data",
+            "verified_path",
+        )
+        missing_path.pop("asset_path")
+        result = self.run_cli(
+            job="search_answer",
+            carrier="screenshot_markup",
+            assets=[missing_path, receipt("screen-2", "current_owned_screen_captures")],
+            style_binding=binding("search_answer", "screenshot_markup"),
+        )
+        self.assertEqual(result.returncode, 2)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["status"], "invalid_asset_manifest")
+        self.assertIn("asset_path", payload["message"])
+
+        wrong_hash = receipt(
+            "screen-1",
+            "current_owned_screen_captures",
+            "device_or_app_version",
+            "redacted_private_data",
+            "verified_path",
+        )
+        wrong_hash["sha256"] = "0" * 64
+        result = self.run_cli(
+            job="search_answer",
+            carrier="screenshot_markup",
+            assets=[wrong_hash, receipt("screen-2", "current_owned_screen_captures")],
+            style_binding=binding("search_answer", "screenshot_markup"),
+        )
+        self.assertEqual(result.returncode, 2)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["status"], "invalid_asset_manifest")
+        self.assertIn("sha256 mismatch", payload["message"])
+
+    def test_asset_path_traversal_and_outside_symlink_are_rejected(self) -> None:
+        traversal = receipt(
+            "screen-1",
+            "current_owned_screen_captures",
+            "device_or_app_version",
+            "redacted_private_data",
+            "verified_path",
+            asset_path="../outside.txt",
+        )
+        result = self.run_cli(
+            job="search_answer",
+            carrier="screenshot_markup",
+            assets=[traversal, receipt("screen-2", "current_owned_screen_captures")],
+            style_binding=binding("search_answer", "screenshot_markup"),
+        )
+        self.assertEqual(result.returncode, 2)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["status"], "invalid_asset_manifest")
+        self.assertIn("path traversal", payload["message"])
+
+        symlink = receipt(
+            "screen-1",
+            "current_owned_screen_captures",
+            "device_or_app_version",
+            "redacted_private_data",
+            "verified_path",
+            asset_path="assets/link.txt",
+            test_symlink_outside=True,
+        )
+        result = self.run_cli(
+            job="search_answer",
+            carrier="screenshot_markup",
+            assets=[symlink, receipt("screen-2", "current_owned_screen_captures")],
+            style_binding=binding("search_answer", "screenshot_markup"),
+        )
+        self.assertEqual(result.returncode, 2)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["status"], "invalid_asset_manifest")
+        self.assertIn("outside manifest root", payload["message"])
+
+    def test_image_dimensions_are_read_from_file_not_self_declared(self) -> None:
+        one_pixel_png = b64decode(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8A"
+            "AQUBAScY42YAAAAASUVORK5CYII="
+        )
+        common = (
+            "current_owned_screen_captures",
+            "device_or_app_version",
+            "redacted_private_data",
+            "verified_path",
+        )
+        valid_image = receipt(
+            "screen-1",
+            *common,
+            asset_path="assets/screen-1.png",
+            media_dimensions={"width_px": 1, "height_px": 1},
+            test_content=one_pixel_png,
+        )
+        result = self.run_cli(
+            job="search_answer",
+            carrier="screenshot_markup",
+            assets=[valid_image, receipt("screen-2", "current_owned_screen_captures")],
+            style_binding=binding("search_answer", "screenshot_markup"),
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+        invalid_image = dict(valid_image)
+        invalid_image["media_dimensions"] = {"width_px": 2, "height_px": 1}
+        result = self.run_cli(
+            job="search_answer",
+            carrier="screenshot_markup",
+            assets=[invalid_image, receipt("screen-2", "current_owned_screen_captures")],
+            style_binding=binding("search_answer", "screenshot_markup"),
+        )
+        self.assertEqual(result.returncode, 2)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["status"], "invalid_asset_manifest")
+        self.assertIn("dimensions mismatch", payload["message"])
+
+        disguised_image = receipt(
+            "screen-1",
+            *common,
+            asset_path="assets/disguised.txt",
+            test_content=one_pixel_png,
+        )
+        result = self.run_cli(
+            job="search_answer",
+            carrier="screenshot_markup",
+            assets=[
+                disguised_image,
+                receipt("screen-2", "current_owned_screen_captures"),
+            ],
+            style_binding=binding("search_answer", "screenshot_markup"),
+        )
+        self.assertEqual(result.returncode, 2)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["status"], "invalid_asset_manifest")
+        self.assertIn("media_dimensions", payload["message"])
 
     def test_single_image_selection_returns_explicit_merge_rule(self) -> None:
         assets = [

@@ -4,13 +4,19 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
+import shutil
+import sqlite3
+import struct
+import subprocess
 import sys
 from collections import defaultdict
 from datetime import date
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 
 DEFAULT_LIBRARY = (
@@ -73,6 +79,38 @@ def load_library(path: Path) -> dict[str, Any]:
     }
     if required_top - set(payload):
         raise ContractError("visual direction library missing machine contracts")
+    asset_contract = payload["asset_manifest_contract"]
+    required_asset_fields = {
+        "asset_id",
+        "asset_path",
+        "material_codes",
+        "sha256",
+        "media_dimensions",
+        "rights_basis",
+        "authorization_ref",
+        "license_ref",
+        "transform_history",
+        "privacy_review",
+        "commercial_disclosure",
+        "expires_at",
+    }
+    if set(asset_contract.get("required_fields", [])) != required_asset_fields:
+        raise ContractError("asset manifest contract does not fail closed")
+    if asset_contract.get("locator_contract", {}).get("mode") != "local_file_only":
+        raise ContractError("unsupported asset locator mode")
+    if not asset_contract.get("media_dimensions_contract", {}).get(
+        "required_for_extensions"
+    ):
+        raise ContractError("asset dimension verification contract missing")
+    style_contract = payload["style_binding_contract"]
+    if style_contract.get("source") != "sqlite_publication_reconciliation_only":
+        raise ContractError("standalone style binding is not allowed")
+    if set(style_contract.get("exact_match_fields", [])) != {
+        "category",
+        "primary_job",
+        "carrier",
+    }:
+        raise ContractError("style binding exact-match contract drift")
 
     card_ids = {card.get("card_id") for card in cards if isinstance(card, dict)}
     if None in card_ids or len(card_ids) != len(cards):
@@ -193,8 +231,217 @@ def load_library(path: Path) -> dict[str, Any]:
     return payload
 
 
+def canonical_json(value: object) -> str:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def canonical_row_sha256(*values: object) -> str:
+    normalized = [float(value) if isinstance(value, float) else value for value in values]
+    return hashlib.sha256(canonical_json(normalized).encode("utf-8")).hexdigest()
+
+
+def file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def path_is_below(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+    except ValueError:
+        return False
+    return True
+
+
+def jpeg_dimensions(path: Path) -> tuple[int, int]:
+    sof_markers = {
+        0xC0,
+        0xC1,
+        0xC2,
+        0xC3,
+        0xC5,
+        0xC6,
+        0xC7,
+        0xC9,
+        0xCA,
+        0xCB,
+        0xCD,
+        0xCE,
+        0xCF,
+    }
+    with path.open("rb") as handle:
+        if handle.read(2) != b"\xff\xd8":
+            raise ContractError(f"asset {path.name} is not a valid JPEG")
+        while True:
+            marker_start = handle.read(1)
+            if not marker_start:
+                break
+            if marker_start != b"\xff":
+                continue
+            marker = handle.read(1)
+            while marker == b"\xff":
+                marker = handle.read(1)
+            if not marker:
+                break
+            marker_value = marker[0]
+            if marker_value in {0xD8, 0xD9}:
+                continue
+            length_bytes = handle.read(2)
+            if len(length_bytes) != 2:
+                break
+            segment_length = struct.unpack(">H", length_bytes)[0]
+            if segment_length < 2:
+                break
+            if marker_value in sof_markers:
+                body = handle.read(5)
+                if len(body) != 5:
+                    break
+                height, width = struct.unpack(">HH", body[1:])
+                return width, height
+            handle.seek(segment_length - 2, 1)
+    raise ContractError(f"asset {path.name} JPEG dimensions cannot be read")
+
+
+def webp_dimensions(path: Path) -> tuple[int, int]:
+    data = path.read_bytes()
+    if len(data) < 30 or data[:4] != b"RIFF" or data[8:12] != b"WEBP":
+        raise ContractError(f"asset {path.name} is not a valid WebP")
+    chunk = data[12:16]
+    if chunk == b"VP8X":
+        width = 1 + int.from_bytes(data[24:27], "little")
+        height = 1 + int.from_bytes(data[27:30], "little")
+        return width, height
+    if chunk == b"VP8L" and len(data) >= 25 and data[20] == 0x2F:
+        bits = int.from_bytes(data[21:25], "little")
+        return (bits & 0x3FFF) + 1, ((bits >> 14) & 0x3FFF) + 1
+    if chunk == b"VP8 ":
+        marker = data.find(b"\x9d\x01\x2a", 20)
+        if marker >= 0 and len(data) >= marker + 7:
+            width = int.from_bytes(data[marker + 3 : marker + 5], "little") & 0x3FFF
+            height = int.from_bytes(data[marker + 5 : marker + 7], "little") & 0x3FFF
+            return width, height
+    raise ContractError(f"asset {path.name} WebP dimensions cannot be read")
+
+
+def image_dimensions(path: Path) -> tuple[int, int]:
+    with path.open("rb") as handle:
+        header = handle.read(32)
+    if header[:8] == b"\x89PNG\r\n\x1a\n":
+        if len(header) < 24:
+            raise ContractError(f"asset {path.name} is not a valid PNG")
+        return struct.unpack(">II", header[16:24])
+    if header[:6] in {b"GIF87a", b"GIF89a"}:
+        if len(header) < 10:
+            raise ContractError(f"asset {path.name} is not a valid GIF")
+        return struct.unpack("<HH", header[6:10])
+    if header[:2] == b"\xff\xd8":
+        return jpeg_dimensions(path)
+    if header[:4] == b"RIFF" and header[8:12] == b"WEBP":
+        return webp_dimensions(path)
+    raise ContractError(f"asset {path.name} image dimensions cannot be read")
+
+
+def detect_visual_kind(path: Path, contract: dict[str, Any]) -> str | None:
+    with path.open("rb") as handle:
+        header = handle.read(32)
+    if (
+        header[:8] == b"\x89PNG\r\n\x1a\n"
+        or header[:6] in {b"GIF87a", b"GIF89a"}
+        or header[:2] == b"\xff\xd8"
+        or (header[:4] == b"RIFF" and header[8:12] == b"WEBP")
+    ):
+        return "image"
+    if header[:4] == b"\x1a\x45\xdf\xa3" or header[4:8] == b"ftyp":
+        return "video"
+    suffix = path.suffix.lower()
+    required_extensions = set(
+        contract["media_dimensions_contract"]["required_for_extensions"]
+    )
+    if suffix in {".png", ".jpg", ".jpeg", ".gif", ".webp"}:
+        return "image"
+    if suffix in required_extensions:
+        return "video"
+    return None
+
+
+def video_dimensions(path: Path) -> tuple[int, int]:
+    ffprobe = shutil.which("ffprobe")
+    if not ffprobe:
+        raise ContractError(
+            f"asset {path.name} requires ffprobe for dimension verification"
+        )
+    result = subprocess.run(
+        [
+            ffprobe,
+            "-v",
+            "error",
+            "-select_streams",
+            "v:0",
+            "-show_entries",
+            "stream=width,height",
+            "-of",
+            "json",
+            str(path),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise ContractError(f"asset {path.name} video dimensions cannot be read")
+    try:
+        streams = json.loads(result.stdout).get("streams", [])
+        width = int(streams[0]["width"])
+        height = int(streams[0]["height"])
+    except (IndexError, KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+        raise ContractError(
+            f"asset {path.name} video dimensions cannot be read"
+        ) from exc
+    return width, height
+
+
+def validate_dimensions(
+    asset: dict[str, Any], located_path: Path, contract: dict[str, Any]
+) -> None:
+    declared = asset.get("media_dimensions")
+    visual_kind = detect_visual_kind(located_path, contract)
+    if visual_kind is None:
+        if declared is not None:
+            raise ContractError(
+                f"asset {asset['asset_id']} declares unverifiable media_dimensions"
+            )
+        return
+    if not isinstance(declared, dict) or set(declared) != {"width_px", "height_px"}:
+        raise ContractError(
+            f"asset {asset['asset_id']} requires width_px/height_px media_dimensions"
+        )
+    if any(
+        not isinstance(declared[field], int) or declared[field] < 1
+        for field in ("width_px", "height_px")
+    ):
+        raise ContractError(f"asset {asset['asset_id']} has invalid media_dimensions")
+    if visual_kind == "image":
+        actual_width, actual_height = image_dimensions(located_path)
+    elif visual_kind == "video":
+        actual_width, actual_height = video_dimensions(located_path)
+    else:
+        raise ContractError(f"asset {asset['asset_id']} dimensions cannot be verified")
+    if (declared["width_px"], declared["height_px"]) != (
+        actual_width,
+        actual_height,
+    ):
+        raise ContractError(
+            f"asset {asset['asset_id']} dimensions mismatch: "
+            f"declared={declared['width_px']}x{declared['height_px']} "
+            f"actual={actual_width}x{actual_height}"
+        )
+
+
 def validate_asset_manifest(
-    payload: dict[str, Any], contract: dict[str, Any]
+    payload: dict[str, Any], contract: dict[str, Any], manifest_root: Path
 ) -> tuple[list[dict[str, Any]], dict[str, set[str]]]:
     assets = payload.get(contract["container_field"])
     if not isinstance(assets, list) or not assets:
@@ -205,6 +452,10 @@ def validate_asset_manifest(
     allowed_commercial = set(contract["commercial_disclosure_allowed"])
     ids: set[str] = set()
     material_assets: dict[str, set[str]] = defaultdict(set)
+    try:
+        resolved_root = manifest_root.resolve(strict=True)
+    except OSError as exc:
+        raise ContractError("asset manifest root does not exist") from exc
 
     for index, asset in enumerate(assets):
         if not isinstance(asset, dict):
@@ -218,6 +469,22 @@ def validate_asset_manifest(
         if not isinstance(asset_id, str) or not asset_id.strip() or asset_id in ids:
             raise ContractError(f"asset_manifest_refs[{index}] has invalid/duplicate asset_id")
         ids.add(asset_id)
+        asset_path = asset.get("asset_path")
+        if not isinstance(asset_path, str) or not asset_path.strip():
+            raise ContractError(f"asset {asset_id} has invalid asset_path")
+        relative_path = Path(asset_path)
+        if relative_path.is_absolute():
+            raise ContractError(f"asset {asset_id} asset_path must be relative")
+        if ".." in relative_path.parts:
+            raise ContractError(f"asset {asset_id} asset_path contains path traversal")
+        try:
+            located_path = (resolved_root / relative_path).resolve(strict=True)
+        except OSError as exc:
+            raise ContractError(f"asset {asset_id} file does not exist") from exc
+        if not path_is_below(located_path, resolved_root):
+            raise ContractError(f"asset {asset_id} resolves outside manifest root")
+        if not located_path.is_file():
+            raise ContractError(f"asset {asset_id} is not a regular file")
         codes = asset.get("material_codes")
         if (
             not isinstance(codes, list)
@@ -229,6 +496,13 @@ def validate_asset_manifest(
             r"[0-9a-f]{64}", asset["sha256"]
         ):
             raise ContractError(f"asset {asset_id} has invalid sha256")
+        actual_sha256 = file_sha256(located_path)
+        if actual_sha256 != asset["sha256"]:
+            raise ContractError(
+                f"asset {asset_id} sha256 mismatch: "
+                f"declared={asset['sha256']} actual={actual_sha256}"
+            )
+        validate_dimensions(asset, located_path, contract)
         rights = asset.get("rights_basis")
         if rights not in allowed_rights:
             raise ContractError(f"asset {asset_id} has invalid rights_basis")
@@ -261,29 +535,291 @@ def validate_asset_manifest(
     return assets, material_assets
 
 
-def validate_style_binding(
-    payload: dict[str, Any], contract: dict[str, Any], job: str, carrier: str
+def parse_json_text(value: Any, field: str) -> Any:
+    if not isinstance(value, str):
+        raise ContractError(f"style binding {field} is not JSON text")
+    try:
+        return json.loads(value)
+    except json.JSONDecodeError as exc:
+        raise ContractError(f"style binding {field} is invalid JSON") from exc
+
+
+def load_published_style_binding(
+    db_path: Path,
+    draft_binding_id: str,
+    *,
+    category: str,
+    job: str,
+    carrier: str,
+    contract: dict[str, Any],
 ) -> dict[str, Any]:
-    required = set(contract["required_fields"])
-    missing = required - set(payload)
-    if missing:
-        raise ContractError("style binding missing " + ", ".join(sorted(missing)))
-    if payload.get("status") != contract["status_required"]:
-        raise ContractError("style binding is not published")
-    if payload.get("primary_job") != job or payload.get("carrier") != carrier:
-        raise ContractError("style binding does not exactly match primary_job/carrier")
-    if not isinstance(payload.get("style_rule_ids"), list) or not payload["style_rule_ids"]:
-        raise ContractError("style binding has no published style_rule_ids")
-    aesthetic = payload.get("aesthetic_contract")
-    if not isinstance(aesthetic, dict):
-        raise ContractError("style binding aesthetic_contract must be an object")
-    missing_aesthetic = set(contract["aesthetic_fields_required"]) - set(aesthetic)
-    if missing_aesthetic:
-        raise ContractError(
-            "style binding missing aesthetic fields: "
-            + ", ".join(sorted(missing_aesthetic))
+    """Reconcile one published binding and its aesthetic rules from SQLite."""
+
+    if not draft_binding_id.strip():
+        raise ContractError("draft_binding_id is required")
+    try:
+        resolved_db = db_path.resolve(strict=True)
+    except OSError as exc:
+        raise ContractError("style library does not exist") from exc
+    if not resolved_db.is_file():
+        raise ContractError("style library is not a regular SQLite file")
+    uri = f"file:{quote(str(resolved_db), safe='/')}?mode=ro"
+    try:
+        con = sqlite3.connect(uri, uri=True)
+        con.row_factory = sqlite3.Row
+    except sqlite3.Error as exc:
+        raise ContractError("style library cannot be opened read-only") from exc
+    try:
+        if con.execute("PRAGMA user_version").fetchone()[0] != 2:
+            raise ContractError("style library schema_version mismatch")
+        required_tables = {
+            "style_archetypes",
+            "archetype_publications",
+            "archetype_rules",
+            "archetype_rule_publications",
+            "draft_style_bindings",
+            "draft_binding_publications",
+        }
+        tables = {
+            row[0]
+            for row in con.execute(
+                "SELECT name FROM sqlite_schema WHERE type='table'"
+            ).fetchall()
+        }
+        if required_tables - tables:
+            raise ContractError("style library is missing publication tables")
+        con.execute("BEGIN")
+        row = con.execute(
+            """
+            SELECT
+                binding.draft_binding_id,
+                binding.draft_id,
+                binding.binding_source,
+                binding.archetype_id,
+                binding.binding_role,
+                binding.archetype_version,
+                binding.archetype_snapshot_sha256,
+                binding.starter_pack_id,
+                binding.starter_pack_version,
+                binding.starter_pack_sha256,
+                binding.starter_prompt_id,
+                binding.selected_rule_ids,
+                binding.reference_library_post_ids,
+                binding.counterexample_library_post_ids,
+                binding.material_plan_json,
+                binding.intentional_deviations_json,
+                binding.anti_patterns_checked_json,
+                binding.review_status,
+                publication.binding_sha256,
+                publication.published_at AS binding_published_at,
+                archetype.name AS archetype_name,
+                archetype.category_scope,
+                archetype.carrier AS archetype_carrier,
+                archetype.primary_job_scope,
+                archetype.audience_state,
+                archetype.description AS archetype_description,
+                archetype.production_cost,
+                archetype.confidence,
+                archetype.status AS archetype_status,
+                archetype.current_version,
+                archetype.snapshot_sha256,
+                archetype.taxonomy_version,
+                archetype_publication.published_at AS archetype_published_at
+            FROM draft_style_bindings AS binding
+            JOIN draft_binding_publications AS publication
+              ON publication.draft_binding_id = binding.draft_binding_id
+             AND publication.draft_id = binding.draft_id
+            JOIN style_archetypes AS archetype
+              ON archetype.archetype_id = binding.archetype_id
+             AND archetype.current_version = binding.archetype_version
+             AND archetype.snapshot_sha256 = binding.archetype_snapshot_sha256
+            JOIN archetype_publications AS archetype_publication
+              ON archetype_publication.archetype_id = archetype.archetype_id
+             AND archetype_publication.archetype_version = archetype.current_version
+             AND archetype_publication.archetype_snapshot_sha256 = archetype.snapshot_sha256
+            WHERE binding.draft_binding_id = ?
+            """,
+            (draft_binding_id,),
+        ).fetchone()
+        if row is None:
+            raise ContractError("published draft binding not found")
+        if row["binding_source"] != "library":
+            raise ContractError(
+                "starter-pack binding cannot supply exact category aesthetic rules"
+            )
+        if row["binding_role"] != "primary" or row["review_status"] != "PASS":
+            raise ContractError("style binding is not a reviewed primary binding")
+        if row["archetype_status"] not in {"supported", "reusable"}:
+            raise ContractError("style binding archetype is not supported/reusable")
+        exact_values = {
+            "category": (row["category_scope"], category),
+            "primary_job": (row["primary_job_scope"], job),
+            "carrier": (row["archetype_carrier"], carrier),
+        }
+        mismatches = [
+            field
+            for field, (actual, expected) in exact_values.items()
+            if actual != expected
+        ]
+        if mismatches:
+            raise ContractError(
+                "style binding does not exactly match " + "/".join(mismatches)
+            )
+
+        expected_archetype_hash = canonical_row_sha256(
+            row["archetype_id"],
+            row["archetype_name"],
+            row["category_scope"],
+            row["archetype_carrier"],
+            row["primary_job_scope"],
+            row["audience_state"],
+            row["archetype_description"],
+            row["production_cost"],
+            row["confidence"],
+            row["archetype_status"],
+            row["current_version"],
+            row["taxonomy_version"],
         )
-    return payload
+        if expected_archetype_hash != row["snapshot_sha256"]:
+            raise ContractError("archetype publication hash mismatch")
+
+        json_fields = (
+            "selected_rule_ids",
+            "reference_library_post_ids",
+            "counterexample_library_post_ids",
+            "material_plan_json",
+            "intentional_deviations_json",
+            "anti_patterns_checked_json",
+        )
+        parsed = {field: parse_json_text(row[field], field) for field in json_fields}
+        selected_rule_ids = parsed["selected_rule_ids"]
+        if (
+            not isinstance(selected_rule_ids, list)
+            or not selected_rule_ids
+            or any(not isinstance(rule_id, str) for rule_id in selected_rule_ids)
+            or len(set(selected_rule_ids)) != len(selected_rule_ids)
+        ):
+            raise ContractError("style binding selected_rule_ids are invalid")
+        expected_binding_hash = canonical_row_sha256(
+            row["draft_binding_id"],
+            row["draft_id"],
+            row["binding_source"],
+            row["archetype_id"],
+            row["archetype_version"],
+            row["archetype_snapshot_sha256"],
+            row["starter_pack_id"],
+            row["starter_pack_version"],
+            row["starter_pack_sha256"],
+            row["starter_prompt_id"],
+            canonical_json(parsed["selected_rule_ids"]),
+            canonical_json(parsed["reference_library_post_ids"]),
+            canonical_json(parsed["counterexample_library_post_ids"]),
+            canonical_json(parsed["material_plan_json"]),
+            canonical_json(parsed["intentional_deviations_json"]),
+            canonical_json(parsed["anti_patterns_checked_json"]),
+            row["review_status"],
+        )
+        if expected_binding_hash != row["binding_sha256"]:
+            raise ContractError("binding publication hash mismatch")
+
+        placeholders = ",".join("?" for _ in selected_rule_ids)
+        rule_rows = con.execute(
+            f"""
+            SELECT
+                rule.rule_id,
+                rule.archetype_id,
+                rule.archetype_version,
+                rule.rule_type,
+                rule.rule_payload_json,
+                rule.applicability_scope,
+                rule.status,
+                publication.archetype_snapshot_sha256,
+                publication.rule_sha256,
+                publication.evidence_set_sha256,
+                publication.evidence_count,
+                publication.published_at
+            FROM archetype_rules AS rule
+            JOIN archetype_rule_publications AS publication
+              ON publication.rule_id = rule.rule_id
+             AND publication.archetype_id = rule.archetype_id
+             AND publication.archetype_version = rule.archetype_version
+            WHERE rule.rule_id IN ({placeholders})
+            """,
+            tuple(selected_rule_ids),
+        ).fetchall()
+        rules_by_id = {rule["rule_id"]: rule for rule in rule_rows}
+        if set(rules_by_id) != set(selected_rule_ids):
+            raise ContractError("style binding references unpublished rule")
+        aesthetic_fields = contract["aesthetic_fields_required"]
+        aesthetic_contract: dict[str, list[dict[str, Any]]] = {
+            field: [] for field in aesthetic_fields
+        }
+        rule_receipts = []
+        for rule_id in selected_rule_ids:
+            rule = rules_by_id[rule_id]
+            if (
+                rule["archetype_id"] != row["archetype_id"]
+                or rule["archetype_version"] != row["archetype_version"]
+                or rule["archetype_snapshot_sha256"]
+                != row["archetype_snapshot_sha256"]
+                or rule["status"] != "active"
+            ):
+                raise ContractError("published rule does not match binding snapshot")
+            payload = parse_json_text(rule["rule_payload_json"], "rule_payload_json")
+            if not isinstance(payload, dict):
+                raise ContractError("published rule payload must be an object")
+            expected_rule_hash = canonical_row_sha256(
+                rule["rule_id"],
+                rule["archetype_id"],
+                rule["archetype_version"],
+                rule["rule_type"],
+                canonical_json(payload),
+                rule["applicability_scope"],
+                rule["status"],
+            )
+            if expected_rule_hash != rule["rule_sha256"]:
+                raise ContractError(f"published rule hash mismatch: {rule_id}")
+            for field in aesthetic_fields:
+                if field in payload and payload[field] not in (None, "", [], {}):
+                    aesthetic_contract[field].append(
+                        {"rule_id": rule_id, "value": payload[field]}
+                    )
+            rule_receipts.append(
+                {
+                    "rule_id": rule_id,
+                    "rule_type": rule["rule_type"],
+                    "rule_sha256": rule["rule_sha256"],
+                    "evidence_set_sha256": rule["evidence_set_sha256"],
+                    "evidence_count": rule["evidence_count"],
+                    "published_at": rule["published_at"],
+                }
+            )
+        missing_aesthetics = [
+            field for field, receipts in aesthetic_contract.items() if not receipts
+        ]
+        if missing_aesthetics:
+            raise ContractError(
+                "published style rules missing aesthetic fields: "
+                + ", ".join(missing_aesthetics)
+            )
+        return {
+            "binding_id": row["draft_binding_id"],
+            "binding_sha256": row["binding_sha256"],
+            "status": "published",
+            "category": row["category_scope"],
+            "primary_job": row["primary_job_scope"],
+            "carrier": row["archetype_carrier"],
+            "snapshot_id": row["archetype_snapshot_sha256"],
+            "style_rule_ids": selected_rule_ids,
+            "aesthetic_contract": aesthetic_contract,
+            "rule_publication_receipts": rule_receipts,
+            "binding_published_at": row["binding_published_at"],
+            "archetype_published_at": row["archetype_published_at"],
+        }
+    except sqlite3.Error as exc:
+        raise ContractError(f"style library reconciliation failed: {exc}") from exc
+    finally:
+        con.close()
 
 
 def card_gap(
@@ -330,9 +866,14 @@ def selected_card(
         {
             "source": "published_style_binding",
             "binding_id": binding["binding_id"],
+            "binding_sha256": binding["binding_sha256"],
+            "category": binding["category"],
+            "primary_job": binding["primary_job"],
+            "carrier": binding["carrier"],
             "snapshot_id": binding["snapshot_id"],
             "style_rule_ids": binding["style_rule_ids"],
             "aesthetic_contract": binding["aesthetic_contract"],
+            "rule_publication_receipts": binding["rule_publication_receipts"],
         }
         if binding
         else {
@@ -377,11 +918,21 @@ def selected_card(
 
 
 def select(
-    library: dict[str, Any], job: str, carrier: str,
-    manifest: dict[str, Any] | None, binding: dict[str, Any] | None,
-    active_contraindications: set[str], mode: str, limit: int
+    library: dict[str, Any],
+    category: str,
+    job: str,
+    carrier: str,
+    manifest: dict[str, Any] | None,
+    manifest_root: Path | None,
+    style_library: Path | None,
+    draft_binding_id: str | None,
+    active_contraindications: set[str],
+    mode: str,
+    limit: int,
 ) -> tuple[dict[str, Any], int]:
     invalid = []
+    if not category.strip():
+        invalid.append("category=<empty>")
     if job not in library["primary_job_taxonomy"]:
         invalid.append(f"primary_job={job}")
     if carrier not in library["carrier_taxonomy"]:
@@ -400,12 +951,13 @@ def select(
         }, 2
 
     query = {
+        "category": category,
         "primary_job": job,
         "carrier": carrier,
         "mode": mode,
         "active_contraindications": sorted(active_contraindications),
     }
-    if manifest is None:
+    if manifest is None or manifest_root is None:
         return {
             "status": "prototype_gap",
             "message": "asset_manifest_refs are required; no direction is inferred.",
@@ -415,7 +967,7 @@ def select(
         }, 2
     try:
         _, material_assets = validate_asset_manifest(
-            manifest, library["asset_manifest_contract"]
+            manifest, library["asset_manifest_contract"], manifest_root
         )
     except ContractError as exc:
         return {
@@ -473,18 +1025,27 @@ def select(
         }, 2
 
     if mode == "production":
-        if binding is None:
+        if style_library is None or not draft_binding_id:
             return {
                 "status": "prototype_gap",
-                "message": "Candidate skeletons cannot control production aesthetics.",
+                "message": "Production aesthetics require a reconciled SQLite publication.",
                 "query": query,
-                "missing_requirements": ["published_style_binding"],
+                "missing_requirements": [
+                    "published_style_binding",
+                    "style_library_sqlite",
+                    "published_draft_binding_id",
+                ],
                 "prototype_candidates": [card["card_id"] for card in eligible],
                 "matches": [],
             }, 2
         try:
-            validated_binding = validate_style_binding(
-                binding, library["style_binding_contract"], job, carrier
+            validated_binding = load_published_style_binding(
+                style_library,
+                draft_binding_id,
+                category=category,
+                job=job,
+                carrier=carrier,
+                contract=library["style_binding_contract"],
             )
         except ContractError as exc:
             return {
@@ -518,7 +1079,10 @@ def select(
         ]
         return {
             "status": "matched",
-            "message": "Direction cards control evidence/attention only; binding controls aesthetics.",
+            "message": (
+                "Direction cards control evidence/attention only; "
+                "binding controls aesthetics."
+            ),
             "query": query,
             "matches": matches,
         }, 0
@@ -529,23 +1093,67 @@ def select(
     ]
     return {
         "status": "matched_exploration",
-        "message": "Explicit exploration may use one candidate direction, but it remains prototype_only and cannot become ready.",
+        "message": (
+            "Explicit exploration may use one candidate direction, but it remains "
+            "prototype_only and cannot become ready."
+        ),
         "query": query,
         "matches": matches,
     }, 0
+
+
+def select_from_paths(
+    *,
+    category: str,
+    job: str,
+    carrier: str,
+    asset_manifest_path: Path | None,
+    style_library_path: Path | None,
+    draft_binding_id: str | None,
+    active_contraindications: set[str] | None = None,
+    mode: str = "production",
+    limit: int = 2,
+    library_path: Path = DEFAULT_LIBRARY,
+) -> tuple[dict[str, Any], int]:
+    """Callable fail-closed API; derive the asset root from the manifest path."""
+
+    library = load_library(library_path)
+    manifest = (
+        load_json(asset_manifest_path, "asset manifest")
+        if asset_manifest_path
+        else None
+    )
+    manifest_root = asset_manifest_path.resolve().parent if asset_manifest_path else None
+    return select(
+        library=library,
+        category=category,
+        job=job,
+        carrier=carrier,
+        manifest=manifest,
+        manifest_root=manifest_root,
+        style_library=style_library_path,
+        draft_binding_id=draft_binding_id,
+        active_contraindications=active_contraindications or set(),
+        mode=mode,
+        limit=limit,
+    )
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Select Xiaohongshu visual evidence/attention skeletons."
     )
+    parser.add_argument("--category", required=True, help="Exact category scope")
     parser.add_argument("--job", required=True, help="Exact primary_job taxonomy value")
     parser.add_argument("--carrier", required=True, help="Exact carrier taxonomy value")
     parser.add_argument(
         "--asset-manifest", type=Path, help="JSON object containing asset_manifest_refs"
     )
     parser.add_argument(
-        "--style-binding", type=Path, help="Exact published style-binding receipt"
+        "--style-library", type=Path, help="Version-2 style-library SQLite database"
+    )
+    parser.add_argument(
+        "--draft-binding-id", help="Published draft_style_bindings identifier"
     )
     parser.add_argument(
         "--contraindication", action="append", default=[],
@@ -569,16 +1177,17 @@ def main() -> int:
         )
         return 2
     try:
-        library = load_library(args.library)
-        manifest = (
-            load_json(args.asset_manifest, "asset manifest")
-            if args.asset_manifest
-            else None
-        )
-        style_binding = (
-            load_json(args.style_binding, "style binding")
-            if args.style_binding
-            else None
+        payload, code = select_from_paths(
+            category=args.category,
+            job=args.job,
+            carrier=args.carrier,
+            asset_manifest_path=args.asset_manifest,
+            style_library_path=args.style_library,
+            draft_binding_id=args.draft_binding_id,
+            active_contraindications=set(args.contraindication),
+            mode=args.mode,
+            limit=args.limit,
+            library_path=args.library,
         )
     except ContractError as exc:
         emit(
@@ -586,16 +1195,6 @@ def main() -> int:
             args.json,
         )
         return 2
-    payload, code = select(
-        library=library,
-        job=args.job,
-        carrier=args.carrier,
-        manifest=manifest,
-        binding=style_binding,
-        active_contraindications=set(args.contraindication),
-        mode=args.mode,
-        limit=args.limit,
-    )
     emit(payload, args.json)
     return code
 
