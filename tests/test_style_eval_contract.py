@@ -23,7 +23,7 @@ RED_BASELINE_SKILL_BUNDLE_SHA256 = (
     "da4fdd33f1db880ed3e9d0d46a9e778c51d0abb8d8bf869459cb4b99795f0b90"
 )
 PREREGISTRATION_SHA256 = (
-    "670779063bcbd4c22341228e582d6a740f6f4e67c603a20d860309dab2c6c550"
+    "8efa1479865b4ac46cb640306aa59055c97a499141a70ad3feb872c380e330c8"
 )
 
 STYLE_SCENARIOS = {
@@ -47,6 +47,34 @@ GEEKLAWS_RAW_FILES = {
 
 
 class StyleEvalContractTests(unittest.TestCase):
+    REVIEWER_SLOTS = {"reviewer_01", "reviewer_02", "reviewer_03"}
+
+    def assert_valid_blind_ballots(self, ballots: list[dict[str, object]]) -> None:
+        by_id = {str(ballot["ballot_id"]): ballot for ballot in ballots}
+        self.assertEqual(len(by_id), len(ballots), "ballot_id must be unique")
+        active_by_slot: dict[str, list[dict[str, object]]] = {}
+        for ballot in ballots:
+            slot = str(ballot["reviewer_slot"])
+            self.assertIn(slot, self.REVIEWER_SLOTS)
+            status = str(ballot["status"])
+            self.assertIn(status, {"valid", "invalidated"})
+            replacement_of = ballot.get("replacement_of")
+            if replacement_of is not None:
+                self.assertEqual(status, "valid")
+                original = by_id.get(str(replacement_of))
+                self.assertIsNotNone(original, "replacement must reference an audited ballot")
+                self.assertEqual(original["status"], "invalidated")
+                self.assertEqual(original["reviewer_slot"], slot)
+            if status == "valid":
+                active_by_slot.setdefault(slot, []).append(ballot)
+
+        self.assertEqual(set(active_by_slot), self.REVIEWER_SLOTS)
+        self.assertTrue(
+            all(len(rows) == 1 for rows in active_by_slot.values()),
+            "each preregistered slot must have exactly one active valid ballot",
+        )
+        self.assertEqual(sum(map(len, active_by_slot.values())), 3)
+
     def eval_artifact(self, relative_path: object, expected_root: Path) -> Path:
         path = (EVAL_ROOT / str(relative_path)).resolve()
         self.assertTrue(
@@ -217,7 +245,8 @@ class StyleEvalContractTests(unittest.TestCase):
         )
         self.assertEqual(text.count("    scale: [0, 1, 2, 3, 4]\n"), 5)
         for required in (
-            "  minimum_eligible: 3\n",
+            "  required_active_valid: 3\n",
+            "  maximum_active_valid: 3\n",
             "    - reviewer_01\n",
             "    - reviewer_02\n",
             "    - reviewer_03\n",
@@ -226,7 +255,9 @@ class StyleEvalContractTests(unittest.TestCase):
             "    - design_reviewer\n",
             "  seed_sha256: b4777f56e7fa995c13ab940c6deac755b3c04659a7ee04b7f8e7ed845360879e\n",
             "  score_imputation: forbidden\n",
-            "  fewer_than_three_eligible_ballots: mark_pilot_incomplete_and_do_not_pass\n",
+            "  active_valid_count_not_three: mark_pilot_incomplete_and_do_not_pass\n",
+            "  replacement_requires_invalidated_ballot: true\n",
+            "  replacement_must_use_same_slot: true\n",
             "    threshold: 3\n",
             "    style_grounding: 1\n",
             "    copy_grounding: 1\n",
@@ -257,6 +288,38 @@ class StyleEvalContractTests(unittest.TestCase):
                 "new_bundle_visuals_existed_at_freeze": False,
             },
         )
+
+    def test_preregistration_has_exactly_three_valid_reviewer_slots(self) -> None:
+        text = PREREGISTRATION.read_text(encoding="utf-8")
+        slots = re.findall(r"^    - (reviewer_[0-9]{2})$", text, re.MULTILINE)
+        self.assertEqual(slots, ["reviewer_01", "reviewer_02", "reviewer_03"])
+        self.assertEqual(text.count("  required_active_valid: 3\n"), 1)
+        self.assertEqual(text.count("  maximum_active_valid: 3\n"), 1)
+        self.assertNotIn("minimum_eligible", text)
+
+    def test_blind_scores_accept_three_valid_and_reject_fourth_nonreplacement(self) -> None:
+        three = [
+            {"ballot_id": "B-01", "reviewer_slot": "reviewer_01", "status": "valid"},
+            {"ballot_id": "B-02", "reviewer_slot": "reviewer_02", "status": "valid"},
+            {"ballot_id": "B-03", "reviewer_slot": "reviewer_03", "status": "valid"},
+        ]
+        self.assert_valid_blind_ballots(three)
+
+        with self.assertRaises(AssertionError):
+            self.assert_valid_blind_ballots(three[:2])
+        with self.assertRaises(AssertionError):
+            self.assert_valid_blind_ballots(
+                three
+                + [{"ballot_id": "B-04", "reviewer_slot": "reviewer_04", "status": "valid"}]
+            )
+
+        replaced = [
+            {"ballot_id": "B-01", "reviewer_slot": "reviewer_01", "status": "valid"},
+            {"ballot_id": "B-02", "reviewer_slot": "reviewer_02", "status": "invalidated"},
+            {"ballot_id": "B-02R", "reviewer_slot": "reviewer_02", "status": "valid", "replacement_of": "B-02"},
+            {"ballot_id": "B-03", "reviewer_slot": "reviewer_03", "status": "valid"},
+        ]
+        self.assert_valid_blind_ballots(replaced)
 
     def test_red_style_baselines_are_preserved(self) -> None:
         payload = json.loads(RESULTS.read_text(encoding="utf-8"))

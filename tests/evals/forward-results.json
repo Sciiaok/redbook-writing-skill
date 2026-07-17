@@ -5,7 +5,7 @@
   "method": "Clean-context agents loaded only the frozen Skill and named scenario, preserved raw outputs, and received an independent Critical/Important audit. Failed iterations remain in history. Current release requires two independently hashed passing outputs per high-risk scenario.",
   "visual_pilot_preregistration": {
     "file": "visual-pilot/preregistration.yaml",
-    "sha256": "670779063bcbd4c22341228e582d6a740f6f4e67c603a20d860309dab2c6c550",
+    "sha256": "8efa1479865b4ac46cb640306aa59055c97a499141a70ad3feb872c380e330c8",
     "status": "frozen",
     "new_bundle_visuals_existed_at_freeze": false
   },
@@ -748,7 +748,7 @@
       "execution_id": "red-style-geeklaws-old-skill-001",
       "skill_revision": "frozen-old-bundle-553cf94",
       "skill_bundle_sha256": "da4fdd33f1db880ed3e9d0d46a9e778c51d0abb8d8bf869459cb4b99795f0b90",
-      "preregistration_sha256": "670779063bcbd4c22341228e582d6a740f6f4e67c603a20d860309dab2c6c550",
+      "preregistration_sha256": "8efa1479865b4ac46cb640306aa59055c97a499141a70ad3feb872c380e330c8",
       "outcome": "fail",
       "scores": {
         "style_grounding": 1,
@@ -787,7 +787,7 @@
       "execution_id": "behavior-style-whitepaper-old-skill-001",
       "skill_revision": "frozen-old-bundle-553cf94",
       "skill_bundle_sha256": "da4fdd33f1db880ed3e9d0d46a9e778c51d0abb8d8bf869459cb4b99795f0b90",
-      "preregistration_sha256": "670779063bcbd4c22341228e582d6a740f6f4e67c603a20d860309dab2c6c550",
+      "preregistration_sha256": "8efa1479865b4ac46cb640306aa59055c97a499141a70ad3feb872c380e330c8",
       "outcome": "blocked",
       "behavior_status": "not_exercised",
       "scores": {
