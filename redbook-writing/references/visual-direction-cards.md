@@ -1,126 +1,225 @@
-# 跨类目视觉方向卡 v1
+# 跨类目视觉方向卡 v1.1
 
 机器资产：`assets/visual-direction-cards-v1.json`
 
-这 12 张卡解决的是“现有真实素材怎样被组织成一套像小红书、又能完成用户任务的视觉方向”，不是“什么版式会爆”。全部固定为：
+选择器：`scripts/select_visual_directions.py`
+
+这 16 张卡只回答两个问题：第一份真实证据怎样进入首屏；不同载体怎样安排证据、动作与边界。它们不回答“什么配色会爆”，也不提供字体、滤镜、裁切、标注或密度公式。
+
+全部方向卡固定为：
 
 ```text
+maturity                   = prototype
 performance_evidence_status = candidate_only
 performance_evidence_scope  = not_performance_evidence
 starter_eligible            = false
+aesthetic_authority          = published_style_binding_only
 ```
 
-公开互动样本只能帮助发现任务适配、系列常量、反例和待测假设。卡片不能代替当前类目研究、合格风格 binding，也不能把稿件推进到 `ready`。
+## 目录
 
-## 1. 选择卡片
+- [1. 生产态选择合同](#1-生产态选择合同)
+- [2. 方向卡索引](#2-方向卡索引)
+- [3. 素材 manifest](#3-素材-manifest)
+- [4. 风格 binding](#4-风格-binding)
+- [5. 载体角色与单图合并](#5-载体角色与单图合并)
+- [6. Prompt 变量合同](#6-prompt-变量合同)
+- [7. 失败状态](#7-失败状态)
+- [8. 审稿边界](#8-审稿边界)
+- [9. 证据与晋级](#9-证据与晋级)
 
-先写四项，再检索 JSON：
+## 1. 生产态选择合同
+
+按以下顺序运行，不从卡名倒推素材：
+
+1. 写定本篇唯一 `primary_job` 和 exact `carrier`。
+2. 把真实素材、事实收据、人工审校和授权证明写入 `asset_manifest_refs`。
+3. 运行选择器；只保留任务、载体、全部必需素材、素材数量门槛同时满足且未命中 contraindication 的卡。
+4. 在生产态提供 exact、`published` 的 style binding。方向卡只控制 evidence/attention skeleton；binding 控制审美。
+5. 若返回 `no_eligible_card` 或 `prototype_gap`，补真实输入或换载体，不让生成模型补图、补聊天、补过程、补效果或发明“类似风格”。
+
+```bash
+python3 redbook-writing/scripts/select_visual_directions.py \
+  --job search_answer \
+  --carrier screenshot_markup \
+  --asset-manifest run/asset-manifest.json \
+  --style-binding run/published-style-binding.json \
+  --json
+```
+
+探索态可在没有 binding 时查看候选骨架：
+
+```bash
+python3 redbook-writing/scripts/select_visual_directions.py \
+  --job relationship_build \
+  --carrier chat_dramatization \
+  --asset-manifest run/asset-manifest.json \
+  --mode exploration \
+  --json
+```
+
+探索结果固定为 `prototype_only`；只有显式 exploration 可以把候选卡当作单一探索方向，仍不能标为 ready 或回写成表现规则。
+
+## 2. 方向卡索引
+
+| 卡 | 载体入口 | 可解决的任务 | 第一份证据 | 最近替代思路 |
+|---|---|---|---|---|
+| VDC01 真实改造 | 实拍日记 / 照片批注 | 信任、决策 | 完整真实起点与过程 | 只有使用结果时转 VDC09 |
+| VDC02 工作物首屏 | 照片批注 / 清单步骤 | 搜索、权威 | 当前文件或工具 | 工作物不可公开时转 VDC11 |
+| VDC03 截图教程 | 截图批注 | 搜索 | 同版本连续截图 | 动态路径必要时转 VDC15 |
+| VDC04 产品比较 | 比较警示 / 实拍日记 | 决策、转化 | 多候选与统一协议 | 无统一协议时转 VDC09 |
+| VDC05 复杂解释 | 文字卡 / 照片批注 | 解释、权威 | 当前一手来源与答案图 | 单个工作物足够时转 VDC02 |
+| VDC06 关系档案 | 拼贴日记 / 实拍日记 | 关系、信任 | 全员授权档案与时间线 | 档案不完整时转 VDC12 |
+| VDC07 系列代理 | 文字卡 / 单图 / 拼贴 | 停留、关系 | 自有代理与本篇新事实 | 无自有代理时转 VDC10 |
+| VDC08 场景路线 | 照片批注 / 拼贴 / 实拍 | 搜索、决策 | 核验路线与当前信息 | 路线素材不可用时转 VDC11 |
+| VDC09 真实体验 | 实拍日记 / 照片批注 | 信任、转化 | 到手与真实使用 | 多候选统一协议时转 VDC04 |
+| VDC10 视觉反证 | 照片批注 / 单图 / 实拍 | 停留、关系 | 授权且无伤害的反证画面 | 有伤害风险时转 VDC12 |
+| VDC11 清单工作表 | 清单 / 文字卡 / 单图 | 搜索、决策 | 已审校行动与来源 | 必须看真实对象时转 VDC02 |
+| VDC12 氛围+实用出口 | 实拍 / 拼贴 | 关系、信任、转化 | 授权真实处境 | 核心为产品体验时转 VDC09 |
+| VDC13 聊天叙事 | 聊天演绎 | 关系、信任、停留 | 授权原始聊天或显著虚构标签 | 无授权时转 VDC12/VDC11 |
+| VDC14 过程视频 | 过程视频 | 信任、解释、决策 | 真实动作序列 | 只有照片时转 VDC01 |
+| VDC15 录屏教程 | 屏幕录制 | 搜索、解释 | 当前版本录屏与验证结果 | 静态足够时转 VDC03 |
+| VDC16 口播/现场 | 真人或现场视频 | 解释、信任、权威 | 真人/场地授权与主张依据 | 来源复杂时转 VDC05 |
+
+`VDC07` 是 `series_modifier_only`。即使已经有 published binding，也必须同时存在一个完成本篇任务的基础方向；系列代理不能单独成为生产方向。
+
+## 3. 素材 manifest
+
+每条 `asset_manifest_ref` 都要有以下字段；字段存在不等于审核通过，值也必须满足合同：
+
+```json
+{
+  "asset_id": "screen-01",
+  "material_codes": ["current_owned_screen_captures", "verified_path"],
+  "sha256": "64 位小写十六进制哈希",
+  "rights_basis": "owned",
+  "authorization_ref": null,
+  "license_ref": null,
+  "transform_history": [],
+  "privacy_review": "redacted",
+  "commercial_disclosure": "not_applicable",
+  "expires_at": null
+}
+```
+
+执行这些约束：
+
+- `rights_basis=written_permission` 时填写 `authorization_ref`。
+- `rights_basis=licensed` 时填写 `license_ref`。
+- 保存裁切、遮罩、去标识、调色和合成等变换记录；空数组只表示没有变换。
+- 把隐私和商业关系分别审查，不用“已授权”代替隐私或广告披露。
+- 对界面、价格、路线、营业、版本等会过期的信息填写 `expires_at`；过期 receipt 不参与选择。
+- 按 `distinct_asset_id` 计算素材数量；把同一文件复制多个文件名不能通过 count gate。
+
+Manifest 可以同时容纳照片、视频、界面、来源文档、授权单和人工审校记录。它们都必须有哈希，避免模型凭一个自然语言素材名宣称“已经有证据”。
+
+## 4. 风格 binding
+
+生产态必须提供与 `primary_job + carrier` 精确匹配的已发布 binding：
+
+```json
+{
+  "binding_id": "DSB-...",
+  "status": "published",
+  "primary_job": "search_answer",
+  "carrier": "screenshot_markup",
+  "snapshot_id": "SNAP-...",
+  "style_rule_ids": ["RULE-..."],
+  "aesthetic_contract": {
+    "palette": "来自已发布风格证据",
+    "typography": "来自已发布风格证据",
+    "image_treatment": "来自已发布风格证据",
+    "density": "来自已发布风格证据",
+    "annotation_language": "来自已发布风格证据",
+    "crop_logic": "来自已发布风格证据"
+  }
+}
+```
+
+权限边界必须清楚：
+
+| 方向卡控制 | Published style binding 控制 |
+|---|---|
+| 注意力路径 | 色彩与明暗关系 |
+| 证据到达顺序 | 字体、字号层级、字重 |
+| carrier role plan | 裁切与图像处理 |
+| 图像/页文/caption 分工 | 标注语法与装饰语言 |
+| 真实性、权利、隐私、披露边界 | 密度与系列识别常量 |
+
+不要把方向卡里的 prompt 当作审美 system prompt。没有 exact published binding 时，保留 `prototype_gap`；不要从卡名、类目印象或模型偏好临时发明色板。
+
+## 5. 载体角色与单图合并
+
+每张卡对每个可用 carrier 都有独立 `carrier_role_plans`，不要把轮播页序直接套到视频或单图：
+
+- 轮播：每页完成一个证据、动作、判断或边界；只合并因果相邻且仍能辨认的角色。
+- 聊天：先显示真实授权/虚构演绎标签，再给处境、关键来回、转折和行动；聊天气泡不能承载作者旁白。
+- 过程视频：真实对象与动作先于剪辑节奏；补拍、演示、变速和时间线重排必须披露。
+- 录屏：目标结果、版本、定位、动作、验证、异常分支形成同一版本闭环。
+- 口播/现场：人负责提出有边界的判断，来源、对象和演示负责证明；字幕不能代替依据。
+- 单图：只允许“主证据 → 判断/行动 → 来源/披露/边界”的可扫描合并；不得把整套轮播缩成微型卡片，也不得靠缩小字号补齐。
+
+每个 carrier 另有 `material_count_gates`。例如连续截图、比较对象和关系档案需要多条可区分素材；选择器按不同 `asset_id` 计数，不按文件名或材料标签重复计数。
+
+## 6. Prompt 变量合同
+
+`prompt_variables` 不再是字符串清单。每个变量必须声明：
 
 ```text
-唯一 primary_job
-第一份真实证据是什么
-可用 carrier
-素材权利 / 事实 / 隐私 / 商业披露约束
+name | type | required | null_behavior
 ```
 
-只选 `primary_job + carrier + required_materials` 同时匹配、且没有命中 contraindication 的卡。只能放宽类目，不能换任务或补造素材。需要两个原型时，选两条真正不同的 attention path；只换标题、字体和颜色仍是同一概念。
+执行规则：
 
-| 卡 | 优先任务 | 核心入口 | 最低真实素材 |
-|---|---|---|---|
-| VDC01 真实改造 | trust / decision | 起点→过程→结果→代价 | 完整前中后 + 成本/约束 |
-| VDC02 工作物首屏 | search / authority | 真实对象→定位→使用 | 当前文件/工具 + 来源/版本 |
-| VDC03 截图教程 | search | 路径→动作→结果 | 当前截图 + 已验证路径 |
-| VDC04 产品比较阵列 | decision / conversion | 范围→协议→分人群取舍 | 产品实拍 + 统一协议 + 披露 |
-| VDC05 复杂解释 | explain / authority | 范围证明→答案地图 | 当前一手来源 + 结论—来源对 |
-| VDC06 关系档案 | relationship / trust | 时间证据→关系弧线 | 全员授权档案 + 事件时间线 |
-| VDC07 系列代理视角 | feed / relationship | 稳定代理→本篇新矛盾 | 自有代理 + 新事实 + 虚构标签 |
-| VDC08 场景路线 | search / decision | 起点/人群/时长答案入口 | 核验路线 + 当前开放/交通信息 |
-| VDC09 真实体验/开箱 | trust / conversion | 到手状态→具体取舍 | 真实使用图 + 来源/周期/披露 |
-| VDC10 视觉反证笑点 | feed / relationship | 严肃命题↔同屏反证 | 授权真实反证画面 + 无伤害边界 |
-| VDC11 清单工作表 | search / decision | 高风险时刻→行动顺序 | 已审校条目 + 来源/版本 |
-| VDC12 氛围场景+实用出口 | relationship / trust | 真实氛围→同场景方法 | 真实场景 + 阻力 + 可执行方法 |
+- `required=true` 时固定 `null_behavior=block_selection`。
+- 每个 `page_roles.required_proof` 和 `carrier_role_plans.roles.required_proof` 都必须有同名必填变量。
+- `asset_manifest_refs` 始终必填。
+- `published_style_binding_id` 在静态候选卡中可空，但空值触发人工检查；生产选择器会额外要求 exact published binding。
+- 可选变量只能使用 `omit_clause`、`render_as_not_applicable` 或 `require_human_review`；禁止让模型猜一个默认值。
 
-## 2. 组装一次性设计 prompt
+Prompt 输出回显：已用 asset ID、未用原因、逐角色 proof job、copy job、caption job、缺失项、授权、隐私、商业披露和人工审稿点。输出不得自行升级为 ready。
 
-1. 读取卡片的 `prompt_variables`，只填已经存在的素材 ID、来源和人工结论；缺失项保持缺失，不让模型猜。
-2. 把 `prompt_template` 连同真实素材清单交给设计/生成工具。涉及照片、截图、文件、人物、产品效果和前后变化时，工具只能做裁切、确定性排版或非证据装饰，不能生成证据。
-3. 要求工具按 `field_contract.prompt_output_contract` 回显素材使用、逐页 role、图文分工、feed/full review 和未证明项。
-4. 把 `negative_prompt` 与 `anti_ppt_check` 原样加入审稿，不要只截取正向审美词。
+## 7. 失败状态
 
-方向卡是一次性 brief 的骨架，不是视觉模型的万能 system prompt。具体标题、素材顺序、颜色和字形应来自本篇任务与素材，而不是把卡片变成新的统一模板。
+| 状态 | 含义 | 正确动作 |
+|---|---|---|
+| `invalid_query` | job/carrier/contraindication 不在 taxonomy | 修正输入，不做近似匹配 |
+| `invalid_asset_manifest` | 哈希、权利、授权/许可、变换、隐私、商业或有效期不合格 | 修 receipt 或换素材 |
+| `no_eligible_card` | exact 卡存在但缺素材、数量不足或命中禁忌；或没有 exact job+carrier | 补真实输入、换 carrier 或按 nearest alternative 重做任务 |
+| `prototype_gap` | 骨架可用，但缺 exact published binding；或系列卡会成为唯一方向 | 发布 style binding 或增加基础方向 |
+| `matched_exploration` | 仅允许验证候选骨架 | 保持 prototype_only，不发布 ready |
+| `matched` | 素材和 binding 合同通过 | 仍需事实、视觉、权利与发布前人工审稿 |
 
-## 3. “原生”不等于故意粗糙
+选择器不会把“差一点匹配”的卡返回为合格结果。放宽类目可以，放宽任务、载体、素材真实性或权利不可以。
 
-小红书感来自“素材正在做事”，不是便签、手写、荧光笔、低饱和或随手拍的堆叠：
-
-- 真实改造允许不同角度和光线，是因为它们记录过程；不能为“原生感”故意加噪点。
-- 工作物与教程可以严格网格，是因为用户要定位；不能用企业 KV 盖住真实对象。
-- 关系档案可以不统一，是因为年份差异本身是证据；不能用 AI 旧照片补齐时间线。
-- 比较板可以整齐，是因为协议必须一致；不能用红黑分区替代测试标准。
-- 氛围场景可以很美，但前两页必须进入具体阻力，后页必须交付同一处境里的方法。
-
-判断是否 AI PPT 化，只问三件事：
-
-```text
-删掉渐变、图标、圆角卡，第一份真实证据还在吗？
-每页是否只完成一个场景 / 证据 / 步骤 / 比较 / 结论工作？
-把图片换成任意图库后内容仍成立吗？若成立，真实素材没有参与表达。
-```
-
-## 4. 图文分工与密度
-
-图片优先证明对象、过程、状态、位置、比例、时间或场景；页内文字解释图片看不见的判断、动作和边界；caption 补完整来源、方法、披露、替代方案和更正。三者逐字重复会增加密度，却不会增加信息。
-
-密度随任务变化，不设通用“少字”规则：
-
-- feed stop：低密，单一焦点；
-- screenshot / route：一页一个动作或路段；
-- comparison / checklist：中高密，但字段与扫描顺序固定；
-- complex explain：封面低密、内页一页一结论；
-- archive / atmosphere：前段低密，方法或结论段再提高密度。
-
-中文字体感只规定角色，不指定某个字体文件：场景/关系可用轻量人文黑体，严肃范围标题可用现代宋体或书卷感黑体，步骤与正文用高可读中性黑体。最多两种字族、三层字号；伪手写不能替代本人手写和真实来源。
-
-## 5. Feed 与全尺寸两次审稿
+## 8. 审稿边界
 
 ### Feed 缩略图
 
-- 1 秒能否认出对象、任务和第一焦点；
-- 文字是否仍可读，是否只有一个主承诺；
-- 真实证据是否比品牌、装饰和标题框更先被看到；
-- 有没有因为人物、颜值、争议或产品抢镜而发生注意力泄漏。
+- 第一眼能否认出对象、任务和第一份证据；
+- 标题是否只做承诺，不遮住证据；
+- 人物、颜值、争议、品牌或产品是否抢走本篇 primary job；
+- binding 的视觉语言是否真的来自已发布样本，而不是方向卡或模型默认审美。
 
-### 全尺寸
+### 全尺寸 / 播放态
 
-- 每页是否新增信息并关闭同一承诺；
-- asset_ref 与结论能否一一对应；
-- 来源、版本、授权、隐私和披露是否可见；
-- 字体、色彩、批注、网格和密度是否在完成信息工作；
-- 未证明项是否被诚实标出，而非被视觉润色掩盖。
+- 每个页面或镜头是否新增一个证据、动作、判断或边界；
+- 每个结论能否回指 manifest receipt；
+- 版本、授权、隐私、商业披露和有效期是否可见；
+- 视频时间线、变速、补拍和演示是否造成虚假因果；
+- 图片、页文、字幕与 caption 是否分工，而不是逐字重复；
+- 缺失项是否保持缺失，是否被设计润色成“仿佛已经证明”。
 
-## 6. 证据角色与晋级边界
+判断 AI PPT 化时，不寻找某个固定风格。检查：真实素材是否在做信息工作；载体角色是否闭环；删掉装饰后，证据、动作和边界是否仍成立。
 
-每张卡只允许三种角色：
+## 9. 证据与晋级
 
-- `task_fit`：素材和载体适合完成任务；不是表现规则。
-- `series_constant`：识别资产，可保持少量稳定；高低帖共有时不能解释表现。
-- `candidate`：需要同账号、同任务、同 carrier、相近阶段的对照和一方数据继续测试。
+方向卡只允许三种证据角色：
 
-方向卡本身永不升级为 starter 或表现规则。若未来得到完整配对和一方实验，应在 append-only style library 中发布新的 observation、rule、archetype 与 binding；不要改写这份静态候选卡，把旧 prompt 伪装成已验证。
+- `task_fit`：素材和载体适合完成任务，不是表现规则。
+- `series_constant`：帮助识别账号，但高低帖共有时不能解释表现。
+- `candidate`：注意力顺序或证据距离需要同账号、同任务、同 carrier、相近阶段的一方数据继续验证。
 
-## 7. 权利与真实性
+卡片本身永不升级为 starter 或表现规则。取得合格配对与一方实验后，把新 observation、rule、archetype 和 binding 发布进 append-only style library；保留这份静态候选卡的 `candidate_only` 边界，不回写成“已验证爆款模板”。
 
-参考样本统一为 `reference_only_no_reuse`。只迁移抽象任务机制，不复制图片、原句、人物、代理 IP、产品组合、路线、表格、色板、构图或页面顺序。
-
-以下素材不能由生成模型补造：真实人物/关系史、聊天、文件、系统界面、到手使用、前后效果、路线事实、成本、产品质地与功效。没有 owned / written permission / licensed 依据时，停止渲染；没有当前来源时，停止事实承诺；商业关系未知时，停止发布判断。
-
-## 8. 来源边界
-
-卡片综合了：站内公开高低代理审计、跨类目载体缺口、官方 2024 商家课程、学术/大样本审计，以及现有流量机制库。来源只能支持生产问题、任务适配、治理和待测假设：
-
-- 同一版式、真人、实拍、网格、深色、大字、美图、红框、便签都同时可能出现在高低公开代理样本中；
-- 公开赞藏评没有曝光分母，不能成为 traffic verdict；
-- 官方课程说明平台当时怎样教商家生产，不证明 2026 推荐算法；
-- 学术观察可建立来源、真实性、商业关系、AI 和实验边界，不能提供跨类目视觉因果公式。
-
-具体卡片的 `source_refs` 回指仓库中的证据文件；使用时要连同限制读取，不能只抄卡名和 prompt。
+参考样本统一为 `reference_only_no_reuse`。只迁移抽象任务机制，不复制图片、原句、人物、代理 IP、产品组合、路线、表格、色板、构图、镜头或页面顺序。公开赞藏评没有曝光分母，不能成为 traffic verdict；服务商或官方生产建议能证明工作流，不自动证明自然推荐因果。
