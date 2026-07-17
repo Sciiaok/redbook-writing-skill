@@ -1,0 +1,1043 @@
+{
+  "schema_version": "1.0.0",
+  "snapshot_date": "2026-07-18",
+  "title": "小红书内容生产：学术与大样本多模态证据审计",
+  "purpose": "把小红书原生研究翻译成标题、图片、正文、互动、真实性、个人风格、商业化和 AI 辅助的可执行边界；不生成爆款公式。",
+  "evidence_policy": {
+    "source_grades": {
+      "A": "当前官方规则或能力",
+      "B": "原始研究",
+      "C": "单方案例",
+      "D": "经验、低透明度或不可审计资料"
+    },
+    "claim_usability": {
+      "B": "可在限定作用域内定义审计、留痕或研究流程；不等于流量因果",
+      "C": "只生成假设、风险线索或实验变量，不进入默认表现规则",
+      "D": "当前不进入动作库"
+    },
+    "causal_rule": "没有随机/准随机分配、曝光测量、时间顺序与关键混杂控制时，相关结果不得晋级为内容效果因果。",
+    "content_effect_grade_A_count": 0
+  },
+  "headline_decisions": [
+    {
+      "decision_id": "D1",
+      "decision": "标题历史和近期语境只作为候选上下文",
+      "default_action": "只读取发布前的创作者历史；保存趋势来源日期与语义相关性",
+      "prohibited_inference": "标题相似度、热词或 ROUGE 等于点击、曝光或互动提升",
+      "source_ids": [
+        "S1"
+      ]
+    },
+    {
+      "decision_id": "D2",
+      "decision": "商业风险采用全笔记多模态审计",
+      "default_action": "联合检查标题、正文、全部图片、评论和 CTA，并由人工查证合同、报酬、赠品、链接和披露",
+      "prohibited_inference": "文风像广告即可证明存在商业关系",
+      "source_ids": [
+        "S3",
+        "S4"
+      ]
+    },
+    {
+      "decision_id": "D3",
+      "decision": "真实性、商业关系、AI 辅助和创作者声音分栏",
+      "default_action": "分别保存来源、授权、商业关系/披露、AI 使用范围和声音审核",
+      "prohibited_inference": "自然感可替代事实来源或商业披露",
+      "source_ids": [
+        "S3",
+        "S4",
+        "S5"
+      ]
+    },
+    {
+      "decision_id": "D4",
+      "decision": "字数、人脸、问题句、品牌露出、发布时间和趋势词仅可实验",
+      "default_action": "同账号、同主题、同商业状态、同分发方式，一次只改一个变量",
+      "prohibited_inference": "从观察性大样本直接导出通用最佳实践",
+      "source_ids": [
+        "S1",
+        "S2"
+      ]
+    },
+    {
+      "decision_id": "D5",
+      "decision": "结果复盘同时保留分母、时长和分发条件",
+      "default_action": "保存实际曝光或明确估算来源、互动分项、发布后观察时长、自然/付费状态和账号基线",
+      "prohibited_inference": "只用累计总互动评估内容",
+      "source_ids": [
+        "S1",
+        "S2",
+        "S5"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "S1",
+      "title": "How to Generate Popular Post Headlines on Social Media?",
+      "primary_url": "https://arxiv.org/abs/2309.09949",
+      "publication": {
+        "type": "arXiv preprint",
+        "version": "v1",
+        "date": "2023-09-18",
+        "peer_reviewed_version_found": false
+      },
+      "source_grade": "B",
+      "claim_usability": {
+        "candidate_context_and_experiment_hypothesis": "C",
+        "engagement_effect": "D"
+      },
+      "causal_status": "观察性相关 + 离线生成评测；无内容效果因果识别",
+      "design": [
+        "跨时间窗口标题相似度分组",
+        "作者层面聚合相关",
+        "离线序列生成与 ROUGE 评测"
+      ],
+      "data_window": {
+        "raw_start_year": 2020,
+        "raw_end_year": 2022,
+        "exact_dates_disclosed": false,
+        "trend_target_window": "2021 年最后 10 天",
+        "trend_reference_windows": "此前连续 5 个 90 天窗口"
+      },
+      "sample": {
+        "raw_posts": 1695219,
+        "accounts": 42447,
+        "account_label_conflict": "摘要称 celebrities，方法称 users",
+        "trend_target_titles": 50000,
+        "trend_titles_per_reference_window": 500,
+        "same_author_title_pairs": 1000000,
+        "cross_author_title_pairs": 1000000,
+        "generation_posts_after_filter": 248311,
+        "generation_train_2021": 150770,
+        "generation_validation_2022": 9780,
+        "generation_test_2022": 87761,
+        "generation_filter": "至少 500 赞、正文和标题非空、作者有前序帖子"
+      },
+      "variables": {
+        "observed": [
+          "正文",
+          "标题",
+          "点赞",
+          "月份",
+          "作者"
+        ],
+        "trend_proxy": "目标标题与各历史窗口标题的 Jaccard 词集合重合度；附 LCS、N-gram、cosine 检查",
+        "personal_style_index": "作者全部标题两两 Jaccard 均值",
+        "popularity_index": "作者全部帖子平均 log(likes)",
+        "generation_metrics": [
+          "ROUGE-1",
+          "ROUGE-2",
+          "ROUGE-L"
+        ],
+        "not_observed": [
+          "曝光",
+          "点击率",
+          "粉丝量",
+          "收藏/评论/分享",
+          "投放",
+          "商业关系",
+          "帖子观察时长"
+        ]
+      },
+      "key_findings": [
+        {
+          "finding": "最像最近 90 天窗口的标题组平均 553.78 赞，最像第三近窗口的组平均 486.93 赞；一年附近回升",
+          "interpretation": "标题重合与点赞相关，可能混入季节性、作者、主题、曝光和投放"
+        },
+        {
+          "finding": "同作者标题对平均相似度 0.081，跨作者为 0.017",
+          "interpretation": "可支持账号内存在可识别的表达重复"
+        },
+        {
+          "finding": "PSI [0.4,0.6) 组 PI 5.86，[0,0.2) 组 PI 5.39；标准误随 PSI 从 0.011 升至 0.184",
+          "interpretation": "作者层面描述性关系，不能定义最优风格强度"
+        },
+        {
+          "finding": "MEBART ROUGE-L 27.33，最佳基线 25.32",
+          "interpretation": "提高参考标题词面复现，不是 CTR 或互动提升"
+        }
+      ],
+      "auditability": {
+        "methods_public": true,
+        "raw_data_public": false,
+        "stable_code_or_data_found": false,
+        "collection_frame_disclosed": false
+      },
+      "biases": [
+        "抽样框、抓取与删帖过程未披露",
+        "趋势由标题词重合代理，可能把节日/周期词当趋势",
+        "作者、粉丝、主题、正文、投放、曝光和帖子年龄未控制",
+        "PSI 与 PI 可能使用全期数据并存在作者层级混杂",
+        "生成集只保留至少 500 赞帖子",
+        "ROUGE 衡量参考复现而非表现",
+        "趋势分组未报告各组 N、点赞方差或显著性检验，重尾均值可能受极端值影响",
+        "PSI 公式未说明是否排除 SIM(y_i,y_i)=1 的对角自配对；若未排除，n 个标题会机械贡献至少约 1/n，且各 PSI 档账号数/标题数未报告"
+      ],
+      "can_support": [
+        "从同一创作者历史标题提取句式、词汇、标点和信息组织习惯",
+        "近期词和周期词可形成有时间戳、需语义校验的候选上下文",
+        "风格/趋势输入可用于候选生成"
+      ],
+      "cannot_support": [
+        "复制热词或提高标题相似度会提升自然流量",
+        "PSI 存在通用最优区间",
+        "500 赞是热门阈值",
+        "ROUGE 或相似度可以作为爆款分",
+        "2020–2022 模式可直接迁移到 2026"
+      ],
+      "skill_actions": [
+        "标题生成只读取 published_before_current=true 的账号历史",
+        "输出 style_elements_kept、new_information、trend_source_date、semantic_relevance",
+        "趋势缺来源日期或仅装饰拼接时拒绝晋级",
+        "在同账号/同主题、相同观察窗和实际曝光下实验"
+      ],
+      "counterexamples": [
+        "大号长期使用固定句式会同时拥有高 PSI 与高点赞；新号复制句式并不会获得其粉丝和分发",
+        "春节/圣诞词隔年重新相似说明周期性，不证明旧趋势提高表现"
+      ]
+    },
+    {
+      "source_id": "S2",
+      "title": "What Makes Social Posts Go ‘Hot’? A Multimodal Analysis of Creator–Content–Timing Signals on a Visual Social Platform",
+      "primary_url": "https://www.mdpi.com/0718-1876/21/1/24",
+      "doi": "10.3390/jtaer21010024",
+      "publication": {
+        "journal": "Journal of Theoretical and Applied Electronic Commerce Research",
+        "year": 2026,
+        "volume": 21,
+        "issue": 1,
+        "article": 24,
+        "peer_reviewed": true
+      },
+      "source_grade": "B",
+      "claim_usability": {
+        "high_engagement_beauty_hypothesis_registry": "C",
+        "engagement_effect": "D"
+      },
+      "causal_status": "高互动层内的观察性 OLS 回归与描述性 K-means；无因果识别",
+      "design": [
+        "按结果条件筛选后的观察性 OLS 回归",
+        "描述性 K-means 聚类"
+      ],
+      "data_window": {
+        "brand_spend_ranking_window": "2023-05 至 2023-10",
+        "post_start": "2022-12-09",
+        "post_end": "2024-02-01",
+        "distinct_dates": 420
+      },
+      "sample": {
+        "brands": 100,
+        "brand_frame": "HUITUNDATA 累计广告投入前 100 个美妆/个护品牌",
+        "selection": "每品牌按总互动取前 3000 条，限图文且首封面可取",
+        "before_core_missing_and_cover_attrition": 169773,
+        "removed": 31060,
+        "removed_rate": 0.183,
+        "final_posts": 138713,
+        "creator_regression_n_total_engagement": 138713,
+        "creator_regression_n_estimated_view_rate": 134619,
+        "creator_regression_n_cost_efficiency": 110862,
+        "mean_estimated_views": 21576,
+        "mean_total_interactions": 1734,
+        "median_creator_followers": 12323
+      },
+      "variables": {
+        "outcomes": {
+          "total_engagement": "实际点赞+收藏+评论+分享",
+          "engagement_rate": "总互动 / Gray Dolphin 估算曝光 × 1000",
+          "int_per_cost": "总互动 / 平台报价估算成本 × 1000，仅正报价"
+        },
+        "creator_and_commercial": [
+          "粉丝层级",
+          "品牌号",
+          "品牌地位",
+          "品牌关联发帖量",
+          "蒲公英官方报备",
+          "估算报价"
+        ],
+        "text": [
+          "清洗后标题+正文字符数",
+          "话题数",
+          "问号数",
+          "品牌提及模式"
+        ],
+        "image": [
+          "仅首张封面的 API 标签",
+          "人脸数",
+          "推断年龄",
+          "表情",
+          "吸引力分数",
+          "性别分数"
+        ],
+        "timing": {
+          "declared_in_methods": [
+            "季节/月",
+            "月内日期",
+            "星期",
+            "时段",
+            "节日窗口"
+          ],
+          "clearly_reported_in_core_variable_table_and_regressions": [
+            "季节/月",
+            "月内日期",
+            "星期"
+          ],
+          "reporting_gap": "时段和节日窗口没有与前三类同等透明的核心变量/系数报告"
+        }
+      },
+      "key_findings": [
+        {
+          "feature": "log 文本字符数",
+          "total_interactions_beta": -0.685,
+          "estimated_view_rate_beta": -0.032,
+          "interpretation": "总量负相关，估算效率系数很小；不能定义字数阈值"
+        },
+        {
+          "feature": "首封面人脸数",
+          "total_interactions_beta": 0.153,
+          "estimated_view_rate_beta": -0.008,
+          "interpretation": "总量与估算效率方向相反，不能推导人脸提高 CTR"
+        },
+        {
+          "feature": "话题数",
+          "total_interactions_beta": -0.017,
+          "estimated_view_rate_beta": 0.003,
+          "interpretation": "方向相反；计数不代表相关性"
+        },
+        {
+          "feature": "问号数",
+          "total_interactions_beta": 0.12,
+          "estimated_view_rate_beta": 0.0101,
+          "interpretation": "问号是粗代理，只有约 9% 帖子含问号，不能证明真实提问导致互动"
+        },
+        {
+          "feature": "只提焦点品牌，相对不提品牌",
+          "total_interactions_beta": -0.436,
+          "estimated_view_rate_beta": -0.084,
+          "interpretation": "可能混入帖子目的、品类、创作者与商业强度；不能鼓励隐藏品牌"
+        },
+        {
+          "feature": "蒲公英官方报备，相对未报备",
+          "total_interactions_beta": -0.236,
+          "estimated_view_rate_beta": 0.084,
+          "estimated_cost_efficiency_beta": -0.378,
+          "interpretation": "不同结果分母方向不一；未报备不是无商业关系的事实标签"
+        },
+        {
+          "feature": "周日，相对周一",
+          "total_interactions_beta": 0.1,
+          "timing_r2_total_before": 0.1975,
+          "timing_r2_total_after": 0.2009,
+          "timing_r2_rate_before": 0.0307,
+          "timing_r2_rate_after": 0.0351,
+          "interpretation": "时间变量增量解释力小；原始高互动帖数量更多集中周二至周五"
+        },
+        {
+          "feature": "文本长度分组",
+          "short_definition": "0–116 字",
+          "short_share": 0.251,
+          "short_mean_total": 2842,
+          "long_definition": "至少 259 字",
+          "long_share": 0.499,
+          "long_mean_total": 1279,
+          "interpretation": "三个长度组每估算曝光互动大体相近，阈值只属于该样本"
+        }
+      ],
+      "auditability": {
+        "article_public": true,
+        "raw_data_public": false,
+        "data_access": "licensed",
+        "derived_code_and_dictionary": "upon reasonable request",
+        "estimated_denominator_algorithms_public": false,
+        "zero_log_transformation_disclosed": false,
+        "unresolved_internal_source_conflicts": [
+          "169,773 条先称已满足首图可取，后又因首图不可得等删除 31,060 条",
+          "报价在变量表称平台报价，在限制部分称 Huitun quoted price"
+        ]
+      },
+      "biases": [
+        "按总互动取每品牌前 3000 条，存在结果条件选择/碰撞偏差",
+        "只含高广告投入美妆品牌关联帖，不代表普通 UGC、视频和低曝光内容",
+        "曝光和成本是第三方估算/报价，不是平台实际曝光或实际支出",
+        "蒲公英未报备不等于没有商业关系",
+        "同一账号/品牌多帖嵌套，未报告账号/品牌固定效应或聚类稳健标准误",
+        "未见发布后观察窗口标准化",
+        "只分析首图且人脸属性来自可能含文化/性别偏差的商业 API",
+        "31,060 条流失未报告流失偏差",
+        "K=4 聚类由肘部法和可解释性选择，不是稳定因果模板",
+        "聚类正文一次把 Cluster 3 互动率系数写成 0.63，表 10 与约 6% 的文字解释均对应 0.063",
+        "总互动、估算曝光和估算报价均含 0，但论文未披露自然对数的零值处理；相关系数不可独立复算",
+        "样本流水线对 169,773 条是否已满足首图可取自相矛盾，报价来源在平台与 Huitun 之间也不一致"
+      ],
+      "can_support": [
+        "形成美妆品牌高互动层的实验变量清单",
+        "总互动和曝光效率可能方向不同，Skill 应并列展示结果分母",
+        "估算曝光、报价和视觉标签必须带 metric_provenance"
+      ],
+      "cannot_support": [
+        "116/258 字是通用阈值",
+        "周日、月底、冬季是通用黄金时间",
+        "封面人脸、年轻女性或高吸引力面孔提高 CTR/转化",
+        "小号更有效率是采购因果规则",
+        "非蒲公英报备等于自然内容",
+        "减少品牌披露会提高表现",
+        "四类聚类是可复制稳定模板"
+      ],
+      "skill_actions": [
+        "字数、人脸、问句、话题、品牌露出和时间全部标为 experiment_only",
+        "实验锁定账号、主题、商业状态、观察窗和分发方式，一次只改一个变量",
+        "并列报告实际曝光与互动分项；估算数据单独标注",
+        "禁止用年龄、性别或吸引力分数选图"
+      ],
+      "counterexamples": [
+        "人脸数与总互动正相关、与每估算曝光互动微负",
+        "话题数对总互动和估算效率方向相反",
+        "高互动帖原始数量更多集中周二至周五，但控制后周日相对周一为正"
+      ]
+    },
+    {
+      "source_id": "S3",
+      "title": "The Informal Labor in Creator Economy: The Making of Key Opinion Consumers From Ordinary Users on Xiaohongshu",
+      "preprint_title": "The Informal Labor of Content Creators: Situating Xiaohongshu's Key Opinion Consumers in Relationships to Marketers, Consumer Brands, and the Platform",
+      "preprint_url": "https://arxiv.org/abs/2409.08360",
+      "primary_url": "https://doi.org/10.1145/3711086",
+      "doi": "10.1145/3711086",
+      "publication": {
+        "journal": "Proceedings of the ACM on Human-Computer Interaction",
+        "volume": 9,
+        "issue": 2,
+        "date": "2025-05-02",
+        "peer_reviewed": true
+      },
+      "source_grade": "B",
+      "claim_usability": {
+        "production_mechanism_and_governance": "B",
+        "engagement_effect": "D"
+      },
+      "causal_status": "数字民族志与访谈；解释生产机制，不估计效果大小或普遍率",
+      "design": [
+        "数字民族志与参与观察",
+        "半结构访谈",
+        "扎根理论编码"
+      ],
+      "data_window": {
+        "abstract_active_fieldwork_claim": "九个月",
+        "methods_calendar_start": "2021-12",
+        "methods_calendar_end": "2023-09",
+        "calendar_span_months_approx": 21,
+        "coding_start": "2023-05",
+        "coding_end": "2023-12",
+        "coding_months": 8,
+        "unresolved_conflict": "论文未解释九个活跃月与约 21 个月日历跨度的关系"
+      },
+      "sample": {
+        "content_creators_interviewed": 16,
+        "industry_informants_interviewed": 8,
+        "industry_roles": [
+          "营销人员",
+          "广告代理",
+          "平台员工"
+        ],
+        "recruitment": [
+          "平台联系",
+          "作者既有跨国企业网络",
+          "知情人引荐"
+        ],
+        "participant_observation": [
+          "研究账号点赞/收藏/评论商业内容",
+          "评论回复与私信",
+          "微信/iMessage",
+          "线下互动"
+        ]
+      },
+      "variables": {
+        "materials": [
+          "访谈",
+          "田野笔记",
+          "备忘录",
+          "16 位创作者账号与品牌商业帖",
+          "平台/政策/媒体/管理层公开材料"
+        ],
+        "analytic_concepts": [
+          "创作者生产与变现实践",
+          "营销方筛选/审核/返工",
+          "品牌协商",
+          "平台机制",
+          "报酬与可见性"
+        ],
+        "effect_variables": "定性研究没有可用于估计效果大小的自变量/因变量"
+      },
+      "analysis": "两位作者以扎根理论方式分别开放编码样本，讨论代码本后进行第二轮编码",
+      "key_findings": [
+        "样本中的创作者研究受众数据、寻找具体有用的垂直主题、维持视觉/人设一致并测试选题",
+        "营销方筛选账号与历史内容，逐字审核、反馈返工并在批准后付款",
+        "看似日常、普通、未经修饰的呈现可能依赖高度组织化的商业劳动",
+        "55% 机构抽成、平台 10% 抽成和搜索隐藏 10 天等数字来自特定知情人叙述，未独立验证"
+      ],
+      "auditability": {
+        "methods_public": true,
+        "participant_count_public": true,
+        "interview_duration_public": false,
+        "full_participant_table_public": false,
+        "post_comment_fieldnote_counts_public": false,
+        "saturation_or_negative_case_counts_public": false
+      },
+      "biases": [
+        "小型目的/网络样本，可能集中于特定城市、关系网和商业场景",
+        "研究者参与互动可能改变行为",
+        "疫情时期和 2021–2023 环境限制当前迁移",
+        "商业劳动为研究焦点，不能外推所有非商业创作者",
+        "不能估算现象普遍率或流量效果"
+      ],
+      "can_support": [
+        "把日常感建模为素材来源、劳动、协商与披露过程，而非可复制的审美 token",
+        "账号声音应来自创作者真实历史和授权边界",
+        "商业 brief、修改、审批、付款和使用权应留痕",
+        "垂直性可作为市场实践假设"
+      ],
+      "cannot_support": [
+        "像普通人、不太专业或随手拍会提高互动",
+        "隐瞒合作、伪装 KOC 或编造体验",
+        "单个知情人的抽成、处罚或报价是 2026 平台规则",
+        "垂直是平台分发因果律"
+      ],
+      "skill_actions": [
+        "新增 experience_provenance",
+        "新增 creator_authorization",
+        "新增 commercial_relationship 与 visible_disclosure",
+        "新增 revision_approvals、rights_and_payment",
+        "真实性与商业披露不得合并为单一 authentic 布尔值"
+      ],
+      "counterexamples": [
+        "有生活照、口语和缺点描述的普通人体验仍可能由品牌逐字审核并付费",
+        "精致内容也可能是创作者真实自费体验；审美不能反推关系事实"
+      ]
+    },
+    {
+      "source_id": "S4",
+      "title": "CHASM: Unveiling Covert Advertisements on Chinese Social Media",
+      "primary_url": "https://proceedings.neurips.cc/paper_files/paper/2025/file/abc663d2e6b189615a210cb931f935ea-Paper-Datasets_and_Benchmarks_Track.pdf",
+      "dataset_url": "https://huggingface.co/datasets/Jingyi77/CHASM-Covert_Advertisement_on_RedNote",
+      "code_url": "https://github.com/Jingyi62/CHASM",
+      "publication": {
+        "venue": "NeurIPS 2025 Datasets & Benchmarks Track",
+        "peer_reviewed": true
+      },
+      "source_grade": "B",
+      "claim_usability": {
+        "multimodal_audit_workflow": "B",
+        "risk_cues": "C",
+        "commercial_relationship_truth": "D"
+      },
+      "causal_status": "检测基准；不研究内容对互动的因果效果",
+      "design": [
+        "人工标注多模态检测基准",
+        "模型零样本/上下文学习/微调评测",
+        "图片与评论模态消融"
+      ],
+      "data_window": {
+        "collection_start": "2024-09",
+        "collection_end": "2024-10",
+        "earliest_post": "2020-03",
+        "latest_post": "2024-10",
+        "median_post_time": "2024-09"
+      },
+      "sample": {
+        "posts": 4992,
+        "paper_positive_covert_ads": 612,
+        "dataset_page_positive_covert_ads": 613,
+        "paper_negative": 4380,
+        "dataset_page_negative": 4379,
+        "product_sharing_hard_negatives": 1127,
+        "positive_share_in_constructed_dataset": 0.123,
+        "average_images": 5.28,
+        "average_post_text_length": 196.63,
+        "average_comment_text_length": 25.01,
+        "collector_accounts": 3,
+        "collector_account_state": "无浏览历史的新账号",
+        "excluded": "带明示广告标签的帖子"
+      },
+      "variables": {
+        "observed": [
+          "标题",
+          "正文",
+          "全部图片",
+          "评论",
+          "发布日期",
+          "隐性广告标签"
+        ],
+        "post_text_length_unit_disclosed": false,
+        "comment_text_length_unit_disclosed": false
+      },
+      "annotation": {
+        "annotators": 5,
+        "annotator_profile": "每日使用小红书超过 1 小时的中文学生",
+        "qualification_gold_questions": 20,
+        "qualification_threshold": 0.95,
+        "embedded_gold_questions": 50,
+        "annotations": 6474,
+        "product_related_voting": "3 人多数票，至少一名资深标注者",
+        "initial_fleiss_kappa": 0.65,
+        "gold_accuracy_after_dynamic_workflow": 0.94
+      },
+      "key_findings": [
+        {
+          "finding": "去掉评论时微调 Qwen2.5-7B F1 从 0.71 降到 0.62；去掉图片降到 0.54",
+          "interpretation": "商业风险审核需要跨正文、图片和评论；不是互动优化证据"
+        },
+        {
+          "finding": "零样本 GPT-4o F1 0.597；最佳微调 Qwen2.5-7B F1 0.756",
+          "interpretation": "模型不够可靠，不能自动判定关系事实或发布"
+        },
+        {
+          "finding": "购买路径、图片/评论导流、私群/私信销售、夸张话术、只讲优点、单品牌聚焦为标注线索",
+          "interpretation": "只能触发查证，不能证明收钱或意图"
+        },
+        {
+          "finding": "图数、正文长度、评论数、评论均长和话题数的正负样本分布整体相似",
+          "interpretation": "单个计数不足以识别隐性广告"
+        }
+      ],
+      "auditability": {
+        "paper_public": true,
+        "dataset_public": true,
+        "code_public": true,
+        "analysis_code_public": false,
+        "code_scope_at_snapshot": "GitHub 仅 README 与 api_inference.py；无数据构建、标注、训练、微调和消融复现实验代码",
+        "dataset_file_access": "Hugging Face 仓库公开示例 parquet、完整 split parquet 与 WebDataset tar 文件",
+        "license_conflict": "Hugging Face 元数据标 MIT；论文 checklist 称模型/数据采用 restricted licenses and access terms",
+        "privacy_actions": [
+          "不收集用户名/IP",
+          "遮盖姓名/电话/邮箱",
+          "遮盖人脸",
+          "随机复核 30 条残余隐私"
+        ]
+      },
+      "biases": [
+        "隐性广告定义含直接经济利益和有意伪装，但标注者无法直接观察付款和主观意图",
+        "标签根据内容线索推断，存在构念误差和循环性",
+        "3 个新账号、两个月采集窗口没有完整抽样概率",
+        "明示广告被排除，类别比例不是平台发生率",
+        "学生标注者不是合同、财务或监管事实核验者",
+        "论文与数据页正负例各有 1 条版本口径差异",
+        "数据文件可访问但主分析代码未公开，无法复现构建/训练/消融",
+        "论文与 Hugging Face 的许可口径冲突"
+      ],
+      "can_support": [
+        "风险审核必须跨标题、正文、全部图片、评论和 CTA",
+        "AI 可做 risk_triage 并排序人工复核优先级",
+        "单品牌、夸张话术和只讲优点等可作为风险线索"
+      ],
+      "cannot_support": [
+        "从文风、字数、图数、人脸、缺点或单品牌判断是否收钱",
+        "模型预测可作为 truth_label、自动拒发或事实指控",
+        "12.3% 是平台隐性广告率",
+        "去掉/添加检测线索会提高互动"
+      ],
+      "skill_actions": [
+        "新增 commercial_risk_review，逐模态记录 cue、location、evidence_needed、human_decision",
+        "只有合同、报酬、赠品、联盟链接、授权等来源证据可更新 commercial_relationship",
+        "模型分数只影响人工复核优先级"
+      ],
+      "counterexamples": [
+        "真实自费体验也可能只写一个品牌并附购买路径",
+        "付费内容也可能诚实写缺点；风格线索和关系事实不等价"
+      ]
+    },
+    {
+      "source_id": "S5",
+      "title": "RedNote-Vibe: A Dataset for Capturing Temporal Dynamics of AI-Generated Text in Lifestyle Social Media",
+      "primary_url": "https://arxiv.org/abs/2509.22055",
+      "repository_url": "https://github.com/ydli-ai/RedNote-Vibe",
+      "publication": {
+        "type": "arXiv preprint",
+        "current_version_at_snapshot": "v2",
+        "revision": "2026-04",
+        "peer_reviewed_version_found": false
+      },
+      "source_grade": "B",
+      "claim_usability": {
+        "ai_qa_risk_lead": "C",
+        "engagement_effect": "D"
+      },
+      "causal_status": "分类器推断后的描述性比较；真实探索集无 AI 使用真值",
+      "design": [
+        "pre-LLM 人类种子与合成 AI 变体的检测基准",
+        "分类器标注后的真实纵向探索集描述性比较",
+        "分类器定义的作者分组比较"
+      ],
+      "data_window": {
+        "real_post_start": "2020-10",
+        "real_post_end": "2025-07",
+        "exploration_period": "2023–2025"
+      },
+      "sample": {
+        "claimed_total_posts": 148000,
+        "domain_table_sum_approx": 156800,
+        "unresolved_post_count_difference": 8800,
+        "named_main_domains_in_collection_text": 10,
+        "domain_table_rows_including_others": 11,
+        "search_tags_approx": 500,
+        "exploration_posts": 90000,
+        "minimum_chinese_characters": 100,
+        "excluded_content": "少于 100 个中文字符、主要为图片型的笔记",
+        "authors_with_at_least_4_posts": 829,
+        "classifier_inferred_traditional_authors": 570,
+        "classifier_inferred_ai_reliant_authors": 230,
+        "classifier_inferred_ai_augmented_authors": 29
+      },
+      "variables": {
+        "observed": [
+          "标题",
+          "正文",
+          "标签",
+          "时间",
+          "点赞",
+          "评论",
+          "收藏",
+          "领域"
+        ],
+        "not_observed": [
+          "图片",
+          "曝光",
+          "粉丝",
+          "投放",
+          "商业关系",
+          "帖子观察时长"
+        ],
+        "training_labels": "2022-11 前帖子视作人类，基于其种子生成 AI 版本",
+        "llm_count_conflict": "正文称 17 个 LLM，比较表写 18",
+        "exploration_labels": "由 PLAD 以 0.9 阈值推断",
+        "validation_false_positive_rate": 0.049
+      },
+      "key_findings": [
+        {
+          "finding": "6 个领域内分类为人类的帖子互动中位数更高、分类为 AI 的帖子高互动离群点更少",
+          "interpretation": "没有作者/主题/曝光/帖子年龄/投放匹配，不能解释为 AI 因果"
+        },
+        {
+          "finding": "29 位分类为混合使用的作者描述性互动较高",
+          "interpretation": "组极小且由分类器定义，不能证明人机混合最优",
+          "sensitivity_example": {
+            "assumptions": "恰好 4 帖、均为人类、4.9% 单帖假阳性率可迁移且误差相互独立",
+            "probability_at_least_one_false_positive": 0.182,
+            "formula": "1-(1-0.049)^4",
+            "warning": "仅作压力测试；真实错误可能相关，不是实测作者误分率"
+          }
+        },
+        {
+          "finding": "节奏一致、词汇多样性、缺少犹豫/自我修正等是检测特征",
+          "interpretation": "不是质量指标，不能反向用于伪造真人感"
+        }
+      ],
+      "auditability": {
+        "paper_public": true,
+        "repository_public": true,
+        "data_entry": "Google Drive",
+        "license": "CC BY-NC 4.0",
+        "analysis_code_public": false,
+        "code_scope_at_snapshot": "README、README_zh、overview.png、quick_start.py；quick_start 是 BERT 示例，不是 PLAD 主分析",
+        "internal_count_consistency": false,
+        "real_ai_use_ground_truth": false
+      },
+      "biases": [
+        "从热门/搜索标签采集，不能代表信息流全体",
+        "删除少于 100 字的图片型笔记，强烈偏向长文本",
+        "帖子年龄、作者规模、主题、曝光、投放和商业状态未控制",
+        "探索集无 AI 真值，结论依赖分类器误差、漂移和合成到真实迁移",
+        "ChatGPT 前不等于绝无任何生成工具",
+        "148,000 与领域表约 156,800 不一致",
+        "17 与 18 个 LLM 口径不一致",
+        "混合作者仅 29 人",
+        "公开仓库未提供 PLAD 主分析、纵向比例或互动比较的复现实现"
+      ],
+      "can_support": [
+        "AI 草稿需人工核查真实经历、事实、作者声音和同质化",
+        "AI 使用状态应独立留痕",
+        "评估 AI 工作流应测 QA 成本、事实错误、声音偏移和修改轮数"
+      ],
+      "cannot_support": [
+        "纯人写在平台上互动更高",
+        "人机混合一定优于纯人或纯 AI",
+        "PLAD 特征可作为去 AI 味指令",
+        "文本分类可证明作者是否使用 AI",
+        "刻意添加错字、犹豫或不连贯会提高质量/互动"
+      ],
+      "skill_actions": [
+        "保存 ai_assistance_scope",
+        "保存 human_source_material",
+        "保存 fact_check_owner、voice_review_owner、post_edit_count",
+        "AI 标签不得更新真实性或商业关系字段"
+      ],
+      "counterexamples": [
+        "成熟作者的选题、粉丝和投放可能同时带来高互动与成熟 AI 使用，产生混杂",
+        "故意写得不顺可能更像检测器训练集的人类，但不等于更有用或可信"
+      ]
+    }
+  ],
+  "production_boundaries": [
+    {
+      "dimension": "title",
+      "default_actions": [
+        "标题与正文/封面承诺一致",
+        "只读取发布前账号历史",
+        "趋势来源带时间戳"
+      ],
+      "experiment_only": [
+        "句式相似度",
+        "趋势词",
+        "标点",
+        "问题句"
+      ],
+      "prohibited": [
+        "相似度、ROUGE 或热词等于点击/流量"
+      ],
+      "source_ids": [
+        "S1"
+      ]
+    },
+    {
+      "dimension": "cover_and_images",
+      "default_actions": [
+        "检查首图与全部图是否支持承诺",
+        "商业线索逐图定位"
+      ],
+      "experiment_only": [
+        "有无人脸",
+        "产品占比",
+        "信息密度"
+      ],
+      "prohibited": [
+        "年轻/女性/高吸引力面孔更有效",
+        "人脸回归等于 CTR"
+      ],
+      "source_ids": [
+        "S2",
+        "S4"
+      ]
+    },
+    {
+      "dimension": "body_text",
+      "default_actions": [
+        "事实、体验、条件、限制和披露分层",
+        "长度由信息任务决定"
+      ],
+      "experiment_only": [
+        "长短版本",
+        "品牌提及方式",
+        "话题数"
+      ],
+      "prohibited": [
+        "116/258 字是阈值",
+        "越短越火"
+      ],
+      "source_ids": [
+        "S2",
+        "S5"
+      ]
+    },
+    {
+      "dimension": "interaction_and_comments",
+      "default_actions": [
+        "只做真实答疑",
+        "检查评论购买/私信/群聊路径",
+        "记录互动分项"
+      ],
+      "experiment_only": [
+        "真实问题与无问题",
+        "CTA 位置"
+      ],
+      "prohibited": [
+        "多问号必然带来评论",
+        "隐藏导流"
+      ],
+      "source_ids": [
+        "S2",
+        "S4"
+      ]
+    },
+    {
+      "dimension": "authenticity",
+      "default_actions": [
+        "来源、授权、商业关系和披露分别留证"
+      ],
+      "experiment_only": [
+        "不同真实素材的呈现方式"
+      ],
+      "prohibited": [
+        "口语、随手拍、缺点或错字等于真实/非商业"
+      ],
+      "source_ids": [
+        "S3",
+        "S4",
+        "S5"
+      ]
+    },
+    {
+      "dimension": "personal_style",
+      "default_actions": [
+        "从本人历史提取可解释元素",
+        "保留新信息预算"
+      ],
+      "experiment_only": [
+        "固定句式强度",
+        "视觉一致程度"
+      ],
+      "prohibited": [
+        "PSI 中间值最优",
+        "重复越多越有风格"
+      ],
+      "source_ids": [
+        "S1",
+        "S3"
+      ]
+    },
+    {
+      "dimension": "commercialization",
+      "default_actions": [
+        "合同、赠品、报酬、链接、授权与可见披露留痕",
+        "多模态人工复核"
+      ],
+      "experiment_only": [
+        "品牌露出结构",
+        "比较型内容"
+      ],
+      "prohibited": [
+        "非蒲公英报备等于自然",
+        "少提品牌可隐瞒合作"
+      ],
+      "source_ids": [
+        "S2",
+        "S3",
+        "S4"
+      ]
+    },
+    {
+      "dimension": "ai_assistance",
+      "default_actions": [
+        "记录使用范围、来源、事实与声音审核人"
+      ],
+      "experiment_only": [
+        "不同协作流程的 QA 成本"
+      ],
+      "prohibited": [
+        "纯人必胜或混合必胜",
+        "添加瑕疵即可真人化"
+      ],
+      "source_ids": [
+        "S5"
+      ]
+    },
+    {
+      "dimension": "timing",
+      "default_actions": [
+        "统一观察窗",
+        "记录自然/付费和账号基线"
+      ],
+      "experiment_only": [
+        "同账号周内或时段测试"
+      ],
+      "prohibited": [
+        "周日、月底或冬季是通用黄金时间"
+      ],
+      "source_ids": [
+        "S2"
+      ]
+    }
+  ],
+  "minimum_experiment_protocol": {
+    "locked_factors": [
+      "account_id",
+      "content_intent/topic",
+      "commercial_relationship",
+      "distribution_mode",
+      "observation_hours"
+    ],
+    "one_variable_at_a_time": true,
+    "required_fields": [
+      "hypothesis_id",
+      "account_id",
+      "content_intent",
+      "topic",
+      "commercial_relationship",
+      "visible_disclosure",
+      "distribution_mode",
+      "changed_variable",
+      "control_version",
+      "treatment_version",
+      "published_at",
+      "observation_hours",
+      "actual_impressions",
+      "impression_source",
+      "likes",
+      "favorites",
+      "comments",
+      "shares",
+      "negative_feedback",
+      "decision",
+      "counterexample"
+    ],
+    "result_policy": "保存未改善和反向结果，不只保存赢家；第三方估算不可命名为平台实际曝光。"
+  },
+  "hard_gates": [
+    {
+      "gate_id": "G1",
+      "gate": "相似不是因果",
+      "rule": "没有曝光、账号/主题控制和时间顺序时，标题、文字、图片与发布时间不得晋级表现规则。"
+    },
+    {
+      "gate_id": "G2",
+      "gate": "自然感不是事实标签",
+      "rule": "模型或审美判断不能把商业关系未知改成无商业关系，也不能替代披露。"
+    },
+    {
+      "gate_id": "G3",
+      "gate": "检测不是优化",
+      "rule": "区分 AI/广告的线索，不能反向成为添加/删除后会提高质量或流量的策略。"
+    }
+  ],
+  "excluded_studies": [
+    {
+      "title": "Beyond algorithms: The human touch machine-generated titles for enhancing click-through rates on social media",
+      "url": "https://doi.org/10.1371/journal.pone.0306639",
+      "year": 2024,
+      "decision": "exclude_from_action_library",
+      "reason": "公开方法不足以核验推广比较的曝光分配、账号/内容匹配和促销混杂；不采用固定标题技巧。"
+    },
+    {
+      "title": "What makes user-generated content more helpful on social media platforms? Insights from creator interactivity perspective",
+      "url": "https://doi.org/10.1016/j.ipm.2022.103201",
+      "year": 2023,
+      "decision": "research_lead_only",
+      "reason": "公开摘要可见 39,456→14,029 条记录，但完整抽样窗口、流失、变量操作和模型当前不可公开审计。"
+    },
+    {
+      "title": "How sentiment volatility of influencer product recommendation posts affects customer engagement",
+      "url": "https://doi.org/10.1016/j.jbusres.2025.115597",
+      "year": 2025,
+      "decision": "research_lead_only",
+      "reason": "摘要称含 12,849 条小红书推荐帖和实验，但公开预览不足以审计样本窗口、随机化与结果口径。"
+    },
+    {
+      "title": "Your posts betray you: Detecting influencer-generated sponsored posts by finding the right clues",
+      "url": "https://doi.org/10.1016/j.im.2022.103719",
+      "year": 2022,
+      "decision": "superseded_by_more_transparent_source",
+      "reason": "26,823 条小红书帖的标签商业真值与采样边界无法从公开材料充分核验；优先使用数据文件更透明的 CHASM，但 CHASM 的主分析代码也不完整。"
+    }
+  ],
+  "blanket_exclusions": [
+    "约 25 人的小样本问卷",
+    "少数访谈却声称效果大小的研究",
+    "非小红书平台的通用外推",
+    "无分母的爆文样本",
+    "低透明度期刊",
+    "工具商销售稿"
+  ],
+  "notes": [
+    "所有数值只描述原研究样本，不成为 2026 平台基准。",
+    "MDPI 的曝光和成本明确为第三方估算/报价。",
+    "RedNote-Vibe 的 148,000 与领域表约 156,800 冲突未擅自修正。",
+    "作者使用 influence/effect/organic/stable template 等词时，如设计仍为观察性、标签只是报备代理或样本先按结果筛选，本账本仍降级为相关或描述。"
+  ]
+}
