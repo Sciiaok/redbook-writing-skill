@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import hashlib
 import json
 import sqlite3
 import subprocess
@@ -13,6 +14,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 STYLE_CLI = ROOT / "redbook-writing" / "scripts" / "style_library.py"
 SCHEMA_PATH = ROOT / "redbook-writing" / "assets" / "style-library-schema.sql"
+SCHEMA_V2_PATH = ROOT / "redbook-writing" / "assets" / "style-library-schema-v2.sql"
+TAXONOMY_V1_PATH = ROOT / "redbook-writing" / "assets" / "style-taxonomy-v1.json"
+TAXONOMY_V2_PATH = ROOT / "redbook-writing" / "assets" / "style-taxonomy-v2.json"
+
+FROZEN_V1_SHA256 = {
+    "style-library-schema.sql": "0264abffb60ef6e00b4ea64dbcfbd445c085df24bf24550c1021d0197d70d991",
+    "style-taxonomy-v1.json": "cad827b3a5278e459dabc5c5eaf71a5d8957e4f0a8e0d037fae0a8ddef3be739",
+}
 
 EXPECTED_TABLES = {
     "style_accounts",
@@ -34,6 +43,15 @@ EXPECTED_TABLES = {
     "draft_assets",
     "draft_outcomes",
     "ingest_receipts",
+    "performance_definitions",
+    "account_baseline_members",
+    "baseline_snapshot_publications",
+    "draft_experiments",
+    "draft_experiment_assignments",
+    "draft_experiment_publications",
+    "draft_outcome_checkpoints",
+    "draft_outcome_metrics",
+    "draft_outcome_publications",
 }
 
 EXPECTED_TAXONOMY: dict[str, object] = {
@@ -322,6 +340,10 @@ EXPECTED_TAXONOMY: dict[str, object] = {
     ],
 }
 
+# The long literal above remains a readable record of the frozen v1 vocabulary.
+# Active tests exercise the strict v2 file selected by the CLI.
+EXPECTED_TAXONOMY = json.loads(TAXONOMY_V2_PATH.read_text(encoding="utf-8"))
+
 VISUAL_CONTROLLED_COLUMNS = {
     "composition",
     "dominant_material",
@@ -468,14 +490,16 @@ def seed_style_graph(con: sqlite3.Connection) -> None:
     )
     con.execute(
         """
-        INSERT INTO visual_observations(visual_observation_id, slide_id)
-        VALUES ('VISUAL-A', 'SLIDE-A')
+        INSERT INTO visual_observations(
+            visual_observation_id, slide_id, library_post_id, observation_sha256
+        ) VALUES ('VISUAL-A', 'SLIDE-A', 'POST-A', 'sha-visual-a')
         """
     )
     con.execute(
         """
-        INSERT INTO copy_observations(observation_id, library_post_id, slide_id)
-        VALUES ('COPY-A', 'POST-A', 'SLIDE-A')
+        INSERT INTO copy_observations(
+            observation_id, library_post_id, slide_id, observation_sha256
+        ) VALUES ('COPY-A', 'POST-A', 'SLIDE-A', 'sha-copy-a')
         """
     )
     con.executemany(
@@ -554,12 +578,12 @@ class StyleLibrarySchemaTests(unittest.TestCase):
         self.addCleanup(self.temp_dir.cleanup)
         self.db = Path(self.temp_dir.name) / "style-library.sqlite3"
 
-    def test_init_creates_v1_schema_without_blob_columns(self) -> None:
+    def test_init_creates_v2_schema_without_blob_columns(self) -> None:
         result = run_cli("init", self.db)
-        self.assertEqual(result["schema_version"], 1)
+        self.assertEqual(result["schema_version"], 2)
         con = sqlite3.connect(self.db)
         self.addCleanup(con.close)
-        self.assertEqual(con.execute("PRAGMA user_version").fetchone()[0], 1)
+        self.assertEqual(con.execute("PRAGMA user_version").fetchone()[0], 2)
         tables = {
             row[0]
             for row in con.execute(
@@ -624,11 +648,11 @@ class StyleLibrarySchemaTests(unittest.TestCase):
         self.assertEqual(len(rows), 2)
         self.assertEqual(len({row[2] for row in rows}), 2)
 
-    def test_schema_contains_complete_v1_table_set_and_is_idempotent(self) -> None:
+    def test_schema_contains_complete_v2_table_set_and_is_idempotent(self) -> None:
         first = run_cli("init", self.db)
         second = run_cli("init", self.db)
-        self.assertEqual(first["schema_version"], 1)
-        self.assertEqual(second["schema_version"], 1)
+        self.assertEqual(first["schema_version"], 2)
+        self.assertEqual(second["schema_version"], 2)
 
         con = sqlite3.connect(self.db)
         self.addCleanup(con.close)
@@ -651,7 +675,7 @@ class StyleLibrarySchemaTests(unittest.TestCase):
         con = sqlite3.connect(self.db)
         con.execute("CREATE TABLE future_marker(value TEXT NOT NULL)")
         con.execute("INSERT INTO future_marker(value) VALUES ('preserve-me')")
-        con.execute("PRAGMA user_version = 2")
+        con.execute("PRAGMA user_version = 3")
         con.commit()
         con.close()
 
@@ -663,7 +687,7 @@ class StyleLibrarySchemaTests(unittest.TestCase):
 
         con = sqlite3.connect(self.db)
         self.addCleanup(con.close)
-        self.assertEqual(con.execute("PRAGMA user_version").fetchone()[0], 2)
+        self.assertEqual(con.execute("PRAGMA user_version").fetchone()[0], 3)
         self.assertEqual(
             con.execute("SELECT value FROM future_marker").fetchone()[0],
             "preserve-me",
@@ -1141,24 +1165,16 @@ class StyleLibrarySchemaTests(unittest.TestCase):
         with self.assertRaises(sqlite3.IntegrityError):
             insert_binding(con, "BIND-PRIMARY-B", "DRAFT-A")
 
-    def test_each_draft_allows_at_most_one_secondary_binding(self) -> None:
+    def test_v2_rejects_secondary_binding_even_when_primary_exists(self) -> None:
         run_cli("init", self.db)
         con = sqlite3.connect(self.db)
         self.addCleanup(con.close)
         seed_style_graph(con)
         insert_binding(con, "BIND-PRIMARY", "DRAFT-A")
-        insert_binding(
-            con,
-            "BIND-SECONDARY-A",
-            "DRAFT-A",
-            archetype_id="ARCH-B",
-            binding_role="secondary",
-            selected_rule_ids='["RULE-OTHER"]',
-        )
         with self.assertRaises(sqlite3.IntegrityError):
             insert_binding(
                 con,
-                "BIND-SECONDARY-B",
+                "BIND-SECONDARY",
                 "DRAFT-A",
                 archetype_id="ARCH-B",
                 binding_role="secondary",
@@ -1180,27 +1196,12 @@ class StyleLibrarySchemaTests(unittest.TestCase):
                 selected_rule_ids='["RULE-OTHER"]',
             )
 
-    def test_primary_binding_cannot_be_deleted_before_secondary(self) -> None:
+    def test_unpublished_primary_binding_can_be_deleted(self) -> None:
         run_cli("init", self.db)
         con = sqlite3.connect(self.db)
         self.addCleanup(con.close)
         seed_style_graph(con)
         insert_binding(con, "BIND-PRIMARY", "DRAFT-A")
-        insert_binding(
-            con,
-            "BIND-SECONDARY",
-            "DRAFT-A",
-            archetype_id="ARCH-B",
-            binding_role="secondary",
-            selected_rule_ids='["RULE-OTHER"]',
-        )
-        with self.assertRaises(sqlite3.IntegrityError):
-            con.execute(
-                "DELETE FROM draft_style_bindings WHERE draft_binding_id='BIND-PRIMARY'"
-            )
-        con.execute(
-            "DELETE FROM draft_style_bindings WHERE draft_binding_id='BIND-SECONDARY'"
-        )
         con.execute(
             "DELETE FROM draft_style_bindings WHERE draft_binding_id='BIND-PRIMARY'"
         )
@@ -1211,25 +1212,18 @@ class StyleLibrarySchemaTests(unittest.TestCase):
             0,
         )
 
-    def test_primary_binding_cannot_move_away_from_its_secondary(self) -> None:
+    def test_primary_binding_cannot_move_onto_another_bound_draft(self) -> None:
         run_cli("init", self.db)
         con = sqlite3.connect(self.db)
         self.addCleanup(con.close)
         seed_style_graph(con)
         insert_binding(con, "BIND-PRIMARY", "DRAFT-A")
-        insert_binding(
-            con,
-            "BIND-SECONDARY",
-            "DRAFT-A",
-            archetype_id="ARCH-B",
-            binding_role="secondary",
-            selected_rule_ids='["RULE-OTHER"]',
-        )
+        insert_binding(con, "BIND-OTHER", "DRAFT-B")
         with self.assertRaises(sqlite3.IntegrityError):
             con.execute(
                 """
-                UPDATE draft_style_bindings SET draft_id='DRAFT-B'
-                WHERE draft_binding_id='BIND-PRIMARY'
+                UPDATE draft_style_bindings SET draft_id='DRAFT-A'
+                WHERE draft_binding_id='BIND-OTHER'
                 """
             )
 
@@ -2013,23 +2007,23 @@ class StyleLibrarySchemaTests(unittest.TestCase):
                         (value,),
                     )
 
-    def test_database_taxonomy_version_is_exactly_v1(self) -> None:
+    def test_database_taxonomy_version_is_exactly_v2(self) -> None:
         run_cli("init", self.db)
         con = sqlite3.connect(self.db)
         self.addCleanup(con.close)
         seed_style_graph(con)
         updates = [
-            "UPDATE style_slides SET taxonomy_version=2 WHERE slide_id='SLIDE-A'",
+            "UPDATE style_slides SET taxonomy_version=1 WHERE slide_id='SLIDE-A'",
             """
-            UPDATE visual_observations SET taxonomy_version=2
+            UPDATE visual_observations SET taxonomy_version=1
             WHERE visual_observation_id='VISUAL-A'
             """,
             """
-            UPDATE copy_observations SET taxonomy_version=2
+            UPDATE copy_observations SET taxonomy_version=1
             WHERE observation_id='COPY-A'
             """,
             """
-            UPDATE style_archetypes SET taxonomy_version=2
+            UPDATE style_archetypes SET taxonomy_version=1
             WHERE archetype_id='ARCH-A'
             """,
         ]
@@ -2038,7 +2032,7 @@ class StyleLibrarySchemaTests(unittest.TestCase):
                 with self.assertRaises(sqlite3.IntegrityError):
                     con.execute(statement)
 
-    def test_taxonomy_v1_is_exact_and_loadable(self) -> None:
+    def test_taxonomy_v2_is_exact_and_loadable(self) -> None:
         module = load_style_module()
         self.assertEqual(module.load_taxonomy(), EXPECTED_TAXONOMY)
 
@@ -2139,6 +2133,461 @@ class StyleLibrarySchemaTests(unittest.TestCase):
                 values = taxonomy[key]
                 self.assertIn("unknown", values)
                 self.assertIn("other", values)
+
+
+class StyleLibraryV2CoreContractTests(unittest.TestCase):
+    """Small, high-value contract suite for the v2 activation boundary."""
+
+    def setUp(self) -> None:
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp_dir.cleanup)
+        self.db = Path(self.temp_dir.name) / "style-library.sqlite3"
+
+    @staticmethod
+    def _ordered_hash(values: list[str]) -> str:
+        encoded = json.dumps(
+            values, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        ).encode("utf-8")
+        return hashlib.sha256(encoded).hexdigest()
+
+    def _seed_publishable_baseline(self, con: sqlite3.Connection) -> tuple[str, str]:
+        included_rows = [
+            "0|OBS-1|METRIC-1|10.0||{}|[]",
+            "1|OBS-2|METRIC-2|20.0||{}|[]",
+        ]
+        all_rows = [
+            "0|OBS-1|METRIC-1|included||10.0||{}|[]",
+            "1|OBS-2|METRIC-2|included||20.0||{}|[]",
+        ]
+        included_hash = self._ordered_hash(included_rows)
+        all_hash = self._ordered_hash(all_rows)
+        con.execute(
+            "INSERT INTO style_accounts(library_account_id,platform) VALUES ('ACC','xiaohongshu')"
+        )
+        con.executemany(
+            """
+            INSERT INTO style_posts(
+                library_post_id,platform,library_account_id,status
+            ) VALUES (?,'xiaohongshu','ACC','active')
+            """,
+            [("POST-1",), ("POST-2",)],
+        )
+        con.executemany(
+            "INSERT INTO run_post_refs(run_id,run_post_id,library_post_id) VALUES ('RUN',?,?)",
+            [("LOCAL-1", "POST-1"), ("LOCAL-2", "POST-2")],
+        )
+        con.execute(
+            """
+            INSERT INTO performance_definitions(
+                performance_definition_id,definition_version,metric_name,
+                business_objective,primary_job,metric_selection_reason,
+                comparison_design,min_baseline_n,paid_or_pinned_policy,
+                missing_value_policy,tier_rules_json,as_of,review_by,
+                definition_sha256
+            ) VALUES (
+                'DEF',1,'engagement_proxy','engagement_proxy','feed_stop',
+                'public visible engagement proxy only','account_baseline',2,
+                'exclude','exclude','{}','2026-07-18','2026-08-18','sha-def'
+            )
+            """
+        )
+        con.execute(
+            """
+            INSERT INTO account_baseline_snapshots(
+                baseline_snapshot_id,library_account_id,metric_name,sample_n,
+                median_value,performance_definition_id,included_members_sha256,
+                all_members_sha256,baseline_snapshot_sha256,source_run_id
+            ) VALUES (
+                'BASE','ACC','engagement_proxy',2,15.0,'DEF',?,?,
+                'sha-baseline','RUN'
+            )
+            """,
+            (included_hash, all_hash),
+        )
+        for ordinal, value in enumerate((10.0, 20.0), start=1):
+            con.execute(
+                """
+                INSERT INTO style_post_observations(
+                    post_observation_id,library_post_id,library_account_id,
+                    run_id,run_post_id,source_csv_sha256,observation_state,
+                    performance_definition_id,target_metric_name
+                ) VALUES (?,?,?,?,?,'sha-source','building','DEF','engagement_proxy')
+                """,
+                (
+                    f"OBS-{ordinal}",
+                    f"POST-{ordinal}",
+                    "ACC",
+                    "RUN",
+                    f"LOCAL-{ordinal}",
+                ),
+            )
+            con.execute(
+                """
+                INSERT INTO post_metrics(
+                    post_metric_id,post_observation_id,metric_name,metric_value,
+                    visibility_scope,metric_sha256
+                ) VALUES (?,?, 'engagement_proxy',?,'public_proxy',?)
+                """,
+                (
+                    f"METRIC-{ordinal}",
+                    f"OBS-{ordinal}",
+                    value,
+                    f"sha-metric-{ordinal}",
+                ),
+            )
+            con.execute(
+                """
+                UPDATE style_post_observations
+                SET observation_state='complete',target_post_metric_id=?
+                WHERE post_observation_id=?
+                """,
+                (f"METRIC-{ordinal}", f"OBS-{ordinal}"),
+            )
+            con.execute(
+                """
+                INSERT INTO account_baseline_members(
+                    baseline_snapshot_id,library_account_id,
+                    performance_definition_id,metric_name,
+                    member_post_observation_id,member_post_metric_id,
+                    inclusion_status,metric_value,member_ordinal
+                ) VALUES ('BASE','ACC','DEF','engagement_proxy',?,?,'included',?,?)
+                """,
+                (
+                    f"OBS-{ordinal}",
+                    f"METRIC-{ordinal}",
+                    value,
+                    ordinal - 1,
+                ),
+            )
+        return included_hash, all_hash
+
+    def test_frozen_v1_assets_remain_byte_identical(self) -> None:
+        for path in (SCHEMA_PATH, TAXONOMY_V1_PATH):
+            with self.subTest(path=path.name):
+                self.assertEqual(
+                    hashlib.sha256(path.read_bytes()).hexdigest(),
+                    FROZEN_V1_SHA256[path.name],
+                )
+
+    def test_init_creates_v2_core_schema(self) -> None:
+        result = run_cli("init", self.db)
+        self.assertEqual(result["schema_version"], 2)
+        con = sqlite3.connect(self.db)
+        self.addCleanup(con.close)
+        self.assertEqual(con.execute("PRAGMA user_version").fetchone()[0], 2)
+        tables = {
+            row[0]
+            for row in con.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'"
+            )
+        }
+        self.assertTrue(
+            {
+                "style_accounts",
+                "style_assets",
+                "style_posts",
+                "style_post_observations",
+                "post_metrics",
+                "performance_definitions",
+                "account_baseline_snapshots",
+                "account_baseline_members",
+                "baseline_snapshot_publications",
+                "style_slides",
+                "visual_observations",
+                "copy_observations",
+                "draft_experiments",
+                "draft_outcome_checkpoints",
+                "draft_outcome_metrics",
+                "draft_outcome_publications",
+            }.issubset(tables)
+        )
+        ddl = " ".join(
+            row[0] or "" for row in con.execute("SELECT sql FROM sqlite_master")
+        )
+        self.assertNotRegex(ddl.upper(), r"\bBLOB\b")
+
+    def test_connect_db_registers_v2_pragmas_and_aggregates(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        con = module.connect_db(self.db)
+        self.addCleanup(con.close)
+        self.assertEqual(con.execute("PRAGMA foreign_keys").fetchone()[0], 1)
+        self.assertEqual(con.execute("PRAGMA recursive_triggers").fetchone()[0], 1)
+        con.execute("CREATE TEMP TABLE values_for_test(ord INTEGER, value REAL)")
+        con.executemany(
+            "INSERT INTO values_for_test VALUES (?, ?)",
+            [(3, 9), (1, 1), (2, 5), (4, 13)],
+        )
+        row = con.execute(
+            """
+            SELECT median_agg_v2(value), canonical_sha256_agg_v2(value)
+            FROM (SELECT value FROM values_for_test ORDER BY ord)
+            """
+        ).fetchone()
+        self.assertEqual(row[0], 7.0)
+        self.assertRegex(row[1], r"^[0-9a-f]{64}$")
+
+    def test_post_observation_finalize_is_one_way_and_fk_clean(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        con = module.connect_db(self.db)
+        self.addCleanup(con.close)
+        self._seed_publishable_baseline(con)
+        with self.assertRaises(sqlite3.IntegrityError):
+            con.execute(
+                """
+                UPDATE style_post_observations SET known_confounds='["late"]'
+                WHERE post_observation_id='OBS-1'
+                """
+            )
+        self.assertEqual(con.execute("PRAGMA foreign_key_check").fetchall(), [])
+
+    def test_baseline_marker_recomputes_and_freezes_exact_children(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        con = module.connect_db(self.db)
+        included_hash, all_hash = self._seed_publishable_baseline(con)
+        con.commit()
+        con.close()
+
+        raw = sqlite3.connect(self.db)
+        with self.assertRaisesRegex(
+            sqlite3.OperationalError, r"no such function: (median|canonical_sha256)_agg_v2"
+        ):
+            raw.execute(
+                """
+                INSERT INTO baseline_snapshot_publications(
+                    baseline_snapshot_id,library_account_id,
+                    performance_definition_id,metric_name,
+                    baseline_snapshot_sha256,included_members_sha256,
+                    all_members_sha256
+                ) VALUES ('BASE','ACC','DEF','engagement_proxy',
+                          'sha-baseline',?,?)
+                """,
+                (included_hash, all_hash),
+            )
+        raw.close()
+
+        con = module.connect_db(self.db)
+        self.addCleanup(con.close)
+        con.execute(
+            """
+            INSERT INTO baseline_snapshot_publications(
+                baseline_snapshot_id,library_account_id,
+                performance_definition_id,metric_name,
+                baseline_snapshot_sha256,included_members_sha256,
+                all_members_sha256
+            ) VALUES ('BASE','ACC','DEF','engagement_proxy',
+                      'sha-baseline',?,?)
+            """,
+            (included_hash, all_hash),
+        )
+        with self.assertRaisesRegex(
+            sqlite3.IntegrityError, "immutable_account_baseline_members"
+        ):
+            con.execute(
+                """
+                UPDATE account_baseline_members SET metric_value=11
+                WHERE baseline_snapshot_id='BASE' AND member_ordinal=0
+                """
+            )
+        with self.assertRaisesRegex(
+            sqlite3.IntegrityError, "published_baseline_metric_frozen"
+        ):
+            con.execute(
+                "UPDATE post_metrics SET metric_value=11 WHERE post_metric_id='METRIC-1'"
+            )
+
+    def test_recursive_triggers_block_insert_or_replace_on_immutable_snapshot(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        con = module.connect_db(self.db)
+        self.addCleanup(con.close)
+        self._seed_publishable_baseline(con)
+        self.assertEqual(con.execute("PRAGMA recursive_triggers").fetchone()[0], 1)
+        with self.assertRaisesRegex(
+            sqlite3.IntegrityError, "immutable_account_baseline_snapshots"
+        ):
+            con.execute(
+                """
+                INSERT OR REPLACE INTO account_baseline_snapshots(
+                    baseline_snapshot_id,library_account_id,metric_name,
+                    sample_n,median_value,performance_definition_id,
+                    included_members_sha256,all_members_sha256,
+                    baseline_snapshot_sha256,source_run_id
+                )
+                SELECT baseline_snapshot_id,library_account_id,metric_name,
+                       sample_n,99,performance_definition_id,
+                       included_members_sha256,all_members_sha256,
+                       baseline_snapshot_sha256,source_run_id
+                FROM account_baseline_snapshots
+                WHERE baseline_snapshot_id='BASE'
+                """
+            )
+
+    def test_production_init_never_uses_executescript(self) -> None:
+        source = STYLE_CLI.read_text(encoding="utf-8")
+        self.assertNotIn(".executescript(", source)
+
+    def test_real_v1_requires_explicit_upgrade_without_mutation(self) -> None:
+        legacy_sql = SCHEMA_PATH.read_text(encoding="utf-8")
+        con = sqlite3.connect(self.db)
+        con.executescript(legacy_sql)
+        con.execute("PRAGMA user_version=1")
+        con.commit()
+        con.close()
+        before = self.db.read_bytes()
+
+        module = load_style_module()
+        with self.assertRaisesRegex(
+            module.StyleLibraryError, "schema_upgrade_required"
+        ):
+            module.init_db(self.db)
+
+        self.assertEqual(self.db.read_bytes(), before)
+
+    def test_corrupt_database_fails_preflight_without_mutation(self) -> None:
+        corrupt = b"not-a-sqlite-database\x00preserve"
+        self.db.write_bytes(corrupt)
+        module = load_style_module()
+        with self.assertRaisesRegex(
+            module.StyleLibraryError, "schema_preflight_failed"
+        ):
+            module.init_db(self.db)
+        self.assertEqual(self.db.read_bytes(), corrupt)
+
+    def test_v2_taxonomy_is_strict_and_has_retrieval_codes(self) -> None:
+        module = load_style_module()
+        taxonomy = module.load_taxonomy()
+        self.assertEqual(taxonomy["taxonomy_version"], 2)
+        for key in (
+            "primary_job",
+            "material_code",
+            "production_constraint_code",
+            "contraindication_code",
+        ):
+            self.assertIn(key, taxonomy)
+        self.assertTrue(
+            {
+                "feed_stop",
+                "search_answer",
+                "explain",
+                "trust_build",
+                "decision_support",
+                "relationship_build",
+                "conversion",
+                "authority_statement",
+            }.issubset(taxonomy["primary_job"])
+        )
+
+    def test_init_validates_taxonomy_before_creating_database(self) -> None:
+        module = load_style_module()
+        invalid_taxonomy = Path(self.temp_dir.name) / "invalid-taxonomy.json"
+        invalid_taxonomy.write_text(
+            json.dumps({"taxonomy_version": 2}), encoding="utf-8"
+        )
+        original = module.TAXONOMY_PATH
+        try:
+            module.TAXONOMY_PATH = invalid_taxonomy
+            with self.assertRaisesRegex(module.StyleLibraryError, "taxonomy_invalid"):
+                module.init_db(self.db)
+        finally:
+            module.TAXONOMY_PATH = original
+        self.assertFalse(self.db.exists())
+
+    def test_style_slides_reject_duplicate_post_index(self) -> None:
+        run_cli("init", self.db)
+        con = sqlite3.connect(self.db)
+        self.addCleanup(con.close)
+        con.execute("PRAGMA foreign_keys=ON")
+        con.execute(
+            "INSERT INTO style_accounts(library_account_id,platform) VALUES ('A','xiaohongshu')"
+        )
+        con.execute(
+            """
+            INSERT INTO style_posts(library_post_id,platform,library_account_id,status)
+            VALUES ('P','xiaohongshu','A','active')
+            """
+        )
+        con.execute(
+            """
+            INSERT INTO style_assets(asset_id,asset_kind,asset_path,asset_sha256)
+            VALUES ('IMG','image','raw/p.png','sha-p')
+            """
+        )
+        con.execute(
+            """
+            INSERT INTO style_slides(slide_id,library_post_id,slide_index,slide_role,asset_id)
+            VALUES ('S1','P',1,'cover','IMG')
+            """
+        )
+        with self.assertRaises(sqlite3.IntegrityError):
+            con.execute(
+                """
+                INSERT INTO style_slides(slide_id,library_post_id,slide_index,slide_role,asset_id)
+                VALUES ('S2','P',1,'scene','IMG')
+                """
+            )
+
+    def test_visual_observation_cannot_claim_a_different_post(self) -> None:
+        run_cli("init", self.db)
+        con = sqlite3.connect(self.db)
+        self.addCleanup(con.close)
+        seed_style_graph(con)
+        with self.assertRaises(sqlite3.IntegrityError):
+            con.execute(
+                """
+                INSERT INTO visual_observations(
+                    visual_observation_id,slide_id,library_post_id,
+                    observation_sha256
+                ) VALUES ('VISUAL-CROSS','SLIDE-A','POST-B','sha-cross')
+                """
+            )
+
+    def test_post_observation_account_must_match_post_owner(self) -> None:
+        run_cli("init", self.db)
+        con = sqlite3.connect(self.db)
+        self.addCleanup(con.close)
+        con.execute("PRAGMA foreign_keys=ON")
+        con.executemany(
+            "INSERT INTO style_accounts(library_account_id,platform) VALUES (?,'xiaohongshu')",
+            [("ACC-A",), ("ACC-B",)],
+        )
+        con.execute(
+            """
+            INSERT INTO style_posts(library_post_id,platform,library_account_id,status)
+            VALUES ('POST-A','xiaohongshu','ACC-A','active')
+            """
+        )
+        con.execute(
+            "INSERT INTO run_post_refs VALUES ('RUN','LOCAL','POST-A')"
+        )
+        with self.assertRaises(sqlite3.IntegrityError):
+            con.execute(
+                """
+                INSERT INTO style_post_observations(
+                    post_observation_id,library_post_id,library_account_id,
+                    run_id,run_post_id,source_csv_sha256
+                ) VALUES ('OBS','POST-A','ACC-B','RUN','LOCAL','sha')
+                """
+            )
+
+    def test_v2_binding_is_exactly_one_primary_per_draft(self) -> None:
+        run_cli("init", self.db)
+        con = sqlite3.connect(self.db)
+        self.addCleanup(con.close)
+        seed_style_graph(con)
+        insert_binding(con, "BIND-1", "DRAFT-1")
+        insert_binding(con, "BIND-2", "DRAFT-2")
+        with self.assertRaises(sqlite3.IntegrityError):
+            insert_binding(
+                con,
+                "BIND-SECONDARY",
+                "DRAFT-2",
+                binding_role="secondary",
+            )
+        with self.assertRaises(sqlite3.IntegrityError):
+            insert_binding(con, "BIND-3", "DRAFT-1", archetype_id="ARCH-B")
 
 
 if __name__ == "__main__":

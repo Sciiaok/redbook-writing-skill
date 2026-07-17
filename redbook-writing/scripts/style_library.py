@@ -4,21 +4,41 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sqlite3
 import sys
+from statistics import median
 from pathlib import Path
 from typing import Sequence
+from urllib.parse import quote
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 ASSETS_DIR = Path(__file__).resolve().parents[1] / "assets"
-SCHEMA_PATH = ASSETS_DIR / "style-library-schema.sql"
-TAXONOMY_PATH = ASSETS_DIR / "style-taxonomy-v1.json"
+LEGACY_SCHEMA_PATH = ASSETS_DIR / "style-library-schema.sql"
+LEGACY_TAXONOMY_PATH = ASSETS_DIR / "style-taxonomy-v1.json"
+SCHEMA_PATH = ASSETS_DIR / "style-library-schema-v2.sql"
+TAXONOMY_PATH = ASSETS_DIR / "style-taxonomy-v2.json"
 
 TAXONOMY_KEYS = frozenset(
     {
         "taxonomy_version",
+        "primary_job",
+        "material_code",
+        "production_constraint_code",
+        "contraindication_code",
+        "motive_code",
+        "distribution_mode",
+        "model_lifecycle_stage",
+        "reviewer_independence_status",
+        "asset_origin_code",
+        "rights_basis_code",
+        "authorization_status",
+        "delivery_surface",
+        "production_gate_status",
+        "account_capability_code",
+        "visual_feedback_reason_code",
         "carrier",
         "slide_role",
         "composition",
@@ -82,6 +102,29 @@ OPEN_ENDED_TAXONOMY_KEYS = frozenset(
         "payoff_move",
         "cta_move",
         "image_caption_division",
+        "material_code",
+        "production_constraint_code",
+        "contraindication_code",
+        "motive_code",
+        "distribution_mode",
+        "asset_origin_code",
+        "rights_basis_code",
+        "delivery_surface",
+        "account_capability_code",
+        "visual_feedback_reason_code",
+    }
+)
+
+REQUIRED_PRIMARY_JOBS = frozenset(
+    {
+        "feed_stop",
+        "search_answer",
+        "explain",
+        "trust_build",
+        "decision_support",
+        "relationship_build",
+        "conversion",
+        "authority_statement",
     }
 )
 
@@ -90,12 +133,67 @@ class StyleLibraryError(RuntimeError):
     """Raised when the local style library contract cannot be satisfied."""
 
 
-def connect_db(db_path: Path) -> sqlite3.Connection:
-    """Open a SQLite connection configured for style-library access."""
+class _CanonicalSha256AggregateV2:
+    """Hash an ordered sequence using the documented compact JSON encoding."""
 
-    con = sqlite3.connect(Path(db_path))
+    def __init__(self) -> None:
+        self._values: list[object] = []
+
+    def step(self, value: object) -> None:
+        self._values.append(value)
+
+    def finalize(self) -> str:
+        encoded = json.dumps(
+            self._values,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+        return hashlib.sha256(encoded).hexdigest()
+
+
+class _MedianAggregateV2:
+    """Return the numeric median while ignoring unavailable (NULL) values."""
+
+    def __init__(self) -> None:
+        self._values: list[float] = []
+
+    def step(self, value: object) -> None:
+        if value is not None:
+            self._values.append(float(value))
+
+    def finalize(self) -> float | None:
+        if not self._values:
+            return None
+        return float(median(self._values))
+
+
+def _configure_connection(con: sqlite3.Connection) -> None:
     con.row_factory = sqlite3.Row
     con.execute("PRAGMA foreign_keys = ON")
+    con.execute("PRAGMA recursive_triggers = ON")
+    con.create_aggregate(
+        "canonical_sha256_agg_v2", 1, _CanonicalSha256AggregateV2
+    )
+    con.create_aggregate("median_agg_v2", 1, _MedianAggregateV2)
+
+
+def connect_db(db_path: Path) -> sqlite3.Connection:
+    """Open a configured v2 connection; legacy databases fail closed."""
+
+    con = sqlite3.connect(Path(db_path))
+    _configure_connection(con)
+    try:
+        version = con.execute("PRAGMA user_version").fetchone()[0]
+    except sqlite3.Error as exc:
+        con.close()
+        raise StyleLibraryError("schema_preflight_failed") from exc
+    if version == 1:
+        con.close()
+        raise StyleLibraryError("schema_upgrade_required")
+    if version != SCHEMA_VERSION:
+        con.close()
+        raise StyleLibraryError("schema_version_mismatch")
     return con
 
 
@@ -117,77 +215,152 @@ def _normalized_schema_objects(
     return objects
 
 
-def _validate_v1_schema(con: sqlite3.Connection, schema_sql: str) -> None:
-    expected = connect_db(Path(":memory:"))
+def _execute_sql_script(con: sqlite3.Connection, schema_sql: str) -> None:
+    """Execute complete SQLite statements without executescript auto-commits."""
+
+    pending = ""
+    for line in schema_sql.splitlines(keepends=True):
+        pending += line
+        if sqlite3.complete_statement(pending):
+            statement = pending.strip()
+            pending = ""
+            if statement:
+                con.execute(statement)
+    if pending.strip():
+        raise StyleLibraryError("schema_sql_incomplete")
+
+
+def _validate_schema(
+    con: sqlite3.Connection, schema_sql: str, error_code: str
+) -> None:
+    expected = sqlite3.connect(":memory:")
+    _configure_connection(expected)
     try:
-        expected.executescript(schema_sql)
+        _execute_sql_script(expected, schema_sql)
         expected_objects = _normalized_schema_objects(expected)
     finally:
         expected.close()
 
     actual_objects = _normalized_schema_objects(con)
-    if any(
-        actual_objects.get(name) != definition
-        for name, definition in expected_objects.items()
-    ):
-        raise StyleLibraryError("schema_v1_invalid")
+    if actual_objects != expected_objects:
+        raise StyleLibraryError(error_code)
+
+
+def _open_read_only(db_path: Path) -> sqlite3.Connection:
+    uri_path = quote(str(db_path.resolve()), safe="/")
+    con = sqlite3.connect(f"file:{uri_path}?mode=ro", uri=True)
+    _configure_connection(con)
+    return con
+
+
+def _preflight_existing_database(db_path: Path) -> int:
+    """Inspect an existing file read-only before any initialization write."""
+
+    try:
+        con = _open_read_only(db_path)
+        try:
+            version = con.execute("PRAGMA user_version").fetchone()[0]
+            integrity = con.execute("PRAGMA quick_check").fetchone()[0]
+            if integrity != "ok":
+                raise StyleLibraryError("schema_preflight_failed")
+            objects = _normalized_schema_objects(con)
+            if version == 0:
+                if objects:
+                    raise StyleLibraryError("unversioned_database_not_empty")
+                return 0
+            if version == 1:
+                legacy_sql = LEGACY_SCHEMA_PATH.read_text(encoding="utf-8")
+                _validate_schema(con, legacy_sql, "schema_v1_invalid")
+                raise StyleLibraryError("schema_upgrade_required")
+            if version == SCHEMA_VERSION:
+                schema_sql = SCHEMA_PATH.read_text(encoding="utf-8")
+                _validate_schema(con, schema_sql, "schema_v2_invalid")
+                if con.execute("PRAGMA foreign_key_check").fetchone() is not None:
+                    raise StyleLibraryError("schema_v2_invalid")
+                return version
+            if version > SCHEMA_VERSION:
+                raise StyleLibraryError("schema_version_unsupported")
+            raise StyleLibraryError("schema_version_unsupported")
+        finally:
+            con.close()
+    except StyleLibraryError:
+        raise
+    except (OSError, sqlite3.Error) as exc:
+        raise StyleLibraryError("schema_preflight_failed") from exc
 
 
 def init_db(db_path: Path) -> dict[str, object]:
-    """Create v1 only in an empty database, or validate an existing v1."""
+    """Create v2 only in a genuinely empty v0 file, after read-only preflight."""
 
+    # Fail before touching the database when the active vocabulary is absent,
+    # malformed, or not exactly v2.
+    load_taxonomy()
     db_path = Path(db_path)
     con: sqlite3.Connection | None = None
+    existed_before = db_path.exists()
+    before_bytes = db_path.read_bytes() if existed_before and db_path.is_file() else None
+    write_started = False
     try:
+        if existed_before:
+            version = _preflight_existing_database(db_path)
+            if version == SCHEMA_VERSION:
+                return {
+                    "status": "ok",
+                    "schema_version": version,
+                    "db": str(db_path),
+                }
+
         db_path.parent.mkdir(parents=True, exist_ok=True)
-        con = connect_db(db_path)
-        version = con.execute("PRAGMA user_version").fetchone()[0]
-
-        if version > SCHEMA_VERSION:
-            raise StyleLibraryError("schema_version_unsupported")
-        if version == 0:
-            has_user_objects = con.execute(
-                """
-                SELECT 1 FROM sqlite_master
-                WHERE name NOT LIKE 'sqlite_%'
-                LIMIT 1
-                """
-            ).fetchone()
-            if has_user_objects is not None:
-                raise StyleLibraryError("unversioned_database_not_empty")
-
+        write_started = True
+        con = sqlite3.connect(db_path)
+        _configure_connection(con)
         schema_sql = SCHEMA_PATH.read_text(encoding="utf-8")
-        if version == SCHEMA_VERSION:
-            _validate_v1_schema(con, schema_sql)
-        elif version == 0:
-            con.executescript(
-                "BEGIN IMMEDIATE;\n"
-                + schema_sql
-                + "\nPRAGMA user_version = 1;\nCOMMIT;"
-            )
-            version = con.execute("PRAGMA user_version").fetchone()[0]
-            _validate_v1_schema(con, schema_sql)
-        else:
-            raise StyleLibraryError("schema_version_unsupported")
+        con.execute("BEGIN IMMEDIATE")
+        _execute_sql_script(con, schema_sql)
+        con.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
+        con.commit()
+        version = con.execute("PRAGMA user_version").fetchone()[0]
+        _validate_schema(con, schema_sql, "schema_v2_invalid")
+        if con.execute("PRAGMA foreign_key_check").fetchone() is not None:
+            raise StyleLibraryError("schema_v2_invalid")
     except StyleLibraryError:
         if con is not None and con.in_transaction:
             con.rollback()
+        if con is not None:
+            con.close()
+            con = None
+        if write_started and existed_before and before_bytes is not None:
+            db_path.write_bytes(before_bytes)
+        elif write_started and not existed_before:
+            db_path.unlink(missing_ok=True)
         raise
     except (OSError, sqlite3.Error) as exc:
         if con is not None and con.in_transaction:
             con.rollback()
+        if con is not None:
+            con.close()
+            con = None
+        if write_started and existed_before and before_bytes is not None:
+            db_path.write_bytes(before_bytes)
+        elif write_started and not existed_before:
+            db_path.unlink(missing_ok=True)
         raise StyleLibraryError("schema_initialization_failed") from exc
     finally:
         if con is not None:
             con.close()
 
     if version != SCHEMA_VERSION:
+        if existed_before and before_bytes is not None:
+            db_path.write_bytes(before_bytes)
+        elif not existed_before:
+            db_path.unlink(missing_ok=True)
         raise StyleLibraryError("schema_version_mismatch")
+
     return {"status": "ok", "schema_version": version, "db": str(db_path)}
 
 
 def load_taxonomy() -> dict[str, object]:
-    """Load taxonomy v1 and reject the wrong version or malformed content."""
+    """Load the exact v2 controlled vocabulary contract."""
 
     try:
         data = json.loads(TAXONOMY_PATH.read_text(encoding="utf-8"))
@@ -220,13 +393,15 @@ def load_taxonomy() -> dict[str, object]:
     for key in ("text_density", "hierarchy_levels"):
         if "unknown" not in data[key]:
             raise StyleLibraryError("taxonomy_invalid")
+    if not REQUIRED_PRIMARY_JOBS.issubset(data["primary_job"]):
+        raise StyleLibraryError("taxonomy_invalid")
     return data
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
-    init_parser = subparsers.add_parser("init", help="initialize a v1 style database")
+    init_parser = subparsers.add_parser("init", help="initialize a v2 style database")
     init_parser.add_argument("db", type=Path)
     return parser
 
