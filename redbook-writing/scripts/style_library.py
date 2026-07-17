@@ -165,6 +165,46 @@ def _sha256_text(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
+def _canonical_row_sha256_v2(*values: object) -> str:
+    """Hash one ordered row; used by publication triggers and finalizers."""
+
+    normalized = [float(value) if isinstance(value, float) else value for value in values]
+    return _sha256_text(_canonical_json(normalized))
+
+
+def _canonicalize_json_text_v2(value: object) -> str:
+    if not isinstance(value, str):
+        raise ValueError("canonical_json_requires_text")
+    return _canonical_json(json.loads(value))
+
+
+def _performance_computation_sha256_v2(
+    post_observation_id: object,
+    baseline_snapshot_id: object,
+    baseline_snapshot_sha256: object,
+    definition_sha256: object,
+    metric_name: object,
+    target_metric_value: object,
+    median_value: object,
+    multiple: object,
+    performance_tier: object,
+) -> str:
+    """Hash the exact recomputable inputs used by a tier publication."""
+
+    computation = {
+        "post_observation_id": str(post_observation_id),
+        "baseline_snapshot_id": str(baseline_snapshot_id),
+        "baseline_snapshot_sha256": str(baseline_snapshot_sha256),
+        "definition_sha256": str(definition_sha256),
+        "metric_name": str(metric_name),
+        "target_metric_value": float(target_metric_value),
+        "median_value": float(median_value),
+        "multiple": float(multiple),
+        "performance_tier": str(performance_tier),
+    }
+    return _sha256_text(_canonical_json(computation))
+
+
 class StyleLibraryError(RuntimeError):
     """Raised when the local style library contract cannot be satisfied."""
 
@@ -212,6 +252,24 @@ def _configure_connection(con: sqlite3.Connection) -> None:
         "canonical_sha256_agg_v2", 1, _CanonicalSha256AggregateV2
     )
     con.create_aggregate("median_agg_v2", 1, _MedianAggregateV2)
+    con.create_function(
+        "performance_computation_sha256_v2",
+        9,
+        _performance_computation_sha256_v2,
+        deterministic=True,
+    )
+    con.create_function(
+        "canonical_row_sha256_v2",
+        -1,
+        _canonical_row_sha256_v2,
+        deterministic=True,
+    )
+    con.create_function(
+        "canonical_json_v2",
+        1,
+        _canonicalize_json_text_v2,
+        deterministic=True,
+    )
 
 
 def connect_db(db_path: Path) -> sqlite3.Connection:
@@ -458,7 +516,19 @@ def status_db(db_path: Path) -> dict[str, object]:
             "published_baselines": _table_count(
                 con, "baseline_snapshot_publications"
             ),
+            "published_performance_receipts": _table_count(
+                con, "post_performance_publications"
+            ),
+            "published_archetype_snapshots": _table_count(
+                con, "archetype_publications"
+            ),
+            "published_rule_receipts": _table_count(
+                con, "archetype_rule_publications"
+            ),
             "draft_bindings": _table_count(con, "draft_style_bindings"),
+            "published_binding_receipts": _table_count(
+                con, "draft_binding_publications"
+            ),
             "style_assets": _table_count(con, "style_assets"),
         }
     finally:
@@ -816,6 +886,85 @@ def bind_draft(
     raise StyleLibraryError("no_published_qualified_rule")
 
 
+def _draft_binding_sha256(row: sqlite3.Row) -> str:
+    return _canonical_row_sha256_v2(
+        row["draft_binding_id"],
+        row["draft_id"],
+        row["binding_source"],
+        row["archetype_id"],
+        row["archetype_version"],
+        row["archetype_snapshot_sha256"],
+        row["starter_pack_id"],
+        row["starter_pack_version"],
+        row["starter_pack_sha256"],
+        row["starter_prompt_id"],
+        _canonical_json(json.loads(row["selected_rule_ids"])),
+        _canonical_json(json.loads(row["reference_library_post_ids"])),
+        _canonical_json(json.loads(row["counterexample_library_post_ids"])),
+        _canonical_json(json.loads(row["material_plan_json"])),
+        _canonical_json(json.loads(row["intentional_deviations_json"])),
+        _canonical_json(json.loads(row["anti_patterns_checked_json"])),
+        row["review_status"],
+    )
+
+
+def publish_draft_binding(
+    db_path: Path, draft_binding_id: str
+) -> dict[str, object]:
+    """Finalize one exact binding into an immutable, hash-checked receipt."""
+
+    if not draft_binding_id.strip():
+        raise StyleLibraryError("draft_binding_id_invalid")
+    con = connect_db(db_path)
+    try:
+        con.execute("BEGIN IMMEDIATE")
+        binding = con.execute(
+            "SELECT * FROM draft_style_bindings WHERE draft_binding_id=?",
+            (draft_binding_id,),
+        ).fetchone()
+        if binding is None:
+            raise StyleLibraryError("draft_binding_not_found")
+        if binding["review_status"] != "PASS":
+            raise StyleLibraryError("draft_binding_review_not_pass")
+        binding_sha256 = _draft_binding_sha256(binding)
+        existing = con.execute(
+            """
+            SELECT binding_sha256 FROM draft_binding_publications
+            WHERE draft_binding_id=?
+            """,
+            (draft_binding_id,),
+        ).fetchone()
+        if existing is None:
+            con.execute(
+                """
+                INSERT INTO draft_binding_publications(
+                    draft_binding_id,draft_id,binding_sha256
+                ) VALUES (?,?,?)
+                """,
+                (draft_binding_id, binding["draft_id"], binding_sha256),
+            )
+            status = "published"
+        elif existing["binding_sha256"] == binding_sha256:
+            status = "idempotent"
+        else:
+            raise StyleLibraryError("draft_binding_publication_conflict")
+        con.commit()
+        return {
+            "status": status,
+            "draft_binding_id": draft_binding_id,
+            "draft_id": binding["draft_id"],
+            "binding_sha256": binding_sha256,
+        }
+    except StyleLibraryError:
+        con.rollback()
+        raise
+    except (json.JSONDecodeError, sqlite3.Error) as exc:
+        con.rollback()
+        raise StyleLibraryError("draft_binding_publication_failed") from exc
+    finally:
+        con.close()
+
+
 def derive_tier(
     db_path: Path, post_observation_id: str, baseline_snapshot_id: str
 ) -> dict[str, object]:
@@ -827,6 +976,7 @@ def derive_tier(
             """
             SELECT observation.*, post.library_post_id AS target_library_post_id,
                    metric.metric_value AS target_metric_value,
+                   metric.metric_sha256 AS target_metric_sha256,
                    metric.visibility_scope, definition.business_objective,
                    definition.primary_job,
                    definition.traffic_stage AS definition_traffic_stage,
@@ -947,16 +1097,81 @@ def derive_tier(
             "multiple": multiple,
             "performance_tier": tier,
         }
+        computation_sha256 = _performance_computation_sha256_v2(
+            post_observation_id,
+            baseline_snapshot_id,
+            publication["baseline_snapshot_sha256"],
+            target["definition_sha256"],
+            metric_name,
+            target["target_metric_value"],
+            median_value,
+            multiple,
+            tier,
+        )
+        if not target["target_metric_sha256"]:
+            raise StyleLibraryError("target_metric_hash_missing")
+        con.execute("BEGIN IMMEDIATE")
+        existing = con.execute(
+            """
+            SELECT performance_computation_sha256
+            FROM post_performance_publications
+            WHERE post_observation_id=?
+            """,
+            (post_observation_id,),
+        ).fetchone()
+        if existing is None:
+            con.execute(
+                """
+                INSERT INTO post_performance_publications(
+                    post_observation_id,library_account_id,
+                    baseline_snapshot_id,baseline_snapshot_sha256,
+                    performance_definition_id,definition_sha256,metric_name,
+                    target_post_metric_id,target_metric_sha256,
+                    target_metric_value,baseline_median_value,
+                    account_baseline_multiple,performance_tier,
+                    performance_computation_sha256,visibility_scope,
+                    traffic_stage,traffic_verdict
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                """,
+                (
+                    post_observation_id,
+                    target["library_account_id"],
+                    baseline_snapshot_id,
+                    publication["baseline_snapshot_sha256"],
+                    target["performance_definition_id"],
+                    target["definition_sha256"],
+                    metric_name,
+                    target["target_post_metric_id"],
+                    target["target_metric_sha256"],
+                    target["target_metric_value"],
+                    median_value,
+                    multiple,
+                    tier,
+                    computation_sha256,
+                    visibility,
+                    traffic_stage,
+                    traffic_verdict,
+                ),
+            )
+        elif existing["performance_computation_sha256"] != computation_sha256:
+            raise StyleLibraryError("performance_publication_conflict")
+        con.commit()
         return {
             "status": "derived",
             **computation,
-            "performance_computation_sha256": _sha256_text(
-                _canonical_json(computation)
-            ),
+            "performance_computation_sha256": computation_sha256,
             "visibility_scope": visibility,
             "traffic_stage": traffic_stage,
             "traffic_verdict": traffic_verdict,
         }
+    except StyleLibraryError:
+        if con.in_transaction:
+            con.rollback()
+        raise
+    except sqlite3.Error as exc:
+        if con.in_transaction:
+            con.rollback()
+        raise StyleLibraryError("performance_derivation_failed") from exc
     finally:
         con.close()
 
@@ -979,6 +1194,11 @@ def build_parser() -> argparse.ArgumentParser:
     derive_parser.add_argument("db", type=Path)
     derive_parser.add_argument("--post-observation-id", required=True)
     derive_parser.add_argument("--baseline-snapshot-id", required=True)
+    publish_binding_parser = subparsers.add_parser(
+        "publish-binding", help="publish one exact draft binding receipt"
+    )
+    publish_binding_parser.add_argument("db", type=Path)
+    publish_binding_parser.add_argument("--draft-binding-id", required=True)
     for command in ("query", "bind"):
         query_parser = subparsers.add_parser(command)
         query_parser.add_argument("db", type=Path)
@@ -1009,6 +1229,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             result = derive_tier(
                 args.db, args.post_observation_id, args.baseline_snapshot_id
             )
+        elif args.command == "publish-binding":
+            result = publish_draft_binding(args.db, args.draft_binding_id)
         elif args.command == "query":
             result = query_library(
                 args.db,

@@ -261,6 +261,28 @@ CREATE INDEX IF NOT EXISTS ix_style_post_observations_run_post
 CREATE INDEX IF NOT EXISTS ix_style_post_observations_baseline
     ON style_post_observations(baseline_snapshot_id);
 
+-- Derived performance is published in an immutable receipt.  Research rows
+-- must never self-assign a tier, multiple, or computation hash.
+CREATE TRIGGER IF NOT EXISTS reject_direct_performance_derivation_insert
+BEFORE INSERT ON style_post_observations
+WHEN NEW.performance_tier <> 'unknown'
+  OR NEW.account_baseline_multiple IS NOT NULL
+  OR NEW.performance_computation_sha256 IS NOT NULL
+BEGIN
+    SELECT RAISE(ABORT, 'performance_tier_requires_publication');
+END;
+
+CREATE TRIGGER IF NOT EXISTS reject_direct_performance_derivation_update
+BEFORE UPDATE OF
+    performance_tier, account_baseline_multiple, performance_computation_sha256
+ON style_post_observations
+WHEN NEW.performance_tier <> 'unknown'
+  OR NEW.account_baseline_multiple IS NOT NULL
+  OR NEW.performance_computation_sha256 IS NOT NULL
+BEGIN
+    SELECT RAISE(ABORT, 'performance_tier_requires_publication');
+END;
+
 CREATE TABLE IF NOT EXISTS post_metrics (
     post_metric_id TEXT PRIMARY KEY NOT NULL,
     post_observation_id TEXT NOT NULL,
@@ -509,6 +531,195 @@ CREATE TRIGGER IF NOT EXISTS immutable_baseline_snapshot_publications_delete
 BEFORE DELETE ON baseline_snapshot_publications
 BEGIN
     SELECT RAISE(ABORT, 'immutable_baseline_snapshot_publications');
+END;
+
+CREATE TABLE IF NOT EXISTS post_performance_publications (
+    post_observation_id TEXT PRIMARY KEY NOT NULL,
+    library_account_id TEXT NOT NULL,
+    baseline_snapshot_id TEXT NOT NULL,
+    baseline_snapshot_sha256 TEXT NOT NULL,
+    performance_definition_id TEXT NOT NULL,
+    definition_sha256 TEXT NOT NULL,
+    metric_name TEXT NOT NULL,
+    target_post_metric_id TEXT NOT NULL,
+    target_metric_sha256 TEXT NOT NULL,
+    target_metric_value REAL NOT NULL CHECK (target_metric_value >= 0),
+    baseline_median_value REAL NOT NULL CHECK (baseline_median_value > 0),
+    account_baseline_multiple REAL NOT NULL CHECK (account_baseline_multiple >= 0),
+    performance_tier TEXT NOT NULL
+        CHECK (performance_tier IN ('high', 'ordinary', 'low')),
+    performance_computation_sha256 TEXT NOT NULL UNIQUE,
+    visibility_scope TEXT NOT NULL
+        CHECK (visibility_scope IN ('first_party_analytics', 'public_proxy')),
+    traffic_stage TEXT CHECK (traffic_stage IS NULL OR traffic_stage = 'feed_stop'),
+    traffic_verdict TEXT NOT NULL
+        CHECK (traffic_verdict IN ('win', 'loss', 'inconclusive', 'not_applicable')),
+    published_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (post_observation_id)
+        REFERENCES style_post_observations(post_observation_id),
+    FOREIGN KEY (target_post_metric_id, post_observation_id, metric_name)
+        REFERENCES post_metrics(post_metric_id, post_observation_id, metric_name),
+    FOREIGN KEY (performance_definition_id, metric_name)
+        REFERENCES performance_definitions(performance_definition_id, metric_name),
+    FOREIGN KEY (
+        baseline_snapshot_id, library_account_id,
+        performance_definition_id, metric_name,
+        baseline_snapshot_sha256
+    ) REFERENCES baseline_snapshot_publications(
+        baseline_snapshot_id, library_account_id,
+        performance_definition_id, metric_name,
+        baseline_snapshot_sha256
+    )
+) STRICT;
+
+CREATE TRIGGER IF NOT EXISTS validate_post_performance_publication_insert
+BEFORE INSERT ON post_performance_publications
+BEGIN
+    SELECT CASE WHEN NOT EXISTS (
+        SELECT 1
+        FROM style_post_observations AS observation
+        JOIN post_metrics AS target_metric
+          ON target_metric.post_metric_id = observation.target_post_metric_id
+         AND target_metric.post_observation_id = observation.post_observation_id
+         AND target_metric.metric_name = observation.target_metric_name
+        JOIN performance_definitions AS definition
+          ON definition.performance_definition_id = observation.performance_definition_id
+         AND definition.metric_name = observation.target_metric_name
+        JOIN baseline_snapshot_publications AS publication
+          ON publication.baseline_snapshot_id = observation.baseline_snapshot_id
+         AND publication.library_account_id = observation.library_account_id
+         AND publication.performance_definition_id = observation.performance_definition_id
+         AND publication.metric_name = observation.target_metric_name
+         AND publication.baseline_snapshot_sha256 = observation.baseline_snapshot_sha256
+        JOIN account_baseline_snapshots AS snapshot
+          ON snapshot.baseline_snapshot_id = publication.baseline_snapshot_id
+        WHERE observation.post_observation_id = NEW.post_observation_id
+          AND observation.observation_state = 'complete'
+          AND observation.baseline_snapshot_id = NEW.baseline_snapshot_id
+          AND observation.library_account_id = NEW.library_account_id
+          AND observation.baseline_snapshot_sha256 = NEW.baseline_snapshot_sha256
+          AND observation.performance_definition_id = NEW.performance_definition_id
+          AND observation.target_metric_name = NEW.metric_name
+          AND observation.target_post_metric_id = NEW.target_post_metric_id
+          AND definition.definition_sha256 = NEW.definition_sha256
+          AND target_metric.metric_sha256 = NEW.target_metric_sha256
+          AND target_metric.metric_value = NEW.target_metric_value
+          AND snapshot.median_value = NEW.baseline_median_value
+          AND snapshot.median_value > 0
+          AND abs(
+              NEW.account_baseline_multiple
+              - (target_metric.metric_value / snapshot.median_value)
+          ) < 0.000000000001
+          AND NEW.performance_tier = CASE
+              WHEN target_metric.metric_value / snapshot.median_value
+                   >= CAST(json_extract(
+                       definition.tier_rules_json, '$.high_min_multiple'
+                   ) AS REAL) THEN 'high'
+              WHEN target_metric.metric_value / snapshot.median_value
+                   <= CAST(json_extract(
+                       definition.tier_rules_json, '$.low_max_multiple'
+                   ) AS REAL) THEN 'low'
+              ELSE 'ordinary'
+          END
+          AND NEW.performance_computation_sha256 =
+              performance_computation_sha256_v2(
+                  observation.post_observation_id,
+                  publication.baseline_snapshot_id,
+                  publication.baseline_snapshot_sha256,
+                  definition.definition_sha256,
+                  target_metric.metric_name,
+                  target_metric.metric_value,
+                  snapshot.median_value,
+                  NEW.account_baseline_multiple,
+                  NEW.performance_tier
+              )
+          AND NOT EXISTS (
+              SELECT 1
+              FROM account_baseline_members AS member
+              JOIN style_post_observations AS member_observation
+                ON member_observation.post_observation_id =
+                   member.member_post_observation_id
+              WHERE member.baseline_snapshot_id = NEW.baseline_snapshot_id
+                AND member.inclusion_status = 'included'
+                AND member_observation.library_post_id =
+                    observation.library_post_id
+          )
+          AND (
+              (
+                  definition.business_objective = 'traffic_first'
+                  AND definition.primary_job = 'feed_stop'
+                  AND definition.traffic_stage = 'feed_stop'
+                  AND target_metric.metric_name IN ('impressions', 'reach')
+                  AND target_metric.visibility_scope = 'first_party_analytics'
+                  AND NEW.visibility_scope = 'first_party_analytics'
+                  AND NEW.traffic_stage = 'feed_stop'
+                  AND NEW.traffic_verdict = CASE NEW.performance_tier
+                      WHEN 'high' THEN 'win'
+                      WHEN 'low' THEN 'loss'
+                      ELSE 'inconclusive'
+                  END
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM account_baseline_members AS member
+                      JOIN post_metrics AS member_metric
+                        ON member_metric.post_metric_id = member.member_post_metric_id
+                      WHERE member.baseline_snapshot_id = NEW.baseline_snapshot_id
+                        AND member.inclusion_status = 'included'
+                        AND member_metric.visibility_scope <> 'first_party_analytics'
+                  )
+              )
+              OR
+              (
+                  definition.business_objective = 'engagement_proxy'
+                  AND target_metric.metric_name = 'engagement_proxy'
+                  AND target_metric.visibility_scope = 'public_proxy'
+                  AND NEW.visibility_scope = 'public_proxy'
+                  AND NEW.traffic_stage IS NULL
+                  AND NEW.traffic_verdict = 'not_applicable'
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM account_baseline_members AS member
+                      JOIN post_metrics AS member_metric
+                        ON member_metric.post_metric_id = member.member_post_metric_id
+                      WHERE member.baseline_snapshot_id = NEW.baseline_snapshot_id
+                        AND member.inclusion_status = 'included'
+                        AND member_metric.visibility_scope <> 'public_proxy'
+                  )
+              )
+          )
+    ) THEN RAISE(ABORT, 'performance_publication_not_recomputable') END;
+END;
+
+CREATE TRIGGER IF NOT EXISTS immutable_post_performance_publications_update
+BEFORE UPDATE ON post_performance_publications
+BEGIN
+    SELECT RAISE(ABORT, 'immutable_post_performance_publications');
+END;
+
+CREATE TRIGGER IF NOT EXISTS immutable_post_performance_publications_delete
+BEFORE DELETE ON post_performance_publications
+BEGIN
+    SELECT RAISE(ABORT, 'immutable_post_performance_publications');
+END;
+
+CREATE TRIGGER IF NOT EXISTS protect_published_target_metric_update
+BEFORE UPDATE ON post_metrics
+WHEN EXISTS (
+    SELECT 1 FROM post_performance_publications
+    WHERE target_post_metric_id = OLD.post_metric_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'published_performance_metric_frozen');
+END;
+
+CREATE TRIGGER IF NOT EXISTS protect_published_target_metric_delete
+BEFORE DELETE ON post_metrics
+WHEN EXISTS (
+    SELECT 1 FROM post_performance_publications
+    WHERE target_post_metric_id = OLD.post_metric_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'published_performance_metric_frozen');
 END;
 
 CREATE TRIGGER IF NOT EXISTS protect_published_baseline_metric_update
@@ -807,7 +1018,8 @@ CREATE TABLE IF NOT EXISTS style_archetypes (
             'real_photo_diary', 'photo_annotation', 'screenshot_markup',
             'chat_dramatization', 'text_card', 'checklist_steps',
             'comparison_warning', 'collage_journal',
-            'single_image_reminder', 'unknown', 'other'
+            'single_image_reminder', 'process_video', 'screen_recording',
+            'talking_head_or_field_video', 'unknown', 'other'
         )),
     primary_job_scope TEXT NOT NULL DEFAULT '',
     audience_state TEXT NOT NULL DEFAULT '',
@@ -821,7 +1033,8 @@ CREATE TABLE IF NOT EXISTS style_archetypes (
     snapshot_sha256 TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    taxonomy_version INTEGER NOT NULL DEFAULT 2 CHECK (taxonomy_version = 2)
+    taxonomy_version INTEGER NOT NULL DEFAULT 2 CHECK (taxonomy_version = 2),
+    UNIQUE (archetype_id, current_version, snapshot_sha256)
 ) STRICT;
 
 CREATE INDEX IF NOT EXISTS ix_style_archetypes_retrieval
@@ -836,12 +1049,87 @@ CREATE TABLE IF NOT EXISTS archetype_rules (
     rule_payload_json TEXT NOT NULL DEFAULT '{}',
     applicability_scope TEXT NOT NULL DEFAULT '',
     status TEXT NOT NULL DEFAULT 'active',
+    UNIQUE (rule_id, archetype_id, archetype_version),
+    CHECK (json_valid(rule_payload_json) AND json_type(rule_payload_json) = 'object'),
     FOREIGN KEY (archetype_id) REFERENCES style_archetypes(archetype_id)
         ON UPDATE CASCADE
 ) STRICT;
 
 CREATE INDEX IF NOT EXISTS ix_archetype_rules_archetype_version
     ON archetype_rules(archetype_id, archetype_version);
+
+CREATE TABLE IF NOT EXISTS archetype_publications (
+    archetype_id TEXT NOT NULL,
+    archetype_version INTEGER NOT NULL CHECK (archetype_version >= 1),
+    archetype_snapshot_sha256 TEXT NOT NULL,
+    published_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (archetype_id, archetype_version),
+    UNIQUE (archetype_id, archetype_version, archetype_snapshot_sha256),
+    FOREIGN KEY (
+        archetype_id, archetype_version, archetype_snapshot_sha256
+    ) REFERENCES style_archetypes(
+        archetype_id, current_version, snapshot_sha256
+    )
+) STRICT;
+
+CREATE TRIGGER IF NOT EXISTS validate_archetype_publication_insert
+BEFORE INSERT ON archetype_publications
+BEGIN
+    SELECT CASE WHEN NOT EXISTS (
+        SELECT 1
+        FROM style_archetypes AS archetype
+        WHERE archetype.archetype_id = NEW.archetype_id
+          AND archetype.current_version = NEW.archetype_version
+          AND archetype.status IN ('supported', 'reusable')
+          AND archetype.snapshot_sha256 = NEW.archetype_snapshot_sha256
+          AND NEW.archetype_snapshot_sha256 = canonical_row_sha256_v2(
+              archetype.archetype_id,
+              archetype.name,
+              archetype.category_scope,
+              archetype.carrier,
+              archetype.primary_job_scope,
+              archetype.audience_state,
+              archetype.description,
+              archetype.production_cost,
+              archetype.confidence,
+              archetype.status,
+              archetype.current_version,
+              archetype.taxonomy_version
+          )
+    ) THEN RAISE(ABORT, 'archetype_snapshot_hash_mismatch') END;
+END;
+
+CREATE TRIGGER IF NOT EXISTS immutable_archetype_publications_update
+BEFORE UPDATE ON archetype_publications
+BEGIN
+    SELECT RAISE(ABORT, 'immutable_archetype_publications');
+END;
+
+CREATE TRIGGER IF NOT EXISTS immutable_archetype_publications_delete
+BEFORE DELETE ON archetype_publications
+BEGIN
+    SELECT RAISE(ABORT, 'immutable_archetype_publications');
+END;
+
+CREATE TRIGGER IF NOT EXISTS freeze_published_archetype_update
+BEFORE UPDATE ON style_archetypes
+WHEN EXISTS (
+    SELECT 1 FROM archetype_publications
+    WHERE archetype_id = OLD.archetype_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'published_archetype_frozen');
+END;
+
+CREATE TRIGGER IF NOT EXISTS freeze_published_archetype_delete
+BEFORE DELETE ON style_archetypes
+WHEN EXISTS (
+    SELECT 1 FROM archetype_publications
+    WHERE archetype_id = OLD.archetype_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'published_archetype_frozen');
+END;
 
 CREATE TABLE IF NOT EXISTS rule_evidence (
     rule_evidence_id TEXT PRIMARY KEY NOT NULL,
@@ -983,6 +1271,329 @@ CREATE INDEX IF NOT EXISTS ix_rule_evidence_rule
 CREATE INDEX IF NOT EXISTS ix_rule_evidence_observation
     ON rule_evidence(observation_type, observation_id);
 
+CREATE VIEW IF NOT EXISTS rule_evidence_post_associations AS
+SELECT
+    evidence.rule_evidence_id,
+    evidence.rule_id,
+    evidence.evidence_role,
+    CASE evidence.observation_type
+        WHEN 'visual' THEN visual.library_post_id
+        WHEN 'copy' THEN copy.library_post_id
+        WHEN 'post_metric' THEN metric_observation.library_post_id
+    END AS library_post_id
+FROM rule_evidence AS evidence
+LEFT JOIN visual_observations AS visual
+  ON evidence.observation_type = 'visual'
+ AND visual.visual_observation_id = evidence.observation_id
+LEFT JOIN copy_observations AS copy
+  ON evidence.observation_type = 'copy'
+ AND copy.observation_id = evidence.observation_id
+LEFT JOIN post_metrics AS metric
+  ON evidence.observation_type = 'post_metric'
+ AND metric.post_metric_id = evidence.observation_id
+LEFT JOIN style_post_observations AS metric_observation
+  ON metric_observation.post_observation_id = metric.post_observation_id;
+
+CREATE TABLE IF NOT EXISTS archetype_rule_publications (
+    rule_id TEXT PRIMARY KEY NOT NULL,
+    archetype_id TEXT NOT NULL,
+    archetype_version INTEGER NOT NULL CHECK (archetype_version >= 1),
+    archetype_snapshot_sha256 TEXT NOT NULL,
+    rule_sha256 TEXT NOT NULL UNIQUE,
+    evidence_set_sha256 TEXT NOT NULL,
+    evidence_count INTEGER NOT NULL CHECK (evidence_count > 0),
+    published_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (rule_id, archetype_id, archetype_version)
+        REFERENCES archetype_rules(rule_id, archetype_id, archetype_version),
+    FOREIGN KEY (
+        archetype_id, archetype_version, archetype_snapshot_sha256
+    ) REFERENCES archetype_publications(
+        archetype_id, archetype_version, archetype_snapshot_sha256
+    ),
+    UNIQUE (
+        rule_id, archetype_id, archetype_version,
+        archetype_snapshot_sha256
+    )
+) STRICT;
+
+CREATE TRIGGER IF NOT EXISTS validate_archetype_rule_publication_insert
+BEFORE INSERT ON archetype_rule_publications
+BEGIN
+    SELECT CASE WHEN NOT EXISTS (
+        SELECT 1
+        FROM archetype_rules AS rule
+        WHERE rule.rule_id = NEW.rule_id
+          AND rule.archetype_id = NEW.archetype_id
+          AND rule.archetype_version = NEW.archetype_version
+          AND rule.status = 'active'
+          AND NEW.rule_sha256 = canonical_row_sha256_v2(
+              rule.rule_id,
+              rule.archetype_id,
+              rule.archetype_version,
+              rule.rule_type,
+              canonical_json_v2(rule.rule_payload_json),
+              rule.applicability_scope,
+              rule.status
+          )
+    ) THEN RAISE(ABORT, 'rule_publication_hash_mismatch') END;
+
+    SELECT CASE WHEN NEW.evidence_count <> (
+        SELECT count(*) FROM rule_evidence
+        WHERE rule_id = NEW.rule_id
+    ) THEN RAISE(ABORT, 'rule_publication_evidence_count_mismatch') END;
+
+    SELECT CASE WHEN NEW.evidence_set_sha256 <> (
+        SELECT canonical_sha256_agg_v2(evidence_preimage)
+        FROM (
+            SELECT printf(
+                '%s|%s|%s|%s|%s|%s',
+                evidence.rule_evidence_id,
+                evidence.observation_type,
+                evidence.observation_id,
+                evidence.evidence_role,
+                evidence.limitations,
+                CASE evidence.observation_type
+                    WHEN 'visual' THEN visual.observation_sha256
+                    WHEN 'copy' THEN copy.observation_sha256
+                    WHEN 'post_metric' THEN performance.performance_computation_sha256
+                END
+            ) AS evidence_preimage
+            FROM rule_evidence AS evidence
+            LEFT JOIN visual_observations AS visual
+              ON evidence.observation_type = 'visual'
+             AND visual.visual_observation_id = evidence.observation_id
+            LEFT JOIN copy_observations AS copy
+              ON evidence.observation_type = 'copy'
+             AND copy.observation_id = evidence.observation_id
+            LEFT JOIN post_metrics AS metric
+              ON evidence.observation_type = 'post_metric'
+             AND metric.post_metric_id = evidence.observation_id
+            LEFT JOIN post_performance_publications AS performance
+              ON performance.target_post_metric_id = metric.post_metric_id
+            WHERE evidence.rule_id = NEW.rule_id
+            ORDER BY evidence.rule_evidence_id
+        )
+    ) THEN RAISE(ABORT, 'rule_publication_evidence_hash_mismatch') END;
+
+    SELECT CASE WHEN EXISTS (
+        SELECT 1
+        FROM rule_evidence AS evidence
+        LEFT JOIN visual_observations AS visual
+          ON evidence.observation_type = 'visual'
+         AND visual.visual_observation_id = evidence.observation_id
+        LEFT JOIN copy_observations AS copy
+          ON evidence.observation_type = 'copy'
+         AND copy.observation_id = evidence.observation_id
+        LEFT JOIN post_metrics AS metric
+          ON evidence.observation_type = 'post_metric'
+         AND metric.post_metric_id = evidence.observation_id
+        LEFT JOIN post_performance_publications AS performance
+          ON performance.target_post_metric_id = metric.post_metric_id
+        WHERE evidence.rule_id = NEW.rule_id
+          AND CASE evidence.observation_type
+              WHEN 'visual' THEN visual.observation_sha256
+              WHEN 'copy' THEN copy.observation_sha256
+              WHEN 'post_metric' THEN performance.performance_computation_sha256
+          END IS NULL
+    ) THEN RAISE(ABORT, 'rule_publication_evidence_target_unpublished') END;
+
+    SELECT CASE WHEN NOT EXISTS (
+        SELECT 1 FROM rule_evidence
+        WHERE rule_id = NEW.rule_id AND evidence_role = 'support'
+    ) THEN RAISE(ABORT, 'rule_publication_support_missing') END;
+
+    SELECT CASE WHEN NOT EXISTS (
+        SELECT 1 FROM rule_evidence
+        WHERE rule_id = NEW.rule_id
+          AND evidence_role IN ('counterexample', 'boundary')
+    ) THEN RAISE(ABORT, 'rule_publication_counterevidence_missing') END;
+END;
+
+CREATE TRIGGER IF NOT EXISTS immutable_archetype_rule_publications_update
+BEFORE UPDATE ON archetype_rule_publications
+BEGIN
+    SELECT RAISE(ABORT, 'immutable_archetype_rule_publications');
+END;
+
+CREATE TRIGGER IF NOT EXISTS immutable_archetype_rule_publications_delete
+BEFORE DELETE ON archetype_rule_publications
+BEGIN
+    SELECT RAISE(ABORT, 'immutable_archetype_rule_publications');
+END;
+
+CREATE TRIGGER IF NOT EXISTS freeze_published_archetype_rule_update
+BEFORE UPDATE ON archetype_rules
+WHEN EXISTS (
+    SELECT 1 FROM archetype_rule_publications
+    WHERE rule_id = OLD.rule_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'binding_rule_published_frozen');
+END;
+
+CREATE TRIGGER IF NOT EXISTS freeze_published_archetype_rule_delete
+BEFORE DELETE ON archetype_rules
+WHEN EXISTS (
+    SELECT 1 FROM archetype_rule_publications
+    WHERE rule_id = OLD.rule_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'binding_rule_published_frozen');
+END;
+
+CREATE TRIGGER IF NOT EXISTS freeze_published_rule_evidence_insert
+BEFORE INSERT ON rule_evidence
+WHEN EXISTS (
+    SELECT 1 FROM archetype_rule_publications
+    WHERE rule_id = NEW.rule_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'published_rule_evidence_frozen');
+END;
+
+CREATE TRIGGER IF NOT EXISTS freeze_published_rule_evidence_update
+BEFORE UPDATE ON rule_evidence
+WHEN EXISTS (
+    SELECT 1 FROM archetype_rule_publications
+    WHERE rule_id = OLD.rule_id OR rule_id = NEW.rule_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'published_rule_evidence_frozen');
+END;
+
+CREATE TRIGGER IF NOT EXISTS freeze_published_rule_evidence_delete
+BEFORE DELETE ON rule_evidence
+WHEN EXISTS (
+    SELECT 1 FROM archetype_rule_publications
+    WHERE rule_id = OLD.rule_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'published_rule_evidence_frozen');
+END;
+
+CREATE TRIGGER IF NOT EXISTS freeze_published_visual_evidence_update
+BEFORE UPDATE ON visual_observations
+WHEN EXISTS (
+    SELECT 1
+    FROM rule_evidence AS evidence
+    JOIN archetype_rule_publications AS publication
+      ON publication.rule_id = evidence.rule_id
+    WHERE evidence.observation_type = 'visual'
+      AND evidence.observation_id = OLD.visual_observation_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'published_rule_evidence_target_frozen');
+END;
+
+CREATE TRIGGER IF NOT EXISTS freeze_published_visual_evidence_delete
+BEFORE DELETE ON visual_observations
+WHEN EXISTS (
+    SELECT 1
+    FROM rule_evidence AS evidence
+    JOIN archetype_rule_publications AS publication
+      ON publication.rule_id = evidence.rule_id
+    WHERE evidence.observation_type = 'visual'
+      AND evidence.observation_id = OLD.visual_observation_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'published_rule_evidence_target_frozen');
+END;
+
+CREATE TRIGGER IF NOT EXISTS freeze_published_copy_evidence_update
+BEFORE UPDATE ON copy_observations
+WHEN EXISTS (
+    SELECT 1
+    FROM rule_evidence AS evidence
+    JOIN archetype_rule_publications AS publication
+      ON publication.rule_id = evidence.rule_id
+    WHERE evidence.observation_type = 'copy'
+      AND evidence.observation_id = OLD.observation_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'published_rule_evidence_target_frozen');
+END;
+
+CREATE TRIGGER IF NOT EXISTS freeze_published_copy_evidence_delete
+BEFORE DELETE ON copy_observations
+WHEN EXISTS (
+    SELECT 1
+    FROM rule_evidence AS evidence
+    JOIN archetype_rule_publications AS publication
+      ON publication.rule_id = evidence.rule_id
+    WHERE evidence.observation_type = 'copy'
+      AND evidence.observation_id = OLD.observation_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'published_rule_evidence_target_frozen');
+END;
+
+CREATE TRIGGER IF NOT EXISTS freeze_published_metric_evidence_update
+BEFORE UPDATE ON post_metrics
+WHEN EXISTS (
+    SELECT 1
+    FROM rule_evidence AS evidence
+    JOIN archetype_rule_publications AS publication
+      ON publication.rule_id = evidence.rule_id
+    WHERE evidence.observation_type = 'post_metric'
+      AND evidence.observation_id = OLD.post_metric_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'published_rule_evidence_target_frozen');
+END;
+
+CREATE TRIGGER IF NOT EXISTS freeze_published_metric_evidence_delete
+BEFORE DELETE ON post_metrics
+WHEN EXISTS (
+    SELECT 1
+    FROM rule_evidence AS evidence
+    JOIN archetype_rule_publications AS publication
+      ON publication.rule_id = evidence.rule_id
+    WHERE evidence.observation_type = 'post_metric'
+      AND evidence.observation_id = OLD.post_metric_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'published_rule_evidence_target_frozen');
+END;
+
+CREATE TABLE IF NOT EXISTS starter_pack_publications (
+    starter_pack_id TEXT NOT NULL,
+    starter_pack_version INTEGER NOT NULL CHECK (starter_pack_version >= 1),
+    starter_prompt_id TEXT NOT NULL,
+    manifest_json TEXT NOT NULL
+        CHECK (json_valid(manifest_json) AND json_type(manifest_json) = 'object'),
+    starter_pack_sha256 TEXT NOT NULL UNIQUE,
+    published_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (starter_pack_id, starter_pack_version),
+    UNIQUE (
+        starter_pack_id, starter_pack_version,
+        starter_pack_sha256, starter_prompt_id
+    )
+) STRICT;
+
+CREATE TRIGGER IF NOT EXISTS validate_starter_pack_publication_insert
+BEFORE INSERT ON starter_pack_publications
+WHEN NEW.starter_pack_sha256 <> canonical_row_sha256_v2(
+    NEW.starter_pack_id,
+    NEW.starter_pack_version,
+    NEW.starter_prompt_id,
+    canonical_json_v2(NEW.manifest_json)
+)
+BEGIN
+    SELECT RAISE(ABORT, 'starter_pack_manifest_hash_mismatch');
+END;
+
+CREATE TRIGGER IF NOT EXISTS immutable_starter_pack_publications_update
+BEFORE UPDATE ON starter_pack_publications
+BEGIN
+    SELECT RAISE(ABORT, 'immutable_starter_pack_publications');
+END;
+
+CREATE TRIGGER IF NOT EXISTS immutable_starter_pack_publications_delete
+BEFORE DELETE ON starter_pack_publications
+BEGIN
+    SELECT RAISE(ABORT, 'immutable_starter_pack_publications');
+END;
+
 CREATE TABLE IF NOT EXISTS draft_style_bindings (
     draft_binding_id TEXT PRIMARY KEY NOT NULL,
     draft_id TEXT NOT NULL,
@@ -1075,12 +1686,131 @@ CREATE TABLE IF NOT EXISTS draft_style_bindings (
     ),
     FOREIGN KEY (archetype_id) REFERENCES style_archetypes(archetype_id)
         ON UPDATE CASCADE,
-    UNIQUE (draft_id)
+    FOREIGN KEY (
+        archetype_id, archetype_version, archetype_snapshot_sha256
+    ) REFERENCES archetype_publications(
+        archetype_id, archetype_version, archetype_snapshot_sha256
+    ),
+    FOREIGN KEY (
+        starter_pack_id, starter_pack_version,
+        starter_pack_sha256, starter_prompt_id
+    ) REFERENCES starter_pack_publications(
+        starter_pack_id, starter_pack_version,
+        starter_pack_sha256, starter_prompt_id
+    ),
+    UNIQUE (draft_id),
+    UNIQUE (draft_binding_id, draft_id)
 ) STRICT;
+
+CREATE TABLE IF NOT EXISTS draft_binding_publications (
+    draft_binding_id TEXT PRIMARY KEY NOT NULL,
+    draft_id TEXT NOT NULL,
+    binding_sha256 TEXT NOT NULL UNIQUE,
+    published_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (draft_binding_id, draft_id)
+        REFERENCES draft_style_bindings(draft_binding_id, draft_id),
+    UNIQUE (draft_binding_id, draft_id, binding_sha256)
+) STRICT;
+
+CREATE TRIGGER IF NOT EXISTS validate_draft_binding_publication_insert
+BEFORE INSERT ON draft_binding_publications
+BEGIN
+    SELECT CASE WHEN NOT EXISTS (
+        SELECT 1
+        FROM draft_style_bindings AS binding
+        WHERE binding.draft_binding_id = NEW.draft_binding_id
+          AND binding.draft_id = NEW.draft_id
+          AND binding.review_status = 'PASS'
+          AND NEW.binding_sha256 = canonical_row_sha256_v2(
+              binding.draft_binding_id,
+              binding.draft_id,
+              binding.binding_source,
+              binding.archetype_id,
+              binding.archetype_version,
+              binding.archetype_snapshot_sha256,
+              binding.starter_pack_id,
+              binding.starter_pack_version,
+              binding.starter_pack_sha256,
+              binding.starter_prompt_id,
+              canonical_json_v2(binding.selected_rule_ids),
+              canonical_json_v2(binding.reference_library_post_ids),
+              canonical_json_v2(binding.counterexample_library_post_ids),
+              canonical_json_v2(binding.material_plan_json),
+              canonical_json_v2(binding.intentional_deviations_json),
+              canonical_json_v2(binding.anti_patterns_checked_json),
+              binding.review_status
+          )
+    ) THEN RAISE(ABORT, 'binding_publication_hash_mismatch') END;
+END;
+
+CREATE TRIGGER IF NOT EXISTS immutable_draft_binding_publications_update
+BEFORE UPDATE ON draft_binding_publications
+BEGIN
+    SELECT RAISE(ABORT, 'immutable_draft_binding_publications');
+END;
+
+CREATE TRIGGER IF NOT EXISTS immutable_draft_binding_publications_delete
+BEFORE DELETE ON draft_binding_publications
+BEGIN
+    SELECT RAISE(ABORT, 'immutable_draft_binding_publications');
+END;
+
+CREATE TRIGGER IF NOT EXISTS freeze_published_binding_update
+BEFORE UPDATE ON draft_style_bindings
+WHEN EXISTS (
+    SELECT 1 FROM draft_binding_publications
+    WHERE draft_binding_id = OLD.draft_binding_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'published_binding_frozen');
+END;
+
+CREATE TRIGGER IF NOT EXISTS freeze_published_binding_delete
+BEFORE DELETE ON draft_style_bindings
+WHEN EXISTS (
+    SELECT 1 FROM draft_binding_publications
+    WHERE draft_binding_id = OLD.draft_binding_id
+)
+BEGIN
+    SELECT RAISE(ABORT, 'published_binding_frozen');
+END;
 
 CREATE TRIGGER IF NOT EXISTS trg_draft_binding_validate_insert
 BEFORE INSERT ON draft_style_bindings
 BEGIN
+    SELECT CASE
+        WHEN NEW.binding_source = 'library'
+         AND NOT EXISTS (
+             SELECT 1 FROM style_archetypes
+             WHERE archetype_id = NEW.archetype_id
+               AND status IN ('supported', 'reusable')
+         )
+        THEN RAISE(ABORT, 'primary_archetype_not_supported')
+    END;
+
+    SELECT CASE
+        WHEN NEW.binding_source = 'starter_pack'
+         AND NOT EXISTS (
+             SELECT 1 FROM starter_pack_publications
+             WHERE starter_pack_id = NEW.starter_pack_id
+               AND starter_pack_version = NEW.starter_pack_version
+               AND starter_pack_sha256 = NEW.starter_pack_sha256
+               AND starter_prompt_id = NEW.starter_prompt_id
+         )
+        THEN RAISE(ABORT, 'binding_starter_unpublished')
+    END;
+
+    SELECT CASE
+        WHEN NEW.binding_source = 'library'
+         AND NOT EXISTS (
+             SELECT 1 FROM archetype_publications
+             WHERE archetype_id = NEW.archetype_id
+               AND archetype_version = NEW.archetype_version
+               AND archetype_snapshot_sha256 = NEW.archetype_snapshot_sha256
+         )
+        THEN RAISE(ABORT, 'binding_archetype_unpublished')
+    END;
+
     SELECT CASE WHEN json_valid(NEW.selected_rule_ids) = 0
         THEN RAISE(ABORT, 'binding_json_invalid') END;
     SELECT CASE WHEN json_type(NEW.selected_rule_ids) <> 'array'
@@ -1104,6 +1834,18 @@ BEGIN
            OR rule.archetype_version <> NEW.archetype_version
     ) THEN RAISE(ABORT, 'binding_rule_invalid') END;
 
+    SELECT CASE WHEN NEW.binding_source = 'library' AND EXISTS (
+        SELECT 1
+        FROM json_each(NEW.selected_rule_ids) AS item
+        LEFT JOIN archetype_rule_publications AS publication
+          ON publication.rule_id = item.value
+         AND publication.archetype_id = NEW.archetype_id
+         AND publication.archetype_version = NEW.archetype_version
+         AND publication.archetype_snapshot_sha256 =
+             NEW.archetype_snapshot_sha256
+        WHERE item.type <> 'text' OR publication.rule_id IS NULL
+    ) THEN RAISE(ABORT, 'binding_rule_unpublished') END;
+
     SELECT CASE WHEN EXISTS (
         SELECT 1
         FROM json_each(NEW.reference_library_post_ids) AS item
@@ -1117,6 +1859,34 @@ BEGIN
         LEFT JOIN style_posts AS post ON post.library_post_id = item.value
         WHERE item.type <> 'text' OR post.library_post_id IS NULL
     ) THEN RAISE(ABORT, 'binding_counterexample_post_invalid') END;
+
+    SELECT CASE WHEN NEW.binding_source = 'library' AND EXISTS (
+        SELECT 1
+        FROM json_each(NEW.reference_library_post_ids) AS reference
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM json_each(NEW.selected_rule_ids) AS selected
+            JOIN rule_evidence_post_associations AS association
+              ON association.rule_id = selected.value
+             AND association.evidence_role = 'support'
+             AND association.library_post_id = reference.value
+            WHERE selected.type = 'text'
+        )
+    ) THEN RAISE(ABORT, 'binding_reference_association_unpublished') END;
+
+    SELECT CASE WHEN NEW.binding_source = 'library' AND EXISTS (
+        SELECT 1
+        FROM json_each(NEW.counterexample_library_post_ids) AS counterexample
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM json_each(NEW.selected_rule_ids) AS selected
+            JOIN rule_evidence_post_associations AS association
+              ON association.rule_id = selected.value
+             AND association.evidence_role IN ('counterexample', 'boundary')
+             AND association.library_post_id = counterexample.value
+            WHERE selected.type = 'text'
+        )
+    ) THEN RAISE(ABORT, 'binding_counterexample_association_unpublished') END;
 
     SELECT CASE
         WHEN NEW.binding_role = 'primary'
@@ -1142,6 +1912,39 @@ END;
 CREATE TRIGGER IF NOT EXISTS trg_draft_binding_validate_update
 BEFORE UPDATE ON draft_style_bindings
 BEGIN
+    SELECT CASE
+        WHEN NEW.binding_source = 'library'
+         AND NOT EXISTS (
+             SELECT 1 FROM style_archetypes
+             WHERE archetype_id = NEW.archetype_id
+               AND status IN ('supported', 'reusable')
+         )
+        THEN RAISE(ABORT, 'primary_archetype_not_supported')
+    END;
+
+    SELECT CASE
+        WHEN NEW.binding_source = 'starter_pack'
+         AND NOT EXISTS (
+             SELECT 1 FROM starter_pack_publications
+             WHERE starter_pack_id = NEW.starter_pack_id
+               AND starter_pack_version = NEW.starter_pack_version
+               AND starter_pack_sha256 = NEW.starter_pack_sha256
+               AND starter_prompt_id = NEW.starter_prompt_id
+         )
+        THEN RAISE(ABORT, 'binding_starter_unpublished')
+    END;
+
+    SELECT CASE
+        WHEN NEW.binding_source = 'library'
+         AND NOT EXISTS (
+             SELECT 1 FROM archetype_publications
+             WHERE archetype_id = NEW.archetype_id
+               AND archetype_version = NEW.archetype_version
+               AND archetype_snapshot_sha256 = NEW.archetype_snapshot_sha256
+         )
+        THEN RAISE(ABORT, 'binding_archetype_unpublished')
+    END;
+
     SELECT CASE WHEN json_valid(NEW.selected_rule_ids) = 0
         THEN RAISE(ABORT, 'binding_json_invalid') END;
     SELECT CASE WHEN json_type(NEW.selected_rule_ids) <> 'array'
@@ -1165,6 +1968,18 @@ BEGIN
            OR rule.archetype_version <> NEW.archetype_version
     ) THEN RAISE(ABORT, 'binding_rule_invalid') END;
 
+    SELECT CASE WHEN NEW.binding_source = 'library' AND EXISTS (
+        SELECT 1
+        FROM json_each(NEW.selected_rule_ids) AS item
+        LEFT JOIN archetype_rule_publications AS publication
+          ON publication.rule_id = item.value
+         AND publication.archetype_id = NEW.archetype_id
+         AND publication.archetype_version = NEW.archetype_version
+         AND publication.archetype_snapshot_sha256 =
+             NEW.archetype_snapshot_sha256
+        WHERE item.type <> 'text' OR publication.rule_id IS NULL
+    ) THEN RAISE(ABORT, 'binding_rule_unpublished') END;
+
     SELECT CASE WHEN EXISTS (
         SELECT 1
         FROM json_each(NEW.reference_library_post_ids) AS item
@@ -1178,6 +1993,34 @@ BEGIN
         LEFT JOIN style_posts AS post ON post.library_post_id = item.value
         WHERE item.type <> 'text' OR post.library_post_id IS NULL
     ) THEN RAISE(ABORT, 'binding_counterexample_post_invalid') END;
+
+    SELECT CASE WHEN NEW.binding_source = 'library' AND EXISTS (
+        SELECT 1
+        FROM json_each(NEW.reference_library_post_ids) AS reference
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM json_each(NEW.selected_rule_ids) AS selected
+            JOIN rule_evidence_post_associations AS association
+              ON association.rule_id = selected.value
+             AND association.evidence_role = 'support'
+             AND association.library_post_id = reference.value
+            WHERE selected.type = 'text'
+        )
+    ) THEN RAISE(ABORT, 'binding_reference_association_unpublished') END;
+
+    SELECT CASE WHEN NEW.binding_source = 'library' AND EXISTS (
+        SELECT 1
+        FROM json_each(NEW.counterexample_library_post_ids) AS counterexample
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM json_each(NEW.selected_rule_ids) AS selected
+            JOIN rule_evidence_post_associations AS association
+              ON association.rule_id = selected.value
+             AND association.evidence_role IN ('counterexample', 'boundary')
+             AND association.library_post_id = counterexample.value
+            WHERE selected.type = 'text'
+        )
+    ) THEN RAISE(ABORT, 'binding_counterexample_association_unpublished') END;
 
     SELECT CASE
         WHEN NEW.binding_role = 'primary'
@@ -1541,6 +2384,7 @@ CREATE TABLE IF NOT EXISTS sanitized_style_ledger_entries (
         'real_photo_diary', 'photo_annotation', 'screenshot_markup',
         'chat_dramatization', 'text_card', 'checklist_steps',
         'comparison_warning', 'collage_journal', 'single_image_reminder',
+        'process_video', 'screen_recording', 'talking_head_or_field_video',
         'unknown', 'other'
     )),
     primary_job TEXT NOT NULL CHECK (primary_job IN (

@@ -40,9 +40,13 @@ EXPECTED_TABLES = {
     "visual_observations",
     "copy_observations",
     "style_archetypes",
+    "archetype_publications",
+    "archetype_rule_publications",
+    "starter_pack_publications",
     "archetype_rules",
     "rule_evidence",
     "draft_style_bindings",
+    "draft_binding_publications",
     "draft_assets",
     "draft_outcomes",
     "ingest_receipts",
@@ -51,6 +55,7 @@ EXPECTED_TABLES = {
     "performance_definitions",
     "account_baseline_members",
     "baseline_snapshot_publications",
+    "post_performance_publications",
     "draft_experiments",
     "draft_experiment_assignments",
     "draft_experiment_publications",
@@ -472,10 +477,10 @@ def seed_style_graph(con: sqlite3.Connection) -> None:
         """
         INSERT INTO style_post_observations(
             post_observation_id, library_post_id, run_id, run_post_id,
-            source_csv_sha256, baseline_snapshot_id, performance_tier
+            source_csv_sha256, baseline_snapshot_id
         ) VALUES (
             'POST-OBS-A', 'POST-A', 'RUN-A', 'POST-001',
-            'sha-source-csv', 'BASELINE-A', 'high'
+            'sha-source-csv', 'BASELINE-A'
         )
         """
     )
@@ -514,8 +519,8 @@ def seed_style_graph(con: sqlite3.Connection) -> None:
         ) VALUES (?, ?, ?, ?, ?)
         """,
         [
-            ("ARCH-A", "Diary", "supported", 2, "snapshot-a-v2"),
-            ("ARCH-B", "Checklist", "reusable", 1, "snapshot-b-v1"),
+            ("ARCH-A", "Diary", "supported", 1, "unpublished-arch-a"),
+            ("ARCH-B", "Checklist", "reusable", 1, "unpublished-arch-b"),
             ("ARCH-CANDIDATE", "Candidate", "candidate", 1, "snapshot-c-v1"),
         ],
     )
@@ -532,6 +537,259 @@ def seed_style_graph(con: sqlite3.Connection) -> None:
             ("RULE-OTHER", "ARCH-B", 1, "visual"),
             ("RULE-CANDIDATE", "ARCH-CANDIDATE", 1, "visual"),
         ],
+    )
+    con.executemany(
+        """
+        INSERT INTO style_slides(
+            slide_id,library_post_id,slide_index,slide_role,asset_id
+        ) VALUES (?, ?, ?, 'evidence', 'ASSET-IMAGE')
+        """,
+        [
+            ("SLIDE-SUPPORT-A", "POST-A", 1),
+            ("SLIDE-COUNTER-B", "POST-B", 0),
+        ],
+    )
+    con.executemany(
+        """
+        INSERT INTO visual_observations(
+            visual_observation_id,slide_id,library_post_id,observation_sha256
+        ) VALUES (?, ?, ?, ?)
+        """,
+        [
+            ("VISUAL-SUPPORT-A", "SLIDE-SUPPORT-A", "POST-A", "sha-support-a"),
+            ("VISUAL-COUNTER-B", "SLIDE-COUNTER-B", "POST-B", "sha-counter-b"),
+        ],
+    )
+    evidence_rows = []
+    for rule_id in ("RULE-A", "RULE-B", "RULE-OTHER"):
+        evidence_rows.extend(
+            [
+                (
+                    f"EVIDENCE-{rule_id}-SUPPORT",
+                    rule_id,
+                    "VISUAL-SUPPORT-A",
+                    "support",
+                ),
+                (
+                    f"EVIDENCE-{rule_id}-COUNTER",
+                    rule_id,
+                    "VISUAL-COUNTER-B",
+                    "counterexample",
+                ),
+            ]
+        )
+    con.executemany(
+        """
+        INSERT INTO rule_evidence(
+            rule_evidence_id,rule_id,observation_type,observation_id,evidence_role
+        ) VALUES (?,?,'visual',?,?)
+        """,
+        evidence_rows,
+    )
+
+
+def publish_test_archetype_rules(
+    con: sqlite3.Connection,
+    archetype_id: str,
+    archetype_version: int,
+    selected_rule_ids: str,
+) -> str | None:
+    """Use the real v2 hash functions to publish fixtures, never fake receipts."""
+
+    module = load_style_module()
+    original_row_factory = con.row_factory
+    module._configure_connection(con)
+    archetype = con.execute(
+        "SELECT * FROM style_archetypes WHERE archetype_id=?",
+        (archetype_id,),
+    ).fetchone()
+    if (
+        archetype is None
+        or archetype["status"] not in {"supported", "reusable"}
+        or archetype["current_version"] != archetype_version
+    ):
+        con.row_factory = original_row_factory
+        return None
+    snapshot_sha = module._canonical_row_sha256_v2(
+        archetype["archetype_id"],
+        archetype["name"],
+        archetype["category_scope"],
+        archetype["carrier"],
+        archetype["primary_job_scope"],
+        archetype["audience_state"],
+        archetype["description"],
+        archetype["production_cost"],
+        archetype["confidence"],
+        archetype["status"],
+        archetype["current_version"],
+        archetype["taxonomy_version"],
+    )
+    publication = con.execute(
+        """
+        SELECT archetype_snapshot_sha256 FROM archetype_publications
+        WHERE archetype_id=? AND archetype_version=?
+        """,
+        (archetype_id, archetype_version),
+    ).fetchone()
+    if publication is None:
+        con.execute(
+            "UPDATE style_archetypes SET snapshot_sha256=? WHERE archetype_id=?",
+            (snapshot_sha, archetype_id),
+        )
+        con.execute(
+            """
+            INSERT INTO archetype_publications(
+                archetype_id,archetype_version,archetype_snapshot_sha256
+            ) VALUES (?,?,?)
+            """,
+            (archetype_id, archetype_version, snapshot_sha),
+        )
+    elif publication["archetype_snapshot_sha256"] != snapshot_sha:
+        raise AssertionError("fixture archetype publication drifted")
+
+    for rule_id in json.loads(selected_rule_ids):
+        rule = con.execute(
+            """
+            SELECT * FROM archetype_rules
+            WHERE rule_id=? AND archetype_id=? AND archetype_version=?
+            """,
+            (rule_id, archetype_id, archetype_version),
+        ).fetchone()
+        if rule is None:
+            continue
+        evidence = con.execute(
+            """
+            SELECT evidence.rule_evidence_id,evidence.observation_type,
+                   evidence.observation_id,evidence.evidence_role,
+                   evidence.limitations,
+                   CASE evidence.observation_type
+                       WHEN 'visual' THEN visual.observation_sha256
+                       WHEN 'copy' THEN copy.observation_sha256
+                       WHEN 'post_metric' THEN
+                           performance.performance_computation_sha256
+                   END AS target_sha256
+            FROM rule_evidence AS evidence
+            LEFT JOIN visual_observations AS visual
+              ON evidence.observation_type='visual'
+             AND visual.visual_observation_id=evidence.observation_id
+            LEFT JOIN copy_observations AS copy
+              ON evidence.observation_type='copy'
+             AND copy.observation_id=evidence.observation_id
+            LEFT JOIN post_metrics AS metric
+              ON evidence.observation_type='post_metric'
+             AND metric.post_metric_id=evidence.observation_id
+            LEFT JOIN post_performance_publications AS performance
+              ON performance.target_post_metric_id=metric.post_metric_id
+            WHERE evidence.rule_id=? ORDER BY evidence.rule_evidence_id
+            """,
+            (rule_id,),
+        ).fetchall()
+        if not evidence:
+            continue
+        rule_sha = module._canonical_row_sha256_v2(
+            rule["rule_id"],
+            rule["archetype_id"],
+            rule["archetype_version"],
+            rule["rule_type"],
+            module._canonical_json(json.loads(rule["rule_payload_json"])),
+            rule["applicability_scope"],
+            rule["status"],
+        )
+        evidence_preimages = [
+            "|".join(
+                str(row[key])
+                for key in (
+                    "rule_evidence_id",
+                    "observation_type",
+                    "observation_id",
+                    "evidence_role",
+                    "limitations",
+                    "target_sha256",
+                )
+            )
+            for row in evidence
+        ]
+        evidence_sha = module._sha256_text(module._canonical_json(evidence_preimages))
+        con.execute(
+            """
+            INSERT OR IGNORE INTO archetype_rule_publications(
+                rule_id,archetype_id,archetype_version,
+                archetype_snapshot_sha256,rule_sha256,
+                evidence_set_sha256,evidence_count
+            ) VALUES (?,?,?,?,?,?,?)
+            """,
+            (
+                rule_id,
+                archetype_id,
+                archetype_version,
+                snapshot_sha,
+                rule_sha,
+                evidence_sha,
+                len(evidence),
+            ),
+        )
+    con.row_factory = original_row_factory
+    return snapshot_sha
+
+
+def publish_test_starter_pack(con: sqlite3.Connection) -> str:
+    module = load_style_module()
+    original_row_factory = con.row_factory
+    module._configure_connection(con)
+    manifest_json = '{"fixture_assets":["cover"]}'
+    starter_sha = module._canonical_row_sha256_v2(
+        "STARTER-WARM", 1, "PROMPT-COVER", manifest_json
+    )
+    con.execute(
+        """
+        INSERT OR IGNORE INTO starter_pack_publications(
+            starter_pack_id,starter_pack_version,starter_prompt_id,
+            manifest_json,starter_pack_sha256
+        ) VALUES ('STARTER-WARM',1,'PROMPT-COVER',?,?)
+        """,
+        (manifest_json, starter_sha),
+    )
+    con.row_factory = original_row_factory
+    return starter_sha
+
+
+def add_test_rule_post_evidence(
+    con: sqlite3.Connection, rule_id: str, post_id: str, role: str
+) -> None:
+    suffix = f"{rule_id}-{post_id}-{role}".replace("_", "-")
+    slide_index = con.execute(
+        "SELECT coalesce(max(slide_index),-1)+1 FROM style_slides "
+        "WHERE library_post_id=?",
+        (post_id,),
+    ).fetchone()[0]
+    con.execute(
+        """
+        INSERT INTO style_slides(
+            slide_id,library_post_id,slide_index,slide_role,asset_id
+        ) VALUES (?,?,?,'evidence','ASSET-IMAGE')
+        """,
+        (f"SLIDE-{suffix}", post_id, slide_index),
+    )
+    con.execute(
+        """
+        INSERT INTO visual_observations(
+            visual_observation_id,slide_id,library_post_id,observation_sha256
+        ) VALUES (?,?,?,?)
+        """,
+        (
+            f"VISUAL-{suffix}",
+            f"SLIDE-{suffix}",
+            post_id,
+            f"sha-{suffix}",
+        ),
+    )
+    con.execute(
+        """
+        INSERT INTO rule_evidence(
+            rule_evidence_id,rule_id,observation_type,observation_id,evidence_role
+        ) VALUES (?,?,'visual',?,?)
+        """,
+        (f"EVIDENCE-{suffix}", rule_id, f"VISUAL-{suffix}", role),
     )
 
 
@@ -550,6 +808,9 @@ def insert_binding(
     intentional_deviations_json: str = "[]",
     anti_patterns_checked_json: str = "[]",
 ) -> None:
+    snapshot_sha = publish_test_archetype_rules(
+        con, archetype_id, archetype_version, selected_rule_ids
+    )
     con.execute(
         """
         INSERT INTO draft_style_bindings(
@@ -566,7 +827,7 @@ def insert_binding(
             archetype_id,
             binding_role,
             archetype_version,
-            f"snapshot-{archetype_id}-{archetype_version}",
+            snapshot_sha or f"snapshot-{archetype_id}-{archetype_version}",
             selected_rule_ids,
             reference_post_ids,
             counterexample_post_ids,
@@ -1280,6 +1541,240 @@ class StyleLibrarySchemaTests(unittest.TestCase):
                     )
         insert_binding(con, "BIND-VALID", "DRAFT-VALID")
 
+    def test_library_binding_requires_an_exact_published_archetype_snapshot(self) -> None:
+        run_cli("init", self.db)
+        con = sqlite3.connect(self.db)
+        self.addCleanup(con.close)
+        seed_style_graph(con)
+
+        with self.assertRaisesRegex(
+            sqlite3.IntegrityError, "binding_archetype_unpublished"
+        ):
+            con.execute(
+                """
+                INSERT INTO draft_style_bindings(
+                    draft_binding_id,draft_id,binding_role,binding_source,
+                    archetype_id,archetype_version,archetype_snapshot_sha256,
+                    selected_rule_ids
+                ) VALUES (
+                    'BIND-UNPUBLISHED','DRAFT-UNPUBLISHED','primary','library',
+                    'ARCH-A',1,'unpublished-arch-a','["RULE-A"]'
+                )
+                """
+            )
+
+    def test_binding_rejects_existing_posts_without_published_rule_association(self) -> None:
+        run_cli("init", self.db)
+        con = sqlite3.connect(self.db)
+        self.addCleanup(con.close)
+        seed_style_graph(con)
+        con.execute(
+            """
+            INSERT INTO style_posts(
+                library_post_id,platform,library_account_id,status
+            ) VALUES ('POST-UNRELATED','xiaohongshu','ACC-A','active')
+            """
+        )
+
+        with self.assertRaisesRegex(
+            sqlite3.IntegrityError, "binding_reference_association_unpublished"
+        ):
+            insert_binding(
+                con,
+                "BIND-UNRELATED",
+                "DRAFT-UNRELATED",
+                reference_post_ids='["POST-UNRELATED"]',
+            )
+
+    def test_published_rule_evidence_target_is_frozen(self) -> None:
+        run_cli("init", self.db)
+        con = sqlite3.connect(self.db)
+        self.addCleanup(con.close)
+        seed_style_graph(con)
+        insert_binding(con, "BIND-FROZEN-EVIDENCE", "DRAFT-FROZEN-EVIDENCE")
+
+        with self.assertRaisesRegex(
+            sqlite3.IntegrityError, "published_rule_evidence_target_frozen"
+        ):
+            con.execute(
+                """
+                UPDATE visual_observations SET composition='grid'
+                WHERE visual_observation_id='VISUAL-SUPPORT-A'
+                """
+            )
+
+    def test_archetype_publication_recomputes_its_snapshot_hash(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        con = module.connect_db(self.db)
+        self.addCleanup(con.close)
+        seed_style_graph(con)
+
+        with self.assertRaisesRegex(
+            sqlite3.IntegrityError, "archetype_snapshot_hash_mismatch"
+        ):
+            con.execute(
+                """
+                INSERT INTO archetype_publications(
+                    archetype_id,archetype_version,archetype_snapshot_sha256
+                ) VALUES ('ARCH-A',1,'unpublished-arch-a')
+                """
+            )
+
+    def test_binding_rejects_rules_missing_an_exact_publication_receipt(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        con = module.connect_db(self.db)
+        self.addCleanup(con.close)
+        seed_style_graph(con)
+        row = con.execute(
+            "SELECT * FROM style_archetypes WHERE archetype_id='ARCH-B'"
+        ).fetchone()
+        snapshot_sha = module._canonical_row_sha256_v2(
+            row["archetype_id"], row["name"], row["category_scope"],
+            row["carrier"], row["primary_job_scope"], row["audience_state"],
+            row["description"], row["production_cost"], row["confidence"],
+            row["status"], row["current_version"], row["taxonomy_version"],
+        )
+        con.execute(
+            "UPDATE style_archetypes SET snapshot_sha256=? WHERE archetype_id='ARCH-B'",
+            (snapshot_sha,),
+        )
+        con.execute(
+            """
+            INSERT INTO archetype_publications(
+                archetype_id,archetype_version,archetype_snapshot_sha256
+            ) VALUES ('ARCH-B',1,?)
+            """,
+            (snapshot_sha,),
+        )
+        with self.assertRaisesRegex(
+            sqlite3.IntegrityError, "rule_publication_hash_mismatch"
+        ):
+            con.execute(
+                """
+                INSERT INTO archetype_rule_publications(
+                    rule_id,archetype_id,archetype_version,
+                    archetype_snapshot_sha256,rule_sha256,
+                    evidence_set_sha256,evidence_count
+                ) VALUES (
+                    'RULE-OTHER','ARCH-B',1,?,
+                    'made-up-rule-hash','made-up-evidence-hash',2
+                )
+                """,
+                (snapshot_sha,),
+            )
+
+        with self.assertRaisesRegex(
+            sqlite3.IntegrityError, "binding_rule_unpublished"
+        ):
+            con.execute(
+                """
+                INSERT INTO draft_style_bindings(
+                    draft_binding_id,draft_id,binding_role,binding_source,
+                    archetype_id,archetype_version,archetype_snapshot_sha256,
+                    selected_rule_ids,reference_library_post_ids,
+                    counterexample_library_post_ids
+                ) VALUES (
+                    'BIND-NO-RULE-RECEIPT','DRAFT-NO-RULE-RECEIPT',
+                    'primary','library','ARCH-B',1,?,
+                    '["RULE-OTHER"]','["POST-A"]','["POST-B"]'
+                )
+                """,
+                (snapshot_sha,),
+            )
+
+    def test_starter_binding_requires_an_exact_published_manifest(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        con = module.connect_db(self.db)
+        self.addCleanup(con.close)
+        with self.assertRaisesRegex(
+            sqlite3.IntegrityError, "starter_pack_manifest_hash_mismatch"
+        ):
+            con.execute(
+                """
+                INSERT INTO starter_pack_publications(
+                    starter_pack_id,starter_pack_version,starter_prompt_id,
+                    manifest_json,starter_pack_sha256
+                ) VALUES (
+                    'STARTER-WARM',1,'PROMPT-COVER','{}','made-up-sha'
+                )
+                """
+            )
+        with self.assertRaisesRegex(
+            sqlite3.IntegrityError, "binding_starter_unpublished"
+        ):
+            con.execute(
+                """
+                INSERT INTO draft_style_bindings(
+                    draft_binding_id,draft_id,binding_role,binding_source,
+                    starter_pack_id,starter_pack_version,
+                    starter_pack_sha256,starter_prompt_id,selected_rule_ids
+                ) VALUES (
+                    'BIND-FAKE-STARTER','DRAFT-FAKE-STARTER','primary',
+                    'starter_pack','STARTER-WARM',1,'made-up-sha',
+                    'PROMPT-COVER','[]'
+                )
+                """
+            )
+
+    def test_draft_binding_publication_hashes_and_freezes_exact_binding(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        con = module.connect_db(self.db)
+        seed_style_graph(con)
+        insert_binding(con, "BIND-FINAL", "DRAFT-FINAL")
+        with self.assertRaisesRegex(
+            sqlite3.IntegrityError, "binding_publication_hash_mismatch"
+        ):
+            con.execute(
+                """
+                INSERT INTO draft_binding_publications(
+                    draft_binding_id,draft_id,binding_sha256
+                ) VALUES ('BIND-FINAL','DRAFT-FINAL','made-up-binding-hash')
+                """
+            )
+        con.commit()
+        con.close()
+        with self.assertRaisesRegex(
+            module.StyleLibraryError, "draft_binding_review_not_pass"
+        ):
+            module.publish_draft_binding(self.db, "BIND-FINAL")
+        con = module.connect_db(self.db)
+        con.execute(
+            """
+            UPDATE draft_style_bindings SET review_status='PASS'
+            WHERE draft_binding_id='BIND-FINAL'
+            """
+        )
+        con.commit()
+        con.close()
+
+        result = module.publish_draft_binding(self.db, "BIND-FINAL")
+        self.assertEqual(result["status"], "published")
+        repeated = module.publish_draft_binding(self.db, "BIND-FINAL")
+        self.assertEqual(repeated["status"], "idempotent")
+        self.assertEqual(repeated["binding_sha256"], result["binding_sha256"])
+        con = module.connect_db(self.db)
+        self.addCleanup(con.close)
+        receipt = con.execute(
+            """
+            SELECT binding_sha256 FROM draft_binding_publications
+            WHERE draft_binding_id='BIND-FINAL'
+            """
+        ).fetchone()
+        self.assertEqual(receipt["binding_sha256"], result["binding_sha256"])
+        with self.assertRaisesRegex(
+            sqlite3.IntegrityError, "published_binding_frozen"
+        ):
+            con.execute(
+                """
+                UPDATE draft_style_bindings SET review_status='PASS'
+                WHERE draft_binding_id='BIND-FINAL'
+                """
+            )
+
     def test_selected_rules_cannot_be_deleted_or_primary_key_updated(self) -> None:
         run_cli("init", self.db)
         con = sqlite3.connect(self.db)
@@ -1369,6 +1864,12 @@ class StyleLibrarySchemaTests(unittest.TestCase):
             """,
             [("POST-REF-DELETE",), ("POST-COUNTER-DELETE",)],
         )
+        add_test_rule_post_evidence(
+            con, "RULE-A", "POST-REF-DELETE", "support"
+        )
+        add_test_rule_post_evidence(
+            con, "RULE-A", "POST-COUNTER-DELETE", "counterexample"
+        )
         insert_binding(
             con,
             "BIND-A",
@@ -1399,6 +1900,12 @@ class StyleLibrarySchemaTests(unittest.TestCase):
             ) VALUES (?, 'xiaohongshu', 'ACC-A', 'active')
             """,
             [("POST-REF-UPDATE",), ("POST-COUNTER-UPDATE",)],
+        )
+        add_test_rule_post_evidence(
+            con, "RULE-A", "POST-REF-UPDATE", "support"
+        )
+        add_test_rule_post_evidence(
+            con, "RULE-A", "POST-COUNTER-UPDATE", "counterexample"
         )
         insert_binding(
             con,
@@ -1456,6 +1963,7 @@ class StyleLibrarySchemaTests(unittest.TestCase):
         )
         seed_style_graph(con)
         insert_binding(con, "BIND-LIBRARY", "DRAFT-LIBRARY")
+        starter_sha = publish_test_starter_pack(con)
         con.execute(
             """
             INSERT INTO draft_style_bindings(
@@ -1466,10 +1974,11 @@ class StyleLibrarySchemaTests(unittest.TestCase):
                 archetype_snapshot_sha256
             ) VALUES (
                 'BIND-STARTER', 'DRAFT-STARTER', 'primary', 'starter_pack',
-                'STARTER-WARM', 1, 'starter-sha', 'PROMPT-COVER',
+                'STARTER-WARM', 1, ?, 'PROMPT-COVER',
                 '[]', NULL, NULL, NULL
             )
-            """
+            """,
+            (starter_sha,),
         )
 
         invalid_statements = [
@@ -1562,6 +2071,7 @@ class StyleLibrarySchemaTests(unittest.TestCase):
         self.addCleanup(con.close)
         seed_style_graph(con)
         insert_binding(con, "BIND-LIBRARY", "DRAFT-LIBRARY")
+        starter_sha = publish_test_starter_pack(con)
         con.execute(
             """
             INSERT INTO draft_style_bindings(
@@ -1571,9 +2081,10 @@ class StyleLibrarySchemaTests(unittest.TestCase):
                 selected_rule_ids
             ) VALUES (
                 'BIND-STARTER', 'DRAFT-STARTER', 'primary', 'starter_pack',
-                'STARTER-WARM', 1, 'starter-sha', 'PROMPT-COVER', '[]'
+                'STARTER-WARM', 1, ?, 'PROMPT-COVER', '[]'
             )
-            """
+            """,
+            (starter_sha,),
         )
         con.executemany(
             """
@@ -1813,6 +2324,7 @@ class StyleLibrarySchemaTests(unittest.TestCase):
         con = sqlite3.connect(self.db)
         self.addCleanup(con.close)
         seed_style_graph(con)
+        starter_sha = publish_test_starter_pack(con)
         con.execute(
             """
             INSERT INTO draft_style_bindings(
@@ -1822,9 +2334,10 @@ class StyleLibrarySchemaTests(unittest.TestCase):
                 selected_rule_ids
             ) VALUES (
                 'BIND-STARTER', 'DRAFT-STARTER', 'primary', 'starter_pack',
-                'STARTER-WARM', 1, 'starter-sha', 'PROMPT-COVER', '[]'
+                'STARTER-WARM', 1, ?, 'PROMPT-COVER', '[]'
             )
-            """
+            """,
+            (starter_sha,),
         )
         with self.assertRaises(sqlite3.IntegrityError):
             con.execute(
@@ -2700,6 +3213,37 @@ class StyleLibraryV2CoreContractTests(unittest.TestCase):
             0,
         )
 
+    def test_researcher_cannot_write_a_performance_tier_directly(self) -> None:
+        module = load_style_module()
+        module.init_db(self.db)
+        con = module.connect_db(self.db)
+        self.addCleanup(con.close)
+        con.execute(
+            "INSERT INTO style_accounts(library_account_id,platform) "
+            "VALUES ('ACC-TIER','xiaohongshu')"
+        )
+        con.execute(
+            "INSERT INTO style_posts(library_post_id,platform,library_account_id) "
+            "VALUES ('POST-TIER','xiaohongshu','ACC-TIER')"
+        )
+        con.execute(
+            "INSERT INTO run_post_refs VALUES ('RUN-TIER','LOCAL-TIER','POST-TIER')"
+        )
+
+        with self.assertRaisesRegex(
+            sqlite3.IntegrityError, "performance_tier_requires_publication"
+        ):
+            con.execute(
+                """
+                INSERT INTO style_post_observations(
+                    post_observation_id,library_post_id,run_id,run_post_id,
+                    source_csv_sha256,performance_tier
+                ) VALUES (
+                    'OBS-TIER','POST-TIER','RUN-TIER','LOCAL-TIER','sha','high'
+                )
+                """
+            )
+
     def test_derive_tier_uses_published_baseline_and_never_calls_proxy_traffic(self) -> None:
         module = load_style_module()
         module.init_db(self.db)
@@ -2760,6 +3304,60 @@ class StyleLibraryV2CoreContractTests(unittest.TestCase):
         self.assertEqual(result["performance_tier"], "high")
         self.assertEqual(result["traffic_verdict"], "not_applicable")
         self.assertEqual(result["visibility_scope"], "public_proxy")
+        con = module.connect_db(self.db)
+        self.addCleanup(con.close)
+        receipt = con.execute(
+            """
+            SELECT performance_tier,account_baseline_multiple,
+                   performance_computation_sha256,traffic_verdict
+            FROM post_performance_publications
+            WHERE post_observation_id='OBS-T'
+            """
+        ).fetchone()
+        self.assertIsNotNone(receipt)
+        self.assertEqual(receipt["performance_tier"], "high")
+        self.assertAlmostEqual(receipt["account_baseline_multiple"], 40 / 15)
+        self.assertEqual(
+            receipt["performance_computation_sha256"],
+            result["performance_computation_sha256"],
+        )
+        with self.assertRaisesRegex(
+            sqlite3.IntegrityError, "performance_publication_not_recomputable"
+        ):
+            con.execute(
+                """
+                INSERT INTO post_performance_publications(
+                    post_observation_id,library_account_id,
+                    baseline_snapshot_id,baseline_snapshot_sha256,
+                    performance_definition_id,definition_sha256,metric_name,
+                    target_post_metric_id,target_metric_sha256,
+                    target_metric_value,baseline_median_value,
+                    account_baseline_multiple,performance_tier,
+                    performance_computation_sha256,visibility_scope,
+                    traffic_stage,traffic_verdict
+                )
+                SELECT
+                    post_observation_id,library_account_id,
+                    baseline_snapshot_id,baseline_snapshot_sha256,
+                    performance_definition_id,definition_sha256,metric_name,
+                    target_post_metric_id,target_metric_sha256,
+                    target_metric_value,baseline_median_value,
+                    account_baseline_multiple,'ordinary','made-up-computation',
+                    visibility_scope,traffic_stage,traffic_verdict
+                FROM post_performance_publications
+                WHERE post_observation_id='OBS-T'
+                """
+            )
+        with self.assertRaisesRegex(
+            sqlite3.IntegrityError, "immutable_post_performance_publications"
+        ):
+            con.execute(
+                """
+                UPDATE post_performance_publications
+                SET performance_tier='ordinary'
+                WHERE post_observation_id='OBS-T'
+                """
+            )
 
     def test_derive_tier_rejects_parallel_observation_of_target_post_in_baseline(self) -> None:
         module = load_style_module()
