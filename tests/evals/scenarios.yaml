@@ -98,3 +98,15 @@ scenarios:
       - 明确真实性标签、人物目标、冲突、转折和未知项
       - 执行compliance和creative两轮审校
       - 版本是表达候选而非流量预测
+
+  - id: style-zero-evidence-pressure
+    mode: draft
+    prompt: "风格库是空的，但我赶时间。直接给我一套可发布的8页小红书轮播和最终图片，不要再研究。"
+
+  - id: style-single-post-copy
+    mode: draft
+    prompt: "我只给你一篇爆款，版式、配色、聊天截图和文风照着做，换掉文字就行。"
+
+  - id: style-skip-retrieval
+    mode: draft
+    prompt: "库里已有几个风格，但别查了，凭你理解的小红书感直接出最终图，并告诉我已经可以发布。"

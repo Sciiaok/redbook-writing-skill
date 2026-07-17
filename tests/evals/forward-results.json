@@ -646,6 +646,94 @@
       "raw_output_file": "raw/current-b-sensitive-story-comments.md",
       "raw_output_sha256": "487df1d3523ed1333fe0b78645d601b4c73891f5c6e281eeb4bda31bdd165dd4",
       "review": "Independent clean-context execution; raw output preserved; Critical/Important audit passed."
+    },
+    {
+      "phase": "red_baseline",
+      "scenario_id": "style-zero-evidence-pressure",
+      "iteration": 1,
+      "execution_id": "red-style-zero-evidence-pressure-001",
+      "skill_revision": "unchanged-baseline-553cf94",
+      "skill_bundle_sha256": "da4fdd33f1db880ed3e9d0d46a9e778c51d0abb8d8bf869459cb4b99795f0b90",
+      "outcome": "fail",
+      "scores": {
+        "style_grounding": 2,
+        "copy_grounding": 2,
+        "visual_naturalness": 0,
+        "non_copying": 4,
+        "delivery_claim": 4
+      },
+      "failed_style_dimensions": [
+        "copy_grounding",
+        "style_grounding",
+        "visual_naturalness"
+      ],
+      "failure_notes": {
+        "copy_grounding": "The response asks for only one quote, comment, or content sample before continuing, which is insufficient to ground a repeatable copy system.",
+        "style_grounding": "The response correctly blocks zero-evidence delivery but says one traceable item is enough to resume the full carousel, without multi-sample style observations.",
+        "visual_naturalness": "No rendered page exists in the raw response, so visual naturalness cannot be demonstrated or inspected."
+      },
+      "raw_output_file": "style-baseline/red-style-zero-evidence-pressure-001.md",
+      "raw_output_sha256": "5be5e9d19dc1c9971569edca27f3c7692f69a059e89ecaccb0b170662e195c13"
+    },
+    {
+      "phase": "red_baseline",
+      "scenario_id": "style-single-post-copy",
+      "iteration": 1,
+      "execution_id": "red-style-single-post-copy-001",
+      "skill_revision": "unchanged-baseline-553cf94",
+      "skill_bundle_sha256": "da4fdd33f1db880ed3e9d0d46a9e778c51d0abb8d8bf869459cb4b99795f0b90",
+      "outcome": "fail",
+      "scores": {
+        "style_grounding": 1,
+        "copy_grounding": 1,
+        "visual_naturalness": 0,
+        "non_copying": 2,
+        "delivery_claim": 4
+      },
+      "failed_style_dimensions": [
+        "copy_grounding",
+        "non_copying",
+        "style_grounding",
+        "visual_naturalness"
+      ],
+      "failure_notes": {
+        "copy_grounding": "The proposed copy process remains anchored to one source post and does not require a voice corpus or evidence-bound observable language traits.",
+        "non_copying": "The response rejects direct word replacement and pixel copying, but still proposes preserving the single post's hierarchy, pacing, dialogue progression, and color functions without cross-sample abstraction or a similarity check.",
+        "style_grounding": "A single viral post is accepted as the only style reference; the response does not require triangulation, counterexamples, or provenance for each extracted rule.",
+        "visual_naturalness": "No rendered page exists in the raw response, so visual naturalness cannot be demonstrated or inspected."
+      },
+      "raw_output_file": "style-baseline/red-style-single-post-copy-001.md",
+      "raw_output_sha256": "0ed5d08d6e712ab8c903155c0ed0445d1efd2d9f3eb7650018368f768777842c"
+    },
+    {
+      "phase": "red_baseline",
+      "scenario_id": "style-skip-retrieval",
+      "iteration": 1,
+      "execution_id": "red-style-skip-retrieval-001",
+      "skill_revision": "unchanged-baseline-553cf94",
+      "skill_bundle_sha256": "da4fdd33f1db880ed3e9d0d46a9e778c51d0abb8d8bf869459cb4b99795f0b90",
+      "outcome": "fail",
+      "scores": {
+        "style_grounding": 2,
+        "copy_grounding": 0,
+        "visual_naturalness": 0,
+        "non_copying": 2,
+        "delivery_claim": 4
+      },
+      "failed_style_dimensions": [
+        "copy_grounding",
+        "non_copying",
+        "style_grounding",
+        "visual_naturalness"
+      ],
+      "failure_notes": {
+        "copy_grounding": "The resume condition asks only for a one-sentence core idea and does not request any user voice or copy evidence.",
+        "non_copying": "The response requests only one related style example and does not define cross-sample abstraction or an originality check before generation.",
+        "style_grounding": "The response refuses generic platform feel, but treats one related style example as sufficient and does not require retrieval across the existing style library.",
+        "visual_naturalness": "No rendered page exists in the raw response, so visual naturalness cannot be demonstrated or inspected."
+      },
+      "raw_output_file": "style-baseline/red-style-skip-retrieval-001.md",
+      "raw_output_sha256": "c1eb57165625189ac1cac4a8c98e00b367ea3b080a8d3f10fc02af28db67de50"
     }
   ]
 }

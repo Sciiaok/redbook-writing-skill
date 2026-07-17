@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "scenario_id": "visual-relationship-education-six-page",
+  "execution_id": "red-visual-relationship-education-001",
+  "executed_at": "2026-07-17",
+  "skill_bundle_sha256": "da4fdd33f1db880ed3e9d0d46a9e778c51d0abb8d8bf869459cb4b99795f0b90",
+  "prompt": "请把下面这份我原创且拥有使用权的固定内容，做成一套正好6页的小红书关系教育轮播逐页视觉 brief。只使用文字与合成几何形状，不使用任何第三方照片、截图、插画或品牌素材。主题：吵架时，先分清是在解决问题，还是争输赢。受众：一发生分歧就容易升级冲突的伴侣。第1页提出问题：“这场争吵，是在解决问题，还是争输赢？”；第2页写争输赢的信号：“抢着反驳、翻旧账、只想证明自己没错”；第3页写解决问题的信号：“能复述对方在意什么、一次只谈一件事、愿意提出下一步”；第4页给暂停句：“我现在有点上头，想先停十分钟，再回来把这件事说完”；第5页给重启句：“我听见你在意的是____，我在意的是____，我们先处理____”；第6页收束：“暂停不是冷战，回来继续谈才是关键”，并邀请读者收藏备用。请为每页给出标题、正文、版式、配色和视觉元素。",
+  "source_material": "synthetic_text_and_shapes_only",
+  "raw_brief_file": "visual-pilot/baseline/relationship-education-six-page-brief.md",
+  "raw_brief_sha256": "f29111ddf40dfafe943643d995d24de6c33793799f063b253316366900c86223",
+  "render_status": "complete",
+  "render_notes": "Rendered once from the preserved raw brief with local text and geometric primitives; all six 1080x1440 PNGs were decoded and visually inspected without post-baseline tuning.",
+  "renderer": "Pillow 11.3.0 with local STHeiti font",
+  "pages": [
+    {
+      "page": 1,
+      "file": "visual-pilot/baseline/page-01.png",
+      "sha256": "0a3f79d7eeb87f0872719b009d411bb9b516dae8e3d137bad1b0d324b5916c27",
+      "width": 1080,
+      "height": 1440,
+      "source_material": "synthetic_text_and_shapes_only"
+    },
+    {
+      "page": 2,
+      "file": "visual-pilot/baseline/page-02.png",
+      "sha256": "e2cb05530682652d7bbf11318fd5b8d6e8c370f5d36cc9438200c07e36dae78e",
+      "width": 1080,
+      "height": 1440,
+      "source_material": "synthetic_text_and_shapes_only"
+    },
+    {
+      "page": 3,
+      "file": "visual-pilot/baseline/page-03.png",
+      "sha256": "aa57a9d58ea731532e6c04d0bf415f865cd251bf5c6e59470eadec80f8db6a97",
+      "width": 1080,
+      "height": 1440,
+      "source_material": "synthetic_text_and_shapes_only"
+    },
+    {
+      "page": 4,
+      "file": "visual-pilot/baseline/page-04.png",
+      "sha256": "cbeccc60f46443d82d24cb53d56407e1efec626cf5e084941341d6fcba835342",
+      "width": 1080,
+      "height": 1440,
+      "source_material": "synthetic_text_and_shapes_only"
+    },
+    {
+      "page": 5,
+      "file": "visual-pilot/baseline/page-05.png",
+      "sha256": "90833e2e4cc6c9ca0296df87e296e3d17e83b98137d33ae34cc5c1383e9bb99b",
+      "width": 1080,
+      "height": 1440,
+      "source_material": "synthetic_text_and_shapes_only"
+    },
+    {
+      "page": 6,
+      "file": "visual-pilot/baseline/page-06.png",
+      "sha256": "287ef0008c1d0830555c32359ce69a0fa2dd06d716e39a11fe0a554855da933d",
+      "width": 1080,
+      "height": 1440,
+      "source_material": "synthetic_text_and_shapes_only"
+    }
+  ]
+}
