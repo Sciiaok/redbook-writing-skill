@@ -508,6 +508,11 @@ def v2_style_meta(**overrides: str) -> dict[str, str]:
         "traffic_primary_metric": "engagement_proxy",
         "traffic_verdict": "not_applicable",
         "traffic_stage": "feed_stop",
+        "job_primary_metric": "comment_semantic_proxy",
+        "job_metric_event_definition": "目标问题语义评论数；只作公开评论代理，不推断曝光或总体比例",
+        "job_metric_denominator": "comments",
+        "job_metric_data_scope": "public_proxy",
+        "job_metric_verdict": "not_applicable",
         "visual_delivery_requirement": "brief",
         "visual_delivery_status": "brief_only",
     }
@@ -3498,6 +3503,24 @@ class StyleContractFastPathTests(unittest.TestCase):
         result = self.run_validator()
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("traffic_primary_metric", result.stdout)
+
+    def test_first_party_job_metric_must_match_primary_job(self) -> None:
+        self.write_v2_draft(
+            job_primary_metric="conversion_rate",
+            job_metric_event_definition="合规成交数除以 eligible users",
+            job_metric_denominator="eligible_users",
+            job_metric_data_scope="first_party_analytics",
+            job_metric_verdict="inconclusive",
+        )
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("job_metric_job_mismatch", result.stdout)
+
+    def test_public_proxy_job_metric_cannot_claim_a_win(self) -> None:
+        self.write_v2_draft(job_metric_verdict="win")
+        result = self.run_validator()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("job_metric_public_proxy", result.stdout)
 
     def test_invariant_high_low_feature_cannot_be_performance_rule(self) -> None:
         self.write_v2_draft(

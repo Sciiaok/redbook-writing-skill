@@ -140,6 +140,13 @@ feed_stop → read_through → save_share → comment_cocreation → profile_fol
 
 每稿只选一个当前 funnel stage 和一个 primary job；后段指标不能倒推前段曝光，也不能用公开互动替代一方流量。
 
+指标必须分两条：
+
+- `traffic_primary_metric` 只回答“获得了多少实际 exposure”：一方 impressions，平台只给 reach 时固定用 reach；没有就 unavailable。
+- `job_primary_metric` 回答“打开以后是否完成这篇的主要任务”：例如 search answer 的答案完成/保存、decision support 的比较完成、relationship build 的主页访问/关注。必须写事件定义、分母、数据范围和护栏。
+
+公开竞品没有 exposure，也通常没有 job 分母；最多记录 `comment_semantic_proxy`，verdict 固定 `not_applicable`。不得用收藏、完读、CTR、关注或成交顶替 exposure，也不得用曝光上升证明任务已完成。
+
 使用句式：
 
 > 让【具体受众】在【场景】完成【一个可观察的认知或行为变化】。

@@ -524,10 +524,68 @@ V2_TRAFFIC_VERDICTS = {
 }
 V2_TRAFFIC_STAGES = {
     "feed_stop",
-    "read_complete",
+    "read_through",
     "save_share",
     "comment_cocreation",
     "profile_follow",
+}
+V2_JOB_PRIMARY_METRICS_BY_JOB = {
+    "feed_stop": {"valid_open_rate", "first_screen_hold_rate", "unavailable"},
+    "search_answer": {
+        "search_answer_completion_rate",
+        "read_through_rate",
+        "save_rate",
+        "unavailable",
+    },
+    "explain": {
+        "read_through_rate",
+        "correct_restatement_rate",
+        "save_rate",
+        "unavailable",
+    },
+    "trust_build": {
+        "qualified_question_rate",
+        "evidence_acceptance_rate",
+        "save_rate",
+        "unavailable",
+    },
+    "decision_support": {
+        "comparison_completion_rate",
+        "decision_question_rate",
+        "save_rate",
+        "unavailable",
+    },
+    "relationship_build": {
+        "profile_visit_rate",
+        "follow_rate",
+        "return_rate",
+        "unavailable",
+    },
+    "conversion": {"qualified_action_rate", "conversion_rate", "unavailable"},
+    "authority_statement": {
+        "read_through_rate",
+        "source_check_rate",
+        "correction_rate",
+        "unavailable",
+    },
+}
+V2_JOB_PROXY_METRICS = {"comment_semantic_proxy"}
+V2_JOB_METRIC_DATA_SCOPES = {
+    "first_party_analytics",
+    "public_proxy",
+    "unavailable",
+}
+V2_JOB_METRIC_DENOMINATORS = {
+    "impressions",
+    "reach",
+    "opens",
+    "qualified_opens",
+    "readers",
+    "search_entries",
+    "comments",
+    "profile_visits",
+    "eligible_users",
+    "unavailable",
 }
 V2_VISUAL_DELIVERY_REQUIREMENTS = {"none", "brief", "rendered"}
 V2_VISUAL_DELIVERY_STATUSES = {
@@ -568,6 +626,11 @@ V2_DRAFT_META = {
     "traffic_primary_metric",
     "traffic_verdict",
     "traffic_stage",
+    "job_primary_metric",
+    "job_metric_event_definition",
+    "job_metric_denominator",
+    "job_metric_data_scope",
+    "job_metric_verdict",
     "visual_delivery_requirement",
     "visual_delivery_status",
 }
@@ -2920,6 +2983,69 @@ class RunValidator:
         traffic_stage = meta.get("traffic_stage", "")
         if traffic_stage not in V2_TRAFFIC_STAGES:
             invalid("traffic_stage", traffic_stage)
+
+        job_metric = meta.get("job_primary_metric", "")
+        job = meta.get("primary_job", "")
+        allowed_job_metrics = V2_JOB_PRIMARY_METRICS_BY_JOB.get(job, set())
+        job_metric_scope = meta.get("job_metric_data_scope", "")
+        job_metric_denominator = meta.get("job_metric_denominator", "")
+        job_metric_verdict = meta.get("job_metric_verdict", "")
+        job_metric_definition = meta.get("job_metric_event_definition", "").strip()
+        if job_metric_scope not in V2_JOB_METRIC_DATA_SCOPES:
+            invalid("job_metric_data_scope", job_metric_scope)
+        if job_metric_denominator not in V2_JOB_METRIC_DENOMINATORS:
+            invalid("job_metric_denominator", job_metric_denominator)
+        if job_metric_verdict not in V2_TRAFFIC_VERDICTS:
+            invalid("job_metric_verdict", job_metric_verdict)
+        if not job_metric_definition or job_metric_definition.lower() == "none":
+            self.error(
+                "job_metric_contract",
+                path.name,
+                "job_metric_event_definition must state the event and denominator boundary",
+            )
+        if job_metric_scope == "public_proxy":
+            if (
+                job_metric not in V2_JOB_PROXY_METRICS
+                or job_metric_denominator != "comments"
+                or job_metric_verdict != "not_applicable"
+            ):
+                self.error(
+                    "job_metric_public_proxy",
+                    path.name,
+                    "public job diagnostics are limited to comment_semantic_proxy/comments/not_applicable",
+                )
+        elif job_metric_scope == "unavailable":
+            if (
+                job_metric != "unavailable"
+                or job_metric_denominator != "unavailable"
+                or job_metric_verdict not in {"unavailable", "insufficient"}
+            ):
+                self.error(
+                    "job_metric_unavailable",
+                    path.name,
+                    "unavailable job data requires unavailable metric/denominator and unavailable or insufficient verdict",
+                )
+        elif job_metric_scope == "first_party_analytics":
+            if job_metric not in allowed_job_metrics - {"unavailable"}:
+                self.error(
+                    "job_metric_job_mismatch",
+                    path.name,
+                    f"{job_metric} is not a primary metric for primary_job={job}",
+                )
+            if job_metric_denominator == "unavailable":
+                self.error(
+                    "job_metric_contract",
+                    path.name,
+                    "first-party job metric requires an explicit denominator",
+                )
+        elif job_metric and job_metric not in allowed_job_metrics | V2_JOB_PROXY_METRICS:
+            invalid("job_primary_metric", job_metric)
+        if job_metric_verdict in {"win", "loss"} and job_metric_scope != "first_party_analytics":
+            self.error(
+                "job_metric_verdict_scope",
+                path.name,
+                "job metric win/loss requires first-party analytics",
+            )
         if visibility == "public_proxy" and traffic_verdict != "not_applicable":
             self.error(
                 "public_proxy_traffic_verdict",

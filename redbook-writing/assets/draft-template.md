@@ -28,6 +28,11 @@ performance_visibility_scope: public_proxy
 traffic_stage: feed_stop
 traffic_primary_metric: engagement_proxy
 traffic_verdict: not_applicable
+job_primary_metric: unavailable
+job_metric_event_definition: "当前没有一方任务指标；发布前按 primary_job 定义事件与分母"
+job_metric_denominator: unavailable
+job_metric_data_scope: unavailable
+job_metric_verdict: unavailable
 visual_delivery_requirement: brief
 visual_delivery_status: brief_only
 truth_label: factual_explainer
@@ -143,9 +148,10 @@ review_status: pending
 
 ## 观测计划
 
-- 流量阶段：`feed_stop | read_complete | save_share | comment_cocreation | profile_follow`
+- 流量阶段：`feed_stop | read_through | save_share | comment_cocreation | profile_follow`
 - Primary job：
-- 主指标与事件定义：
+- Exposure primary：只用 impressions；平台只给 reach 时固定用 reach。
+- Job primary metric / event / denominator：与 primary job 对应，不能拿点赞或后链路顶替。
 - 可用代理及其局限：
 - 观察窗口：
 - 生命周期：
