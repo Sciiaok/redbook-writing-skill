@@ -39,6 +39,8 @@
 
 长期私有库位于 `research/xiaohongshu/_style_library/`，保存 SQLite、第三方原图和安全派生物。整个目录必须被 Git 忽略；运行文件只引用 library ID、相对 locator 和 SHA-256，不复制图片 BLOB、第三方完整正文、账号凭据或隐私原件。
 
+Skill 内的静态 assets 只提供 schema、空模板和候选方向，不保存第三方原图或版权受限正文。`assets/traffic-mechanisms-v1.json` 是带来源和边界的统一机制库；`assets/traffic-mechanism-candidates-template.jsonl` 用于新运行追加候选；`assets/visual-direction-cards-v1.json` 是 `candidate_only/not_performance_evidence` 的任务型视觉 brief 骨架，不能写入 published style rule 或 starter 字段。
+
 ## ID 与多值规则
 
 - 推荐前缀：`RUN-`、`Q-`、`OFF-/TECH-/ACA-/IND-`、`CLM-`、`ACC-`、`POST-`、`TOPIC-`、`DRAFT-`、`CH-`、`SKU-`、`OFFER-`、`AUTH-`。
