@@ -1,7 +1,7 @@
 interface:
   display_name: "小红书研究与写作"
-  short_description: "研究对标账号、沉淀证据并产出可验证的小红书选题与成稿"
-  default_prompt: "使用 $redbook-writing 调研一个小红书类目，并把证据、选题和可发布成稿落库。"
+  short_description: "跨类目研究真实样本与逐页风格，生成可审查的小红书内容方案"
+  default_prompt: "使用 $redbook-writing 调研任意类目的真实样本与逐页风格，并产出有证据边界的选题、文案和视觉 Brief。"
 
 policy:
   allow_implicit_invocation: true
