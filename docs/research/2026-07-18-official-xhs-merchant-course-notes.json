@@ -1,0 +1,167 @@
+{
+  "schema_version": "1.0",
+  "snapshot_date": "2026-07-18",
+  "source": {
+    "title": "笔记运营实战小课",
+    "institution": "小红书电商学习中心",
+    "home_url": "https://school.xiaohongshu.com/home",
+    "source_class": "first_party_merchant_course",
+    "course_vintage": "2024",
+    "effect_scope": "production_instruction_not_algorithm_causality",
+    "processing": "public video metadata plus local ASR plus manual synthesis; no full transcript or course images retained"
+  },
+  "lessons": [
+    {
+      "lesson_id": "cc4691ac8f7c4a51af49529f0d5f4335",
+      "topic": "account_persona_and_direction",
+      "view_count_ui": 154833,
+      "duration_seconds": 737.81,
+      "api_url": "https://school.xiaohongshu.com/xhsschool/newXhsSchool/front/lesson/cc4691ac8f7c4a51af49529f0d5f4335"
+    },
+    {
+      "lesson_id": "5929f2ca1d2947949de1fdb8e62287be",
+      "topic": "title_and_cover",
+      "view_count_ui": 84062,
+      "duration_seconds": 1663.76,
+      "api_url": "https://school.xiaohongshu.com/xhsschool/newXhsSchool/front/lesson/5929f2ca1d2947949de1fdb8e62287be"
+    },
+    {
+      "lesson_id": "2d390e42fa69486b912f83055bafbc0a",
+      "topic": "content_value_and_retention",
+      "view_count_ui": 45077,
+      "duration_seconds": 1216.10,
+      "api_url": "https://school.xiaohongshu.com/xhsschool/newXhsSchool/front/lesson/2d390e42fa69486b912f83055bafbc0a"
+    },
+    {
+      "lesson_id": "b81b08cf3f7943c991bd8f9e235613da",
+      "topic": "comments_and_private_messages",
+      "view_count_ui": 58145,
+      "duration_seconds": 574.18,
+      "api_url": "https://school.xiaohongshu.com/xhsschool/newXhsSchool/front/lesson/b81b08cf3f7943c991bd8f9e235613da"
+    }
+  ],
+  "evidence_scale": {
+    "source_grade": "B_first_party_instruction",
+    "effect_grade": "D_unverified_effect",
+    "warning": "The course supports that the platform taught this merchant workflow in 2024; it does not establish 2026 ranking weights or universal causal effects."
+  },
+  "mechanisms": [
+    {
+      "id": "OX01",
+      "name": "role_audience_value_before_format",
+      "stage": ["account_positioning", "topic_supply"],
+      "inputs": ["real role", "audience", "recurring job", "verifiable credibility", "content supply"],
+      "actions": ["state who the account helps", "mix education and Q&A into product content when explanation is required"],
+      "metrics": ["profile_to_follow", "repeated audience questions", "series supply"],
+      "failure_conditions": ["fabricated credentials", "fixed naming formula", "persona without source material"],
+      "source_lesson_ids": ["cc4691ac8f7c4a51af49529f0d5f4335"]
+    },
+    {
+      "id": "OX02",
+      "name": "benchmark_transferable_parts",
+      "stage": ["discovery", "benchmark_matrix"],
+      "inputs": ["current comparable accounts", "same-job posts", "cross-category mechanism cases", "account stage"],
+      "actions": ["separate topic, carrier, proof and monetization references", "prefer comparable current accounts"],
+      "metrics": ["repeatable topics", "paired feature contrasts", "comment semantic fit"],
+      "failure_conditions": ["copying one legacy winner", "confounded comparisons", "copying distinctive expression"],
+      "source_lesson_ids": ["cc4691ac8f7c4a51af49529f0d5f4335"]
+    },
+    {
+      "id": "OX03",
+      "name": "one_primary_value_promise",
+      "stage": ["topic", "cover_title", "body"],
+      "inputs": ["one user job", "real assets", "primary practical, economic-risk or emotional value"],
+      "actions": ["write one-sentence reader outcome", "align cover, title and body to that outcome"],
+      "metrics": ["feed_stop", "read_through", "save_or_comment_semantic_alignment"],
+      "failure_conditions": ["many competing promises", "unfulfilled emotion hook", "unprovable result"],
+      "source_lesson_ids": ["5929f2ca1d2947949de1fdb8e62287be", "2d390e42fa69486b912f83055bafbc0a"]
+    },
+    {
+      "id": "OX04",
+      "name": "distribution_job_first",
+      "stage": ["topic", "title", "distribution_diagnosis"],
+      "inputs": ["feed-discovery versus active-search intent", "entities", "problem", "scene", "freshness"],
+      "actions": ["use identity, scene or evidence gap for feed discovery", "use natural entity-problem-scene-answer wording for search"],
+      "metrics": ["traffic_source", "search_query", "feed_stop", "long_tail"],
+      "failure_conditions": ["keyword stuffing", "claiming source without backend", "treating jobs as mutually exclusive"],
+      "source_lesson_ids": ["5929f2ca1d2947949de1fdb8e62287be"]
+    },
+    {
+      "id": "OX05",
+      "name": "carrier_follows_job_and_proof",
+      "stage": ["cover_concept", "visual_brief"],
+      "inputs": ["primary job", "real proof assets", "first uncertainty to resolve"],
+      "actions": ["comparison uses a uniform protocol", "tutorial proves a path", "atmosphere uses real scene", "unboxing answers arrival-state uncertainty"],
+      "metrics": ["feed_stop", "read_through", "proof questions", "save reason"],
+      "failure_conditions": ["fake comparison", "AI evidence", "surface-style copying", "no task fit"],
+      "source_lesson_ids": ["5929f2ca1d2947949de1fdb8e62287be"]
+    },
+    {
+      "id": "OX06",
+      "name": "fact_title_then_rhetorical_compression",
+      "stage": ["title_variants"],
+      "inputs": ["scene", "reader problem", "verifiable number", "bounded result", "keyword"],
+      "actions": ["write a literal fact title first", "choose one entry: information gap, pain, bounded emotion or direct answer", "use numbers or symbols only when they reduce ambiguity"],
+      "metrics": ["title_cover_stop", "post_click_read", "promise_misunderstanding"],
+      "failure_conditions": ["stock catchphrase", "unverifiable number", "emotion exceeds proof", "stale trend word"],
+      "source_lesson_ids": ["5929f2ca1d2947949de1fdb8e62287be"]
+    },
+    {
+      "id": "OX07",
+      "name": "promise_proof_answer_closure",
+      "stage": ["body_pages", "read_through"],
+      "inputs": ["cover promise", "process proof", "source or material", "steps", "fit and non-fit conditions"],
+      "actions": ["confirm relevance on page one", "organize evidence and actions by reader question", "end with a decision or next step"],
+      "metrics": ["read_through", "page_decay", "saves", "specific questions", "misunderstanding"],
+      "failure_conditions": ["comparison promised but only feelings delivered", "beauty without use information", "parameters without scene"],
+      "source_lesson_ids": ["2d390e42fa69486b912f83055bafbc0a"]
+    },
+    {
+      "id": "OX08",
+      "name": "comments_as_objection_and_topic_research",
+      "stage": ["post_publish", "feedback_loop"],
+      "inputs": ["real comments", "repeated questions", "misunderstandings", "counterexamples", "reader scenes"],
+      "actions": ["answer first then ask one genuine follow-up", "turn repeated objections into FAQ or next topic"],
+      "metrics": ["resolved_question_share", "repeat_questions", "next_topic_fit", "real_intent"],
+      "failure_conditions": ["mechanical engagement bait", "fabricated social proof", "coordinated likes or comments", "count-only evaluation"],
+      "source_lesson_ids": ["b81b08cf3f7943c991bd8f9e235613da"]
+    },
+    {
+      "id": "OX09",
+      "name": "fixed_window_own_account_learning",
+      "stage": ["publish", "diagnose", "next_test"],
+      "inputs": ["topic", "title", "cover", "publish time", "account stage", "paid/collab state", "funnel metrics", "comment semantics"],
+      "actions": ["use a consistent configurable window", "change one main variable when feasible", "locate the leaking funnel stage before editing"],
+      "metrics": ["same-account same-stage comparable outcomes"],
+      "failure_conditions": ["tiny sample certainty", "post-age mismatch", "paid-organic mixing", "likes-only evaluation", "freezing one winner"],
+      "source_lesson_ids": ["5929f2ca1d2947949de1fdb8e62287be"]
+    }
+  ],
+  "rejected_or_historical_claims": [
+    {
+      "claim": "fixed 7, 8 or 14 day distribution windows and adding a product link on day 8",
+      "disposition": "reject_as_current_rule",
+      "reason": "historical merchant-course statement without current scoped official verification"
+    },
+    {
+      "claim": "feed traffic fades after about one month while search remains for half a year",
+      "disposition": "historical_example_only",
+      "reason": "useful conceptual contrast but unsupported fixed duration"
+    },
+    {
+      "claim": "collage, decorative text, high saturation or an attractive hand model inherently drives traffic",
+      "disposition": "reject_as_causal_rule",
+      "reason": "creative advice, contradicted as a sufficient condition by live high-low public samples"
+    },
+    {
+      "claim": "tagging friends or group-seeding proves free organic traffic",
+      "disposition": "reject_as_validation_method",
+      "reason": "external seeding is a confound and can become engagement manipulation"
+    },
+    {
+      "claim": "public likes, saves and comments reveal recommendation weights",
+      "disposition": "reject",
+      "reason": "no impression or source denominator"
+    }
+  ]
+}
