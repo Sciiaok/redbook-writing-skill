@@ -177,6 +177,8 @@ exact category + exact carrier + exact primary_job + constraints/materials
 
 ## 9. 视觉 brief：先页面工作，后风格词
 
+封面请求先加载 [cover-pattern-library.md](cover-pattern-library.md)：用 `visual_evidence_role` 决定文字还是证据先工作，再进入下述 brief。字卡是文字型任务的条件默认，不是全类目默认；任何实拍、before/after、截图、文件、质地或比较作为第一证据时，都必须让真实素材先出现。
+
 Brief 至少包含：
 
 ```text

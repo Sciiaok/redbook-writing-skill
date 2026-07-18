@@ -10,9 +10,10 @@
 | --- | ---: | --- | --- |
 | 候选内容/控制机制 | 19 张 | 9 张内容卡 + 10 张载体、真实性、反馈、测量或治理卡；连接标题、封面、正文、评论、指标和失效条件 | 97 次 `source_ref` 引用、78 个去重 ref；**0 张** `first_party_traffic_validated` |
 | 视觉方向卡 | 16 张 | 把真实素材排成 attention path、proof order 和 carrier role plan | 全部是 `candidate_only / prototype`，不提供“什么配色会爆” |
+| 原生封面模式 | 13 种；其中 3 种字卡可确定性渲染 | 覆盖文字、实拍、前后对照、截图、网格、拼贴、产品证据、授权对话及 3 种视频首帧 | 字卡只对文字型任务条件优先；全部上限 `task_fit / prototype_only` |
 | 一次性审美探索 | 8 条 AP、12 个 exact scope cell | 无 binding 时按类目、任务、载体、VDC、素材和禁用项给一个可查看粗原型；保存 source/prompt hash 与反例 | 7 条可探索、1 条仅 research lead；全部上限 `prototype_only`，不能进入 starter/ready |
 | 本地 style library | SQLite schema v2 | 保存逐页 observation、baseline、反例、rule publication 和 immutable draft binding | 公开快照 `qualified_cells=0`，没有证据时会停在风格研究 |
-| 公开研究库 | 2 批次、10 组专题资产 + 基础证据快照 | 保存官方商家课、服务商/操盘课、品牌代理项目、JD/brief 等隐性生产物、学术多模态研究、站内高低公开代理和审美 prompt 来源审计 | 每组都单独写 can / cannot support；不用资料数量投票出因果 |
+| 公开研究库 | 2 批次、11 组专题资产 + 基础证据快照 | 保存官方商家课、服务商/操盘课、品牌代理项目、JD/brief 等隐性生产物、学术多模态研究、站内高低公开代理、审美 prompt 与封面模式来源审计 | 每组都单独写 can / cannot support；不用资料数量投票出因果 |
 
 这些数字描述的是已落盘、可核查的输入，不是 19 条平台算法，也不是“使用后必爆”的成绩单。仓库目前最明确的成熟度数字反而是两个零：`first_party_traffic_validated=0`，`qualified_cells=0`。这意味着它已经能用真实输入做研究、方向选择、候选稿和发布后复盘；在还没有本账号一方曝光复现前，它不会把候选经验换个名字写成“已验证爆款公式”。
 
@@ -29,7 +30,7 @@
 | 对标账号与笔记 | 先找笔记再反查账号，区分规模、近期表现、受众精准和商业邻近四种头部 | accounts、posts、近期中位数与异常倍数 |
 | 流量机制选择 | 按 `stage × job × carrier × materials` 检索，不靠模型记忆临时拼公式 | 1 条内容 + 1 条载体/真实性 + 1 条复盘/治理机制 |
 | 视觉与文风研究 | 保存完整轮播页，拆 carrier、page role、素材、层级、注意力路径和 copy move；高帖与普通/低帖成对看 | 私有 style library、脱敏 observation、counterexample |
-| 风格检索与视觉 brief | 先用 16 张方向卡选真实证据的到达顺序；无 binding 的探索可从 8 条 AP 中按 exact scope 选一条粗原型；生产态仍按 exact `category × carrier × primary_job` 检索 published style binding | visual card、AP receipt、style binding、page-role plan、prototype QA |
+| 风格检索与视觉 brief | 先用 13 种封面/首帧模式决定文字/证据谁先工作，再用 16 张方向卡选真实证据的到达顺序；无 binding 的探索可从 8 条 AP 中按 exact scope 选一条粗原型；生产态仍按 exact `category × carrier × primary_job` 检索 published style binding | cover pattern、visual card、AP receipt、style binding、page-role plan、prototype QA |
 | 流量说法核查 | 查 CES、流量池、冷启动、搜索、限流、养号等说法的原始依据与作用域 | claim ledger、冲突来源、可测替代指标 |
 | 选题库 | 把需求样本、内容样本、账号基线和反例连到同一个选题 | research question、experimental / active topic |
 | 完整成稿 | 给出标题、封面、轮播或聊天场景、正文、关键词、真实性标签和观测计划 | draft 文件与 2–3 个表达版本 |
@@ -151,6 +152,28 @@ python3 redbook-writing/scripts/select_traffic_mechanisms.py \
 ```
 
 输出不是“相似卡前五名”，而是一套固定三槽：content、carrier/truth、learning/governance 各一张。每张都带真实输入、标题/封面/正文/评论动作、主指标、失效条件、反套路和原子来源。素材不足返回 `needs_materials`，某一槽没有 exact match 才返回 `needs_research`；不会偷偷换掉 primary job 或 carrier 来凑结果。
+
+封面现在也有单独的模式选择器。它不会先问“要不要黄底大字”，而是先问第一份证据是什么：如果是一句话观点、判断或冲突，且画面不承担第一证据，字卡是优先路由；如果是人物状态、真实场景、前后差、系统路径、文件、质地或比较，证据型封面覆盖字卡。
+
+```bash
+python3 redbook-writing/scripts/select_cover_pattern.py \
+  --job feed_stop \
+  --carrier text_card \
+  --materials truthful_serious_premise \
+  --visual-evidence-role none \
+  --json
+```
+
+返回 `CP01` 后，可以用确定性渲染器生成 1080×1440 中文字卡。它支持黑底强调、轻纸张梗图、荧光便签三个变体，显式控制换行与强调词；文字溢出会直接失败，不会缩成一张密集 PPT。
+
+```bash
+python3 redbook-writing/scripts/render_text_card_cover.py \
+  --input redbook-writing/assets/cover-render-examples/text-card-input.json
+```
+
+![确定性字卡示例](redbook-writing/assets/cover-render-examples/text-card-demo.png)
+
+这个 PNG 证明排版链可复现，不证明文案会爆。选择器的十三种模式、素材门和反例见 [`cover-pattern-library.md`](redbook-writing/references/cover-pattern-library.md)。
 
 视觉方向也有独立选择器。生产模式下，类目、任务和载体必须 exact match；真实素材从 manifest 校验，色彩、字体、裁切、标注语法和密度只能来自 SQLite 中已发布的 style binding：
 
@@ -353,6 +376,7 @@ flowchart LR
 | --- | --- | --- |
 | [`research-method.md`](redbook-writing/references/research-method.md) | 怎么搜、怎么取样、什么时候算研究完成 | 四种模式、八组关键词、四轮查询、notes-first、近期中位数、高低位与反例、评论编码、去重和停止条件 |
 | [`traffic-mechanism-library.md`](redbook-writing/references/traffic-mechanism-library.md) | 这篇到底调用哪条机制 | 19 张候选内容/控制机制卡、标题/封面/正文/评论动作、三本指标账、自然/付费边界、失败条件和反套路 |
+| [`cover-pattern-library.md`](redbook-writing/references/cover-pattern-library.md) | 首屏应该让文字还是证据画面工作 | 13 种跨类目封面/首帧模式、条件优先级、素材/反例门、3 种确定性字卡与 Anti-PPT QA |
 | [`visual-direction-cards.md`](redbook-writing/references/visual-direction-cards.md) | 真实素材该以什么顺序到达封面、逐页或视频 | 16 个跨类目 attention/proof skeleton、carrier role plan、素材数量门、typed prompt variables、negative prompt 和 Anti-PPT |
 | [`aesthetic-exploration-prompts.md`](redbook-writing/references/aesthetic-exploration-prompts.md) | 无 binding 时怎样先做一个不落入通用 PPT 的粗原型 | 8 条有来源 prompt、12 个 exact scope cell、素材数量/权利/禁用门、hash 校验、反例和两次否定后的 reset |
 | [`style-research-and-generation.md`](redbook-writing/references/style-research-and-generation.md) | 怎样把线上风格变成可检索资产 | 完整轮播采集、matched/boundary 对照、特征角色、SQLite、双原型、Anti-PPT 和一方曝光验证门 |
@@ -366,7 +390,7 @@ flowchart LR
 
 行数只说明范围，不代表这些判断天然正确。因此 reference 里同时保留日期、作用域、原始链接、不可外推部分和冲突来源；规则型文件还要求运行时重新打开官方页面。
 
-这些文件不会在每次任务里全部灌进上下文。类目调研加载研究方法和 Schema；解释 CES 时再加载平台机制与经验审计；写稿先加载统一流量机制；碰到视觉任务再加载方向卡和风格研究，只有“无 binding 但要先看粗原型”才追加一次性审美 prompt；成人内容、商品或外跳才追加现行规则与渠道合同。这样保留方法深度，也避免无关规则挤掉当前样本。
+这些文件不会在每次任务里全部灌进上下文。类目调研加载研究方法和 Schema；解释 CES 时再加载平台机制与经验审计；写稿先加载统一流量机制；碰到封面任务先加载封面模式，再加载方向卡和风格研究，只有“无 binding 但要先看粗原型”才追加一次性审美 prompt；成人内容、商品或外跳才追加现行规则与渠道合同。这样保留方法深度，也避免无关规则挤掉当前样本。
 
 ## 这些方法吃了哪些输入
 
@@ -570,6 +594,8 @@ redbook-writing/
 ├── scripts/
 │   ├── style_library.py         # 本地 SQLite 风格库
 │   ├── select_traffic_mechanisms.py # 按任务检索机制栈
+│   ├── select_cover_pattern.py  # 按任务、载体、素材和证据角色选封面模式
+│   ├── render_text_card_cover.py # 精确渲染三种 1080×1440 中文字卡
 │   ├── select_visual_directions.py # 按任务、素材与 binding 检索视觉骨架
 │   ├── select_aesthetic_exploration.py # 无 binding 时选择 exact scope 的一次性审美 overlay
 │   └── validate_run.py          # run / draft fail-closed 验证

@@ -190,6 +190,12 @@ class AssetSchemaTests(unittest.TestCase):
         self.assertIn("视觉 Brief", text)
         self.assertNotRegex(text, r"爆款|保证流量|流量增长")
 
+    def test_skill_routes_cover_work_to_pattern_library_and_deterministic_renderer(self) -> None:
+        skill = (SKILL / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("cover-pattern-library.md", skill)
+        self.assertIn("select_cover_pattern.py", skill)
+        self.assertIn("render_text_card_cover.py", skill)
+
     def test_draft_lifecycle_has_no_universal_day_schedule(self) -> None:
         text = (SKILL / "references" / "draft-quality.md").read_text(encoding="utf-8")
         self.assertNotRegex(text, r"\|\s*D\d")

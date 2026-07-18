@@ -1,0 +1,29 @@
+{
+  "research_id": "R-COVER-20260718-001",
+  "collected_at": "2026-07-18T16:27:50+08:00",
+  "status": "public_proxy_task_fit_only",
+  "question": "Which native cover carriers should be selectable across Xiaohongshu tasks, and when should text cards receive conditional priority?",
+  "claim_ceiling": "task_fit",
+  "local_samples": [
+    {"sample_id":"LOCAL-COVER-001","path":"/Users/hermione/Downloads/IMG_1138.PNG","sha256":"bce7e54e9a941c6b68ef5a1d402667ad4315eae93c167a5ac78212afc5d0907f","width":1206,"height":2622,"variant":"black_accent_card","public_proxy":{"likes":"8331","comments":"192","saves":"6284","shares":"1211"}},
+    {"sample_id":"LOCAL-COVER-002","path":"/Users/hermione/Downloads/IMG_1140.PNG","sha256":"9be833b9fdd681de494a2accd6a1dce3088bed44e78d575f436f9a7c2df79462","width":1206,"height":2622,"variant":"black_accent_card","public_proxy":{"likes":"566","comments":"651","saves":"113","shares":"26"}},
+    {"sample_id":"LOCAL-COVER-003","path":"/Users/hermione/Downloads/IMG_1139.PNG","sha256":"5e21433e76f6c57cd2b3ff2f481cc95fde0124d245406e7ca3165bad6f5c80b2","width":1206,"height":2622,"variant":"paper_meme_card","public_proxy":{"likes":"1252","comments":"680","saves":"459","shares":"72"}},
+    {"sample_id":"LOCAL-COVER-004","path":"/Users/hermione/Downloads/IMG_1137.PNG","sha256":"a0030d2f037b52ea695e2eafd0eb457248433fd11e4fccdf703fb82a09da9b56","width":1206,"height":2622,"variant":"highlight_note_card","public_proxy":{"likes":"30","comments":"24","saves":"2","shares":"7"}}
+  ],
+  "live_entries": [
+    {"entry_id":"XHS-FEED-20260718","url":"https://www.xiaohongshu.com/explore","observed_families":["document_card","text_dominant_native_card","real_scene_photo","interactive_picture_grid"],"limitation":"personalized logged-in feed snapshot"},
+    {"entry_id":"XHS-COVER-SEARCH-20260718","url":"https://www.xiaohongshu.com/search_result?keyword=%E5%B0%8F%E7%BA%A2%E4%B9%A6%E5%B0%81%E9%9D%A2%E8%AE%BE%E8%AE%A1&source=web_explore_feed","observed_families":["minimal_paper_text","bold_solid_text","portrait_grid","travel_collage"],"limitation":"search-result snapshot, not a random platform sample"},
+    {"entry_id":"XHS-OPERATOR-697A","url":"https://www.xiaohongshu.com/explore/697a0059000000000e00c6ee","claim_role":"operator_claim_lead","public_proxy":{"likes":"4354","saves":"4614","comments":"43"},"claimed_patterns":["handwritten_text","bright_color","short_title","emotion_closeup","collage","three_panel"],"limitation":"no sample table, CTR denominator, baseline or counterexamples"}
+  ],
+  "external_sources": [
+    {"source_id":"EXT-MEITU-20250708","url":"https://www.designkit.cn/article/xhsfm20250527","role":"commercial_design_taxonomy","usable_for":"pattern vocabulary and task-fit leads","not_usable_for":"traffic causality"},
+    {"source_id":"EXT-SOHU-20250716","url":"https://www.sohu.com/a/914245728_121834104","role":"operator_summary_repost","usable_for":"cover-format leads","not_usable_for":"algorithm or uplift claims"},
+    {"source_id":"EXT-BRAND-PLAN","url":"https://enstore.mayihr.com/TXGC_S_WORKS/a-TXGC-S/u-831c35c9ecf34c14804a81405e247f17/5bCP57qi5Lmm56CU56m2Jui_kOiQpeinhOWIklYxXzE2NjY2MDM4MDgyMDIzNTU%3D.pdf","role":"single-brand-production-plan","usable_for":"beauty evidence-material routing","not_usable_for":"cross-category universal rules"}
+  ],
+  "decision": {
+    "text_card_priority": "default_for_text_first_jobs_when_visual_evidence_is_none_or_supporting",
+    "evidence_first_override": "when_real_visual_material_is_primary_proof",
+    "covered_carriers": ["real_photo_diary", "photo_annotation", "checklist_steps", "screenshot_markup", "comparison_warning", "text_card", "collage_journal", "single_image_reminder", "chat_dramatization", "process_video", "screen_recording", "talking_head_or_field_video"],
+    "performance_claim": "unavailable_without_first_party_impressions_and_entries"
+  }
+}

@@ -12,6 +12,7 @@
 | 统一机制库 | 19 张：9 张 content + 10 张 carrier/truth/feedback/measurement/governance | 按任务、载体和真实素材组合候选生产机制 | 写成 19 条爆款公式 |
 | 机制来源 | 97 次 `source_ref` 引用，78 个去重 ref | 沿 `locator` 回查每张卡的 scope 和 limitation | 把 97 次引用写成 97 次独立实验 |
 | 视觉方向库 | 16 张跨类目方向卡，卡内 74 次引用、38 个去重 ref | 安排真实证据的 attention path、proof order 和 carrier role | 从卡名发明配色、字体或“原生感” |
+| 原生封面模式库 | 13 种模式、3 种可确定性渲染的字卡变体 | 按 job、carrier、真实素材与视觉证据角色决定文字还是画面先工作 | 把字卡或任一封面形式写成流量因果 |
 | 公开风格观察 | 12 组脱敏 observation | 做 `series_constant / task_fit / anti_pattern` 和补采设计 | 升级成 starter style rule |
 | 经验验证 | `first_party_traffic_validated=0`，`qualified_cells=0` | 生成显式标注的 candidate，设计本账号实验 | 保证爆款，或声称风格/机制已经带来流量 |
 
@@ -31,6 +32,7 @@
 | [原生实用载体审计](2026-07-18-native-traffic-utility.md) | 比较板、法律清单、截图教程、改造、正式解释 5 组既有观察 | 任务型载体的补采合同与 candidate mechanism | 红黑榜/红框/深蓝/前后图是爆款风格 | [JSONL](2026-07-18-native-traffic-utility.jsonl) |
 | [原生 feed 证据审计](2026-07-18-native-traffic-feed.md) | 站内公开 feed 线索与缺口 | 哪些公开观察可保留为 research lead | 公开互动代理直接升级为流量 | [JSONL](2026-07-18-native-traffic-feed.jsonl) |
 | [一次性审美提示词源审计](2026-07-18-aesthetic-prompt-source-audit.md) | 7 个公开经验/工具/案例来源、6 组冲突、8 个 candidate prompt 模块 | 在没有 qualified binding 时做有来源的 `prototype_only` 审美探索，并识别 AI/PPT 反模式 | 把模板商建议、历史榜单或单篇案例写成当前爆款样式 | [JSON](2026-07-18-aesthetic-prompt-source-audit.json) |
+| [原生封面模式补采](2026-07-18-native-cover-patterns.md) | 4 张用户截图、站内推荐/搜索横截面、3 份公开生产资料 | 决定文字型字卡的条件优先级，补齐实拍、对照、截图、网格、拼贴与产品特写路由 | 用公开互动倒推出封面导致流量 | [JSON](2026-07-18-native-cover-patterns.json) |
 
 ## 2026-07-17 基础批次
 
