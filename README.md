@@ -13,7 +13,7 @@
 | 原生封面模式 | 13 种；其中 3 种字卡可确定性渲染 | 覆盖文字、实拍、前后对照、截图、网格、拼贴、产品证据、授权对话及 3 种视频首帧 | 字卡只对文字型任务条件优先；全部上限 `task_fit / prototype_only` |
 | 一次性审美探索 | 8 条 AP、12 个 exact scope cell | 无 binding 时按类目、任务、载体、VDC、素材和禁用项给一个可查看粗原型；保存 source/prompt hash 与反例 | 7 条可探索、1 条仅 research lead；全部上限 `prototype_only`，不能进入 starter/ready |
 | 本地 style library | SQLite schema v2 | 保存逐页 observation、baseline、反例、rule publication 和 immutable draft binding | 公开快照 `qualified_cells=0`，没有证据时会停在风格研究 |
-| 公开研究库 | 2 批次、11 组专题资产 + 基础证据快照 | 保存官方商家课、服务商/操盘课、品牌代理项目、JD/brief 等隐性生产物、学术多模态研究、站内高低公开代理、审美 prompt 与封面模式来源审计 | 每组都单独写 can / cannot support；不用资料数量投票出因果 |
+| 公开研究库 | 3 批次、12 组专题资产 + 基础证据快照 | 保存官方商家课、服务商/操盘课、品牌代理项目、JD/brief 等隐性生产物、学术多模态研究、站内高低公开代理、趋势模板现场线索、审美 prompt 与封面模式来源审计 | 每组都单独写 can / cannot support；不用资料数量投票出因果 |
 
 这些数字描述的是已落盘、可核查的输入，不是 19 条平台算法，也不是“使用后必爆”的成绩单。仓库目前最明确的成熟度数字反而是两个零：`first_party_traffic_validated=0`，`qualified_cells=0`。这意味着它已经能用真实输入做研究、方向选择、候选稿和发布后复盘；在还没有本账号一方曝光复现前，它不会把候选经验换个名字写成“已验证爆款公式”。
 
@@ -28,6 +28,7 @@
 | 类目调研 | 拆人群、场景、痛点、方案、结果、载体和反例查询，观察综合/热门/最新 | query log、source log、研究问题 |
 | 生产经验深挖 | 搜官方课程、服务商/品牌结案、JD/岗位访谈、招标/合作规范、学术研究和失败返工 | 生产物、机制候选、来源/激励/混杂 |
 | 对标账号与笔记 | 先找笔记再反查账号，区分规模、近期表现、受众精准和商业邻近四种头部 | accounts、posts、近期中位数与异常倍数 |
+| 近期爆款模板雷达 | 同时走命名趋势词和无元词 feed 结构聚类，再追精确短语、别名/BGM/话题、独立二创链与低表现反例 | template samples、候选家族、复刻状态 × 生命周期、拍/改后拍/观察/不追 |
 | 流量机制选择 | 按 `stage × job × carrier × materials` 检索，不靠模型记忆临时拼公式 | 1 条内容 + 1 条载体/真实性 + 1 条复盘/治理机制 |
 | 视觉与文风研究 | 保存完整轮播页，拆 carrier、page role、素材、层级、注意力路径和 copy move；高帖与普通/低帖成对看 | 私有 style library、脱敏 observation、counterexample |
 | 风格检索与视觉 brief | 先用 13 种封面/首帧模式决定文字/证据谁先工作，再用 16 张方向卡选真实证据的到达顺序；无 binding 的探索可从 8 条 AP 中按 exact scope 选一条粗原型；生产态仍按 exact `category × carrier × primary_job` 检索 published style binding | cover pattern、visual card、AP receipt、style binding、page-role plan、prototype QA |
@@ -109,7 +110,25 @@ python3 -m pip install -r redbook-writing-skill/redbook-writing/requirements-vis
 
 最低输入包括：类目、目标用户、一个具体处境、商业目标、可用素材、生产条件、内容禁区和需要的交付。缺得越多，结果越容易停在研究问题，而不是可发布成稿。
 
-### 3. 第一次做类目调研
+### 3. 搜近期爆火的拍摄/内容模板
+
+这不是搜索“爆款模板”后抄第一篇高赞。趋势雷达同时走两条发现路径：一条找“最近爆火、全网都在拍、跟风拍、交作业、教程/空白模板”等命名信号；另一条不带这些元词，直接观察当前 feed 中跨账号重复的开场、镜头动作、剪辑和参与规则。发现候选后，再用标题原句、变体、别名、BGM/话题和评论叫法追二创链，并补同模板普通/低表现与边界样本。
+
+```text
+使用 redbook-writing，做一次 refresh 趋势模板雷达。
+
+类目：AI 工具 / 职场效率
+目标用户：刚开始使用 Codex 的产品经理
+时间窗：最近 30 天，Asia/Shanghai，首尾都包含
+可用素材：本人屏幕录制、工作流前后对比；不出镜
+目标：找仍可拍的结构，不要只给模板名字
+交付：发现词树、精确短语/二创链、seed/support/counterexample/boundary、
+replication_status × lifecycle_phase、拍/改后拍/观察/不追、真实素材缺口
+```
+
+运行时显式写 `trend_template_requirement: research`，并创建 `trend-template-samples.csv` 与 `trend-template-candidates.jsonl`。同一 post/note/canonical URL 不能伪装成多个独立复刻；`rising/mature/evergreen_carrier` 必须有两个真实、不重叠时间窗。只有 `replicated + 合法生命周期 + 独立反例 + 当前素材/权利/安全通过` 才能进入 `shoot/adapt`。完整方法见 [`trend-template-radar.md`](redbook-writing/references/trend-template-radar.md)。
+
+### 4. 第一次做类目调研
 
 下面用普通家居类目举例。换成旅行、美妆、职场、知识或敏感类目，研究合同不变；只有命中健康、成人、商品或外跳时，才追加对应规则门禁。
 
@@ -215,7 +234,7 @@ python3 redbook-writing/scripts/select_aesthetic_exploration.py \
 
 当当前类目的逐页 observation、真实文件和高低对照已经闭合，可以把候选风格晋级为正式 binding。发布门要求至少两个独立账号、两个内容簇的 high support，同类型普通/低反例，以及 content owner 之外的 reviewer；任何资产字节、规则包或复核后证据发生变化都会使旧收据失效。完整 CLI 见 [`style-promotion-pipeline.md`](redbook-writing/references/style-promotion-pipeline.md)。
 
-### 4. 从研究结果生成成稿
+### 5. 从研究结果生成成稿
 
 ```text
 使用 redbook-writing，执行 draft。
@@ -239,7 +258,7 @@ python3 redbook-writing/scripts/select_aesthetic_exploration.py \
 
 `grounded` 也不是一个可以手填的状态。它必须命中本地 SQLite 中已经发布且 `PASS` 的 exact archetype snapshot、rule evidence、正反例 association 和 immutable draft binding receipt；`rendered_pass` 还要逐页对账 `draft-assets.csv` 的真实可完整解码文件、SHA、binding，以及 content owner 之外的 reviewer 签署的 `visual-review-receipts.jsonl`。没有这些回执，最多是候选，不是 ready。
 
-### 5. 发布后复盘
+### 6. 发布后复盘
 
 把能看到的后台数据补回运行目录，再执行：
 
@@ -366,7 +385,7 @@ flowchart LR
 
 每个 ID 都要能回指上游。`TOPIC-` 找不到帖子或需求样本，不能进入 active；`DRAFT-` 没有完成真实性、商业关系和审校合同，也不能写 ready。
 
-字段定义与引用关系在 [`schemas.md`](redbook-writing/references/schemas.md)。项目附了 22 份可复制模板，不需要从空 CSV 开始搭表。
+字段定义与引用关系在 [`schemas.md`](redbook-writing/references/schemas.md)。项目附了 24 份可复制模板，不需要从空 CSV 开始搭表。
 
 ## Reference 不是附录
 

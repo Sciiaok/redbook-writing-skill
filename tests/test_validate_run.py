@@ -458,6 +458,7 @@ def write_complete_draft(path: Path, **overrides: str) -> None:
     }
     if meta.get("style_contract_version") == "2":
         headings.add("流量机制绑定")
+        headings.add("趋势模板绑定")
         headings.add("视觉方向绑定")
     for heading in sorted(headings):
         if heading == "CTA 与披露":
@@ -488,6 +489,28 @@ def write_complete_draft(path: Path, **overrides: str) -> None:
                     "material_evidence_map: none",
                     "mechanism_application_map: none",
                     "research_gap: exact task-fit materials and counterexample not yet captured",
+                ]
+            )
+        elif heading == "趋势模板绑定":
+            body = "\n".join(
+                [
+                    "template_contract_status: not_used",
+                    "candidate_record_id: none",
+                    "template_id: none",
+                    "family_id: none",
+                    "candidate_version: none",
+                    "replication_status: none",
+                    "lifecycle_phase: none",
+                    "last_refreshed_at: none",
+                    "decision: none",
+                    "source_sample_ids: none",
+                    "support_sample_ids: none",
+                    "counterexample_sample_ids: none",
+                    "fixed_slots: none",
+                    "replaced_slots: none",
+                    "new_semantic_contribution: none",
+                    "material_evidence_map: none",
+                    "failure_condition: none",
                 ]
             )
         elif heading == "视觉方向绑定":
@@ -3558,6 +3581,7 @@ class StyleContractFastPathTests(unittest.TestCase):
             "style_requirement": "both",
             "style_library_path": "../_style_library/style-library.sqlite",
             "style_taxonomy_version": "2",
+            "trend_template_requirement": "none",
         }.items():
             self.fixture.set_run_field(field, value)
         write_csv(

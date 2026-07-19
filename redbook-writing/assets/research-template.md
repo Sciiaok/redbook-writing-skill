@@ -57,6 +57,20 @@
 - 能支持：
 - 不能支持：
 
+## 近期模板雷达（仅 `trend_template_requirement=research|draft`）
+
+- 命名趋势发现词：
+- 无元词 feed 结构簇：
+- 精确短语、别名/BGM/话题追链：
+- 独立账号与 lineage 去重：
+- seed / support / counterexample / boundary：
+- replication status × lifecycle phase：
+- 对比窗口（start/end/support sample IDs/重算独立数）：
+- 拍 / 改后拍 / 观察 / 不追与理由：
+- `trend-template-samples.csv`：
+- `trend-template-candidates.jsonl`：
+- 当前不能支持的流量主张：
+
 ## 用户需求信号
 
 区分求方法、分享经历、反对/质疑、询问商品和泛泛夸赞。不得从头像/昵称推断敏感身份。

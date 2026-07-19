@@ -1,6 +1,6 @@
 ---
 name: redbook-writing
-description: Use when researching, planning, drafting, reviewing, or diagnosing Xiaohongshu (小红书/Redbook) accounts and content, including top-account sampling, recent high-performing posts, topic/title/cover libraries, traffic-mechanism claims, sensitive categories, comments, commercial CTAs, or cross-platform acquisition.
+description: Use when researching, planning, drafting, reviewing, or diagnosing Xiaohongshu (小红书/Redbook) accounts and content, including top-account sampling, recent high-performing posts, current shooting/content template discovery, topic/title/cover libraries, traffic-mechanism claims, sensitive categories, comments, commercial CTAs, or cross-platform acquisition.
 ---
 
 # 小红书研究与写作
@@ -12,6 +12,7 @@ description: Use when researching, planning, drafting, reviewing, or diagnosing 
 只读取本次所需文件；不要一次加载全部：
 
 - 做账号、帖子或类目调研：读 [research-method.md](references/research-method.md)。
+- 用户问“近期爆火模板”、拍摄灵感、全网都在拍、跟拍/挑战/转场/热梗生命周期，或要把模板沉淀进库：必须读 [trend-template-radar.md](references/trend-template-radar.md)。先用发现词树找到命名，再做精确短语追链和二创链，打开原帖、评论与同模板高低对照；禁止从单篇高赞、搜索顺序或旧热门直接写“爆款模板”。
 - 创建或续写落库文件：读 [schemas.md](references/schemas.md)，使用 `assets/` 模板。
 - 解释推荐、搜索、冷启动、限流或“流量公式”：读 [platform-mechanisms.md](references/platform-mechanisms.md) 与 [experience-hypotheses.md](references/experience-hypotheses.md)。
 - 涉及身体、性、医疗、未成年人、商业合作、商品、外链或资质：必须读 [current-rules.md](references/current-rules.md)，并运行时复核当前官方页面。
@@ -31,13 +32,15 @@ description: Use when researching, planning, drafting, reviewing, or diagnosing 
 先检查已有 `research/xiaohongshu/`、历史内容库和账号上下文，再选最轻的充分模式：
 
 ```text
-用户问机制、规则、限流、评论或准入？
-├─ 是 → mechanism：来源账本 + 主张账本；默认不写成稿
-└─ 否
-   ├─ 新类目、定位未定或无可靠样本？ → discovery
-   ├─ 已有研究，只补上次之后变化？ → refresh
-   └─ 已有足够证据，只要选题/成稿？ → draft
-       └─ 证据不足时仅补最小必要调研，不重跑完整 discovery
+用户问近期模板、拍摄灵感或热梗生命周期？
+├─ 是 → template radar：无库用 discovery，有旧卡用 refresh；核验后才能进入 draft
+└─ 否 → 用户问机制、规则、限流、评论或准入？
+   ├─ 是 → mechanism：来源账本 + 主张账本；默认不写成稿
+   └─ 否
+      ├─ 新类目、定位未定或无可靠样本？ → discovery
+      ├─ 已有研究，只补上次之后变化？ → refresh
+      └─ 已有足够证据，只要选题/成稿？ → draft
+          └─ 证据不足时仅补最小必要调研，不重跑完整 discovery
 ```
 
 四种模式可以顺序衔接，但不要混淆：`mechanism` 回答公开证据支持什么；`discovery/refresh` 回答当前类目里观察到什么；`draft` 才回答这次具体写什么。
@@ -86,6 +89,8 @@ description: Use when researching, planning, drafting, reviewing, or diagnosing 
 
 按 [research-method.md](references/research-method.md) 建八组词和最多四轮查询树。分别观察综合、热门、最新；从笔记反查作者，再用用户搜索补账号池。搜索结果位置只代表当前入口、时间和账号环境，不称“全平台排名”。
 
+如果任务是近期模板雷达，在 `run.yaml` 写 `trend_template_requirement: research`，且不以通用八组词结束：继续按 [trend-template-radar.md](references/trend-template-radar.md) 完成“命名趋势词 + 无元词 feed 结构聚类 → 精确短语追链 → 模板家族归一 → 当前复刻/可选评论参与 → 同模板高低对照 → 复刻证据 × 时序阶段 → 拍/改后拍/观察/不追”，并落 `trend-template-samples.csv` 与 `trend-template-candidates.jsonl`。旧模板卡在用户问“近期/现在”时必须先 refresh。
+
 同时保存：
 
 - 近期连续普通样本，建立中位数基线。
@@ -110,6 +115,8 @@ description: Use when researching, planning, drafting, reviewing, or diagnosing 
 ### 5. 生成并审校成稿
 
 按 [draft-quality.md](references/draft-quality.md) 先写一页创作简报。先从统一机制库精确选择 3 条：1 条内容机制、1 条载体/真实性机制、1 条复盘/治理机制；在 `## 流量机制绑定` 写入稳定 ID、真实反例、material code→本次运行证据 ID，以及逐机制 `本稿输入 → 标题/封面/正文/评论动作 → job metric → 原卡失效条件 → intentional deviation`。缺任何一槽或素材门不通过就停在 `needs_research`，不要堆七种钩子。涉及文风或视觉时，再按 [style-research-and-generation.md](references/style-research-and-generation.md) 检索 exact `carrier × primary_job × materials × constraints`，保存候选与拒绝原因；需要视觉产出时，先从封面模式库判定文字/证据谁先工作，再从视觉方向卡选择任务匹配的 attention path，逐项绑定真实 asset manifest，任何缺失证据不得让模型补画。随后输出：证据、2–3 个标题、可获得的不同注意力路径、选定载体、完整正文/分镜、关键词、唯一真实性标签、独立商业关系/披露、事实证明、规则风险与观测计划。若当前证据只支持一个方向，探索态最多交付一个 `prototype_only` 粗原型，不能假装完成双路径比较或临时编第二个；没有合格方向才返回 `prototype_gap/brief_only`。
+
+所有 v2 run 都显式写 `trend_template_requirement: none|research|draft`，所有 v2 draft 都保留 `## 趋势模板绑定`；不用模板时写 `template_contract_status: not_used`，不能省略字段或章节。使用趋势模板卡时填 `draft`，只能绑定同一 `template_id` 中哈希有效的最高 `candidate_version`，且本次已刷新、`replication_status=replicated`、`lifecycle_phase=rising|mature|evergreen_carrier`、`decision=shoot|adapt` 并通过权利/安全/素材门。`query_candidate/observed/fatigued` 是硬阻断，不存在“默认例外”。在绑定区写 candidate record/version、支持/反例、固定/替换槽、真实素材 ID 数组和新语义贡献；sample 必须与 posts 账本身份闭合，生命周期必须由两个真实、不重叠时间窗支撑。只复用 hook、镜头、剪辑和参与语法，不复制原作者的标题、人物、画面、音频或独特台词；缺素材返回 `needs_materials`。
 
 风格证据不足时写 `style_binding_status=needs_style_research`，先交付缺口、补采 query 和素材需求。只有三槽机制、至少 1 条独立反例、每个 required material 的真实证据 ID，以及真实性/授权/事实/商业门全部闭合，才可继续产出显著标注的 `candidate_only / needs_review` 标题、完整候选稿、逐页结构与探索 brief；图像最多为 `prototype_only`，不是最终逐页资产。否则停止生成。`grounded` 必须命中本地 SQLite 中已发布且 `PASS` 的 exact archetype/rule/binding receipt；`rendered_pass` 还必须逐页对账 `draft-assets.csv` 的真实可完整解码文件、SHA、binding、rule refs 与独立人工复核 receipt，禁止只改 frontmatter。任何候选不得称 ready、可直接发布或爆款公式。公开互动样本最高只能形成 `public_proxy_association`；自有一方 impressions/reach 可以进入不可变 outcome checkpoint 供复盘，但当前版本尚未导入原始后台导出并程序重算结论，因此整个 `first_party_traffic_validated` 作用域保持禁用，不能手填“已验证流量”或 `win/loss`。
 
@@ -213,6 +220,7 @@ python3 <skill-dir>/scripts/validate_run.py <run-dir> --strict
 修复全部错误；对警告明确降级、补证或记录为何暂时接受。验证器通过不代表内容一定优质，还要逐项确认：
 
 - 研究覆盖了当前入口、近期普通基线、高表现样本和反例。
+- 近期模板任务已完成精确追链、独立复刻、评论参与、同模板高低对照、生命周期和双文件落库；没有把单篇高赞当模板。
 - 所有最终结论有链接、日期、作用域和置信度依据。
 - 选题不是同一爆款换词，成稿没有抄原句、人物或独特细节。
 - 标题、封面、开头和正文兑现同一个承诺，答案位置明确。

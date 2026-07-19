@@ -21,7 +21,7 @@ from dataclasses import asdict, dataclass
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Iterable
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit, urlunsplit
 
 try:
     from PIL import Image, UnidentifiedImageError
@@ -126,6 +126,47 @@ SCHEMAS: dict[str, list[str]] = {
         "style_library_post_id",
         "style_observation_ids",
         "style_skip_reason",
+    ],
+    "trend-template-samples.csv": [
+        "template_sample_id",
+        "template_id",
+        "family_id",
+        "post_id",
+        "note_id",
+        "url",
+        "account_id",
+        "query_ids",
+        "parent_query_id",
+        "query_round",
+        "search_surface",
+        "sort_or_filter",
+        "rank_observed",
+        "published_at",
+        "date_confidence",
+        "collected_at",
+        "carrier",
+        "primary_job",
+        "template_type",
+        "remix_relation",
+        "creative_family_id",
+        "lineage_cluster_id",
+        "supply_origin",
+        "hook_observation",
+        "shot_grammar_observation",
+        "edit_grammar_observation",
+        "participation_signal",
+        "visible_engagement",
+        "account_baseline_multiple",
+        "performance_tier",
+        "evidence_role",
+        "duplicate_of",
+        "category_scope",
+        "comment_evidence_ids",
+        "source_ids",
+        "access_status",
+        "source_snapshot_sha256",
+        "capture_status",
+        "limitations",
     ],
     "topics.csv": [
         "topic_id",
@@ -262,6 +303,7 @@ ID_FIELDS = {
     "claim-ledger.csv": "claim_id",
     "accounts.csv": "account_id",
     "posts.csv": "post_id",
+    "trend-template-samples.csv": "template_sample_id",
     "topics.csv": "topic_id",
     "acquisition-channels.csv": "channel_id",
     "sku-registry.csv": "eligibility_id",
@@ -317,6 +359,30 @@ REQUIRED_ROW_FIELDS = {
         "evidence_level",
         "confidence",
         "status",
+    },
+    "trend-template-samples.csv": {
+        "template_sample_id",
+        "template_id",
+        "family_id",
+        "post_id",
+        "note_id",
+        "url",
+        "account_id",
+        "query_ids",
+        "query_round",
+        "search_surface",
+        "collected_at",
+        "carrier",
+        "primary_job",
+        "template_type",
+        "remix_relation",
+        "creative_family_id",
+        "lineage_cluster_id",
+        "supply_origin",
+        "evidence_role",
+        "source_ids",
+        "access_status",
+        "capture_status",
     },
     "topics.csv": {
         "topic_id",
@@ -722,7 +788,121 @@ DRAFT_HEADINGS = {
     "创意审校",
     "观测计划",
 }
-V2_DRAFT_HEADINGS = {"流量机制绑定", "视觉方向绑定"}
+V2_DRAFT_HEADINGS = {"流量机制绑定", "趋势模板绑定", "视觉方向绑定"}
+TREND_TEMPLATE_REQUIREMENTS = {"none", "research", "draft"}
+TREND_SAMPLE_ROLES = {"seed", "support", "counterexample", "boundary"}
+TREND_REMIX_RELATIONS = {
+    "direct_remake",
+    "slot_substitution",
+    "category_transfer",
+    "parody",
+    "tutorial",
+    "generator",
+    "unrelated_same_phrase",
+}
+TREND_SUPPLY_ORIGINS = {
+    "spontaneous",
+    "brand_campaign",
+    "platform_program",
+    "paid_distribution",
+    "mixed",
+    "unknown",
+}
+TREND_REPLICATION_STATUSES = {"query_candidate", "observed", "replicated"}
+TREND_LIFECYCLE_PHASES = {
+    "unknown",
+    "rising",
+    "mature",
+    "fatigued",
+    "evergreen_carrier",
+}
+TREND_DECISIONS = {"shoot", "adapt", "observe", "skip"}
+TREND_CURRENT_STATUSES = {"current", "superseded"}
+TREND_RIGHTS_STATUSES = {
+    "grammar_only",
+    "authorized_assets",
+    "needs_review",
+    "blocked",
+    "unknown",
+}
+TREND_SAFETY_STATUSES = {"passed", "needs_review", "blocked", "unknown"}
+TREND_DISCOVERY_LANES = {"named_trend", "unnamed_structure_cluster"}
+TREND_ALLOWED_PERFORMANCE_SCOPES = {
+    "not_performance_evidence",
+    "public_proxy_association",
+}
+TREND_CANDIDATE_FIELDS = {
+    "record_type",
+    "schema_version",
+    "candidate_record_id",
+    "run_id",
+    "candidate_version",
+    "supersedes_candidate_record_id",
+    "template_id",
+    "family_id",
+    "canonical_name",
+    "aliases",
+    "template_types",
+    "discovery_queries",
+    "discovery_lanes",
+    "source_sample_ids",
+    "support_sample_ids",
+    "counterexample_sample_ids",
+    "boundary_sample_ids",
+    "independent_account_count",
+    "category_scopes",
+    "carrier_scopes",
+    "primary_job_scopes",
+    "traffic_stage_scopes",
+    "supply_origin",
+    "supply_origin_evidence_ids",
+    "first_seen_at",
+    "last_seen_at",
+    "sample_window",
+    "window_comparisons",
+    "hook_grammar",
+    "shot_grammar",
+    "edit_grammar",
+    "participation_loop",
+    "slot_map",
+    "required_material_codes",
+    "optional_material_codes",
+    "contraindications",
+    "rights_status",
+    "safety_status",
+    "authorized_asset_ids",
+    "source_asset_hashes",
+    "replication_status",
+    "lifecycle_phase",
+    "lifecycle_reason",
+    "confidence",
+    "evidence_level",
+    "performance_evidence_scope",
+    "decision",
+    "adaptation_notes",
+    "last_refreshed_at",
+    "limitations",
+    "record_sha256",
+}
+TREND_TEMPLATE_CONTRACT_FIELDS = {
+    "template_contract_status",
+    "candidate_record_id",
+    "template_id",
+    "family_id",
+    "candidate_version",
+    "replication_status",
+    "lifecycle_phase",
+    "last_refreshed_at",
+    "decision",
+    "source_sample_ids",
+    "support_sample_ids",
+    "counterexample_sample_ids",
+    "fixed_slots",
+    "replaced_slots",
+    "new_semantic_contribution",
+    "material_evidence_map",
+    "failure_condition",
+}
 V2_MECHANISM_CONTRACT_STATUSES = {
     "needs_research",
     "bound_candidate",
@@ -1042,6 +1222,28 @@ def split_ids(value: str | None) -> list[str]:
     return [item for item in re.split(r"[;|\s]+", value.strip()) if item]
 
 
+def canonical_post_url(value: str | None) -> str:
+    """Return a tracking-free URL identity for duplicate/evidence checks."""
+    raw = (value or "").strip()
+    if not raw:
+        return ""
+    try:
+        parsed = urlsplit(raw)
+    except ValueError:
+        return raw
+    if not parsed.scheme or not parsed.netloc:
+        return raw.rstrip("/")
+    return urlunsplit(
+        (
+            parsed.scheme.lower(),
+            parsed.netloc.lower(),
+            parsed.path.rstrip("/") or "/",
+            "",
+            "",
+        )
+    )
+
+
 def parse_iso(value: str) -> date | None:
     try:
         return date.fromisoformat(value)
@@ -1327,6 +1529,18 @@ def valid_sha256(value: str | None) -> bool:
     return bool(re.fullmatch(r"[a-fA-F0-9]{64}", (value or "").strip()))
 
 
+def canonical_json_sha256(payload: dict[str, object], omitted_key: str) -> str:
+    canonical = {key: value for key, value in payload.items() if key != omitted_key}
+    return hashlib.sha256(
+        json.dumps(
+            canonical,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    ).hexdigest()
+
+
 def channel_status_class(value: str | None) -> str | None:
     """Return active/blocked only for machine-readable, non-contradictory statuses."""
     status = (value or "").strip().lower()
@@ -1358,6 +1572,7 @@ class RunValidator:
         self.run: dict[str, str] = {}
         self.style_taxonomy_v2: dict[str, object] = {}
         self.traffic_mechanism_library: dict[str, object] = {}
+        self.trend_candidates: list[dict[str, object]] = []
 
     def _is_v2(self) -> bool:
         return self.run.get("run_contract_version", "").strip() == "2"
@@ -1434,9 +1649,11 @@ class RunValidator:
         self._load_run()
         self._check_required_files()
         self._load_csvs()
+        self._load_trend_candidates()
         self._check_completion()
         self._check_rows()
         self._check_dates()
+        self._check_trend_templates()
         self._check_references()
         self._check_sources()
         self._check_claims()
@@ -1531,6 +1748,7 @@ class RunValidator:
             "style_requirement",
             "style_library_path",
             "style_taxonomy_version",
+            "trend_template_requirement",
         }
         for key in sorted(required):
             if not self.run.get(key, "").strip():
@@ -1590,10 +1808,36 @@ class RunValidator:
                 "run.yaml",
                 "style_taxonomy_version must be 2",
             )
+        trend_requirement = self.run.get("trend_template_requirement", "none")
+        if trend_requirement not in TREND_TEMPLATE_REQUIREMENTS:
+            self.error(
+                "invalid_trend_template_requirement",
+                "run.yaml",
+                "trend_template_requirement must be none, research, or draft",
+            )
+        if trend_requirement == "research" and mode not in {"discovery", "refresh"}:
+            self.error(
+                "trend_template_mode_mismatch",
+                "run.yaml",
+                "trend_template_requirement=research requires discovery or refresh mode",
+            )
+        if trend_requirement == "draft" and mode != "draft":
+            self.error(
+                "trend_template_mode_mismatch",
+                "run.yaml",
+                "trend_template_requirement=draft requires draft mode",
+            )
 
     def _check_required_files(self) -> None:
         mode = self.run.get("mode", "")
         required = COMMON_FILES | MODE_FILES.get(mode, set())
+        if self.run.get("trend_template_requirement", "none") != "none":
+            required |= {
+                "accounts.csv",
+                "posts.csv",
+                "trend-template-samples.csv",
+                "trend-template-candidates.jsonl",
+            }
         for name in sorted(required):
             if not (self.run_dir / name).exists():
                 self.error("missing_file", name, f"required for mode {mode or 'unknown'}")
@@ -1610,6 +1854,12 @@ class RunValidator:
         mode = self.run.get("mode", "")
         required_nonempty = {"query-log.csv", "source-log.csv", "claim-ledger.csv"}
         required_nonempty |= MODE_FILES.get(mode, set())
+        if self.run.get("trend_template_requirement", "none") != "none":
+            required_nonempty |= {
+                "accounts.csv",
+                "posts.csv",
+                "trend-template-samples.csv",
+            }
         for name in sorted(required_nonempty):
             if name in self.rows and not self.rows[name]:
                 self.error(
@@ -1617,6 +1867,28 @@ class RunValidator:
                     name,
                     f"completed {mode} run cannot use an empty required dataset",
                 )
+        if (
+            self.run.get("trend_template_requirement", "none") != "none"
+            and not self.trend_candidates
+        ):
+            self.error(
+                "incomplete_run",
+                "trend-template-candidates.jsonl",
+                "completed trend-template run requires at least one candidate record",
+            )
+        if (
+            self.run.get("trend_template_requirement", "none") == "research"
+            and self.trend_candidates
+            and not any(
+                row.get("replication_status") in {"observed", "replicated"}
+                for row in self.trend_candidates
+            )
+        ):
+            self.error(
+                "incomplete_run",
+                "trend-template-candidates.jsonl",
+                "completed trend research needs at least one opened, observed candidate; query leads alone are not completion",
+            )
         research = self.run_dir / "research.md"
         if research.exists():
             content = re.sub(r"[#>*_`\-\s]", "", research.read_text(encoding="utf-8-sig"))
@@ -1652,6 +1924,720 @@ class RunValidator:
                     self.rows[name] = loaded
             except (OSError, UnicodeDecodeError, csv.Error) as exc:
                 self.error("unreadable_csv", name, str(exc))
+
+    def _load_trend_candidates(self) -> None:
+        path = self.run_dir / "trend-template-candidates.jsonl"
+        if not path.exists():
+            return
+        try:
+            for index, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+                if not raw.strip():
+                    continue
+                try:
+                    row = json.loads(raw)
+                except json.JSONDecodeError as exc:
+                    self.error(
+                        "malformed_trend_candidate",
+                        f"{path.name}:{index}",
+                        str(exc),
+                    )
+                    continue
+                if not isinstance(row, dict):
+                    self.error(
+                        "malformed_trend_candidate",
+                        f"{path.name}:{index}",
+                        "each JSONL line must be an object",
+                    )
+                    continue
+                self.trend_candidates.append(row)
+        except (OSError, UnicodeDecodeError) as exc:
+            self.error("unreadable_jsonl", path.name, str(exc))
+
+    def _check_trend_templates(self) -> None:
+        requirement = self.run.get("trend_template_requirement", "none")
+        samples = self.rows.get("trend-template-samples.csv", [])
+        if requirement == "none" and not samples and not self.trend_candidates:
+            return
+
+        query_ids = self._id_set("query-log.csv")
+        source_ids = self._id_set("source-log.csv")
+        post_ids = self._id_set("posts.csv")
+        account_ids = self._id_set("accounts.csv")
+        post_by_id = {
+            row.get("post_id", ""): row
+            for row in self.rows.get("posts.csv", [])
+            if row.get("post_id", "")
+        }
+        sample_by_id = {
+            row.get("template_sample_id", ""): row
+            for row in samples
+            if row.get("template_sample_id", "")
+        }
+
+        for index, row in enumerate(samples, start=2):
+            location = f"trend-template-samples.csv:{index}"
+            role = row.get("evidence_role", "")
+            if role not in TREND_SAMPLE_ROLES:
+                self.error("invalid_trend_sample_enum", location, f"invalid evidence_role: {role}")
+            remix = row.get("remix_relation", "")
+            if remix not in TREND_REMIX_RELATIONS:
+                self.error("invalid_trend_sample_enum", location, f"invalid remix_relation: {remix}")
+            supply = row.get("supply_origin", "")
+            if supply not in TREND_SUPPLY_ORIGINS:
+                self.error("invalid_trend_sample_enum", location, f"invalid supply_origin: {supply}")
+            capture = row.get("capture_status", "")
+            if capture not in {"complete", "partial", "blocked", "excluded"}:
+                self.error("invalid_trend_sample_enum", location, f"invalid capture_status: {capture}")
+            access = row.get("access_status", "")
+            if access not in {"full", "partial", "snippet_only", "blocked", "dead_link"}:
+                self.error("invalid_trend_sample_enum", location, f"invalid access_status: {access}")
+            try:
+                query_round = int(row.get("query_round", ""))
+            except ValueError:
+                query_round = 0
+            if query_round not in {1, 2, 3, 4}:
+                self.error("invalid_trend_query_round", location, "query_round must be 1, 2, 3, or 4")
+            snapshot_hash = row.get("source_snapshot_sha256", "")
+            if snapshot_hash and not valid_sha256(snapshot_hash):
+                self.error(
+                    "invalid_trend_snapshot_hash",
+                    location,
+                    "source_snapshot_sha256 must be blank or a 64-character SHA-256",
+                )
+            if capture == "complete" and access != "full":
+                self.error(
+                    "trend_capture_mismatch",
+                    location,
+                    "complete capture requires access_status=full",
+                )
+            observations = [
+                row.get("hook_observation", ""),
+                row.get("shot_grammar_observation", ""),
+                row.get("edit_grammar_observation", ""),
+            ]
+            if not any(value and value not in {"unknown", "not_applicable"} for value in observations):
+                self.error(
+                    "trend_structure_missing",
+                    location,
+                    "at least one hook/shot/edit observation must be substantive",
+                )
+            for query_id in split_ids(row.get("query_ids", "")):
+                if query_id not in query_ids:
+                    self.error("dangling_reference", location, f"unknown query_id: {query_id}")
+            parent_query = row.get("parent_query_id", "")
+            if parent_query and parent_query != "none" and parent_query not in query_ids:
+                self.error("dangling_reference", location, f"unknown parent_query_id: {parent_query}")
+            post_id = row.get("post_id", "")
+            if post_id not in post_ids:
+                self.error("dangling_reference", location, f"unknown post_id: {post_id}")
+            else:
+                post_row = post_by_id[post_id]
+                mismatched_fields = [
+                    field
+                    for field in ("note_id", "account_id", "published_at")
+                    if row.get(field, "") != post_row.get(field, "")
+                ]
+                if canonical_post_url(row.get("url")) != canonical_post_url(
+                    post_row.get("url")
+                ):
+                    mismatched_fields.append("url")
+                if mismatched_fields:
+                    self.error(
+                        "trend_sample_post_mismatch",
+                        location,
+                        "trend sample must exactly inherit post identity fields from posts.csv: "
+                        + ", ".join(sorted(set(mismatched_fields))),
+                    )
+            if row.get("account_id", "") not in account_ids:
+                self.error("dangling_reference", location, f"unknown account_id: {row.get('account_id', '')}")
+            for source_id in split_ids(row.get("source_ids", "")):
+                if source_id not in source_ids:
+                    self.error("dangling_reference", location, f"unknown source_id: {source_id}")
+
+        record_by_id: dict[str, dict[str, object]] = {}
+        by_template: dict[str, list[dict[str, object]]] = {}
+        for index, row in enumerate(self.trend_candidates, start=1):
+            location = f"trend-template-candidates.jsonl:{index}"
+            missing = sorted(TREND_CANDIDATE_FIELDS - set(row))
+            extra = sorted(set(row) - TREND_CANDIDATE_FIELDS)
+            if missing or extra:
+                details = []
+                if missing:
+                    details.append("missing fields: " + ", ".join(missing))
+                if extra:
+                    details.append("unknown fields: " + ", ".join(extra))
+                self.error("trend_candidate_schema", location, "; ".join(details))
+                continue
+            record_id = row.get("candidate_record_id")
+            template_id = row.get("template_id")
+            family_id = row.get("family_id")
+            if not isinstance(record_id, str) or not record_id:
+                self.error("trend_candidate_schema", location, "candidate_record_id must be non-empty")
+                continue
+            if record_id in record_by_id:
+                self.error("duplicate_id", location, f"duplicate candidate_record_id: {record_id}")
+            record_by_id[record_id] = row
+            if isinstance(template_id, str) and template_id:
+                by_template.setdefault(template_id, []).append(row)
+            else:
+                self.error("trend_candidate_schema", location, "template_id must be non-empty")
+            if not isinstance(family_id, str) or not family_id:
+                self.error("trend_candidate_schema", location, "family_id must be non-empty")
+            if row.get("record_type") != "trend_template_candidate" or row.get("schema_version") != 1:
+                self.error(
+                    "trend_candidate_schema",
+                    location,
+                    "record_type/schema_version must be trend_template_candidate/1",
+                )
+            if row.get("run_id") != self.run.get("run_id"):
+                self.error("trend_run_mismatch", location, "candidate run_id must match run.yaml")
+            version = row.get("candidate_version")
+            if not isinstance(version, int) or isinstance(version, bool) or version < 1:
+                self.error("trend_version_invalid", location, "candidate_version must be a positive integer")
+            supplied_hash = row.get("record_sha256")
+            calculated_hash = canonical_json_sha256(row, "record_sha256")
+            if not isinstance(supplied_hash, str) or supplied_hash.lower() != calculated_hash:
+                self.error("trend_record_hash_mismatch", location, "record_sha256 does not match canonical record")
+
+            replication = row.get("replication_status")
+            lifecycle = row.get("lifecycle_phase")
+            decision = row.get("decision")
+            rights = row.get("rights_status")
+            safety = row.get("safety_status")
+            supply = row.get("supply_origin")
+            scope = row.get("performance_evidence_scope")
+            if replication not in TREND_REPLICATION_STATUSES:
+                self.error("invalid_trend_candidate_enum", location, f"invalid replication_status: {replication}")
+            if lifecycle not in TREND_LIFECYCLE_PHASES:
+                self.error("invalid_trend_candidate_enum", location, f"invalid lifecycle_phase: {lifecycle}")
+            if decision not in TREND_DECISIONS:
+                self.error("invalid_trend_candidate_enum", location, f"invalid decision: {decision}")
+            if rights not in TREND_RIGHTS_STATUSES:
+                self.error("invalid_trend_candidate_enum", location, f"invalid rights_status: {rights}")
+            if safety not in TREND_SAFETY_STATUSES:
+                self.error("invalid_trend_candidate_enum", location, f"invalid safety_status: {safety}")
+            if supply not in TREND_SUPPLY_ORIGINS:
+                self.error("invalid_trend_candidate_enum", location, f"invalid supply_origin: {supply}")
+            if scope not in TREND_ALLOWED_PERFORMANCE_SCOPES:
+                self.error(
+                    "trend_performance_scope",
+                    location,
+                    "template candidate cannot self-declare first-party traffic validation",
+                )
+
+            array_fields = (
+                "aliases",
+                "template_types",
+                "discovery_queries",
+                "discovery_lanes",
+                "source_sample_ids",
+                "support_sample_ids",
+                "counterexample_sample_ids",
+                "boundary_sample_ids",
+                "category_scopes",
+                "carrier_scopes",
+                "primary_job_scopes",
+                "traffic_stage_scopes",
+                "supply_origin_evidence_ids",
+                "window_comparisons",
+                "required_material_codes",
+                "optional_material_codes",
+                "contraindications",
+                "authorized_asset_ids",
+                "source_asset_hashes",
+                "limitations",
+            )
+            for field in array_fields:
+                if not isinstance(row.get(field), list):
+                    self.error("trend_candidate_schema", location, f"{field} must be an array")
+
+            lanes = row.get("discovery_lanes", [])
+            if isinstance(lanes, list) and any(item not in TREND_DISCOVERY_LANES for item in lanes):
+                self.error("invalid_trend_candidate_enum", location, "discovery_lanes contains an unknown value")
+            if replication in {"observed", "replicated"} and not lanes:
+                self.error("trend_discovery_evidence", location, "observed candidates require a discovery lane")
+            queries = row.get("discovery_queries", [])
+            if isinstance(queries, list):
+                for item in queries:
+                    if not isinstance(item, dict) or not {
+                        "query_id",
+                        "parent_query_id",
+                        "round",
+                        "source",
+                    }.issubset(item):
+                        self.error(
+                            "trend_discovery_evidence",
+                            location,
+                            "each discovery query requires query_id, parent_query_id, round, and source",
+                        )
+                        continue
+                    if item.get("query_id") not in query_ids:
+                        self.error("dangling_reference", location, f"unknown discovery query: {item.get('query_id')}")
+                    parent = item.get("parent_query_id")
+                    if parent not in {None, "none"} and parent not in query_ids:
+                        self.error("dangling_reference", location, f"unknown discovery parent query: {parent}")
+                    if item.get("round") not in {1, 2, 3, 4}:
+                        self.error("invalid_trend_query_round", location, "discovery query round must be 1-4")
+
+            role_fields = {
+                "source_sample_ids": "seed",
+                "support_sample_ids": "support",
+                "counterexample_sample_ids": "counterexample",
+                "boundary_sample_ids": "boundary",
+            }
+            role_sets: dict[str, set[str]] = {}
+            referenced_samples: list[dict[str, str]] = []
+            for field, expected_role in role_fields.items():
+                values = row.get(field, [])
+                value_set = set(values) if isinstance(values, list) else set()
+                role_sets[field] = value_set
+                for sample_id in value_set:
+                    sample_row = sample_by_id.get(str(sample_id))
+                    if sample_row is None:
+                        self.error("dangling_reference", location, f"unknown sample ID: {sample_id}")
+                        continue
+                    referenced_samples.append(sample_row)
+                    if sample_row.get("evidence_role") != expected_role:
+                        self.error(
+                            "trend_sample_role_mismatch",
+                            location,
+                            f"{sample_id} must have evidence_role={expected_role}",
+                        )
+                    if sample_row.get("template_id") != template_id or sample_row.get("family_id") != family_id:
+                        self.error(
+                            "trend_sample_scope_mismatch",
+                            location,
+                            f"{sample_id} template/family does not match candidate",
+                        )
+            role_names = list(role_sets)
+            for position, left in enumerate(role_names):
+                for right in role_names[position + 1 :]:
+                    overlap = role_sets[left] & role_sets[right]
+                    if overlap:
+                        self.error(
+                            "trend_sample_role_overlap",
+                            location,
+                            f"sample IDs cannot occupy two evidence roles: {sorted(overlap)}",
+                        )
+
+            referenced_identity_rows = [
+                sample_by_id[sample_id]
+                for value_set in role_sets.values()
+                for sample_id in value_set
+                if sample_id in sample_by_id
+            ]
+            for identity_name, identity_value in (
+                ("post_id", lambda item: item.get("post_id", "")),
+                ("note_id", lambda item: item.get("note_id", "")),
+                ("canonical_url", lambda item: canonical_post_url(item.get("url"))),
+            ):
+                identities = [
+                    identity_value(item)
+                    for item in referenced_identity_rows
+                    if identity_value(item)
+                ]
+                duplicates = sorted(
+                    value for value, count in Counter(identities).items() if count > 1
+                )
+                if duplicates:
+                    self.error(
+                        "trend_post_role_overlap",
+                        location,
+                        f"one post cannot occupy multiple trend evidence rows ({identity_name}): {duplicates}",
+                    )
+
+            support_rows = [
+                sample_by_id[sample_id]
+                for sample_id in role_sets["support_sample_ids"]
+                if sample_id in sample_by_id
+                and not sample_by_id[sample_id].get("duplicate_of", "")
+            ]
+            unique_accounts = {
+                item.get("account_id", "") for item in support_rows if item.get("account_id", "")
+            }
+            unique_lineages = {
+                item.get("lineage_cluster_id", "")
+                for item in support_rows
+                if item.get("lineage_cluster_id", "")
+            }
+            unique_posts = {
+                item.get("note_id", "")
+                or canonical_post_url(item.get("url"))
+                or item.get("post_id", "")
+                for item in support_rows
+                if item.get("note_id", "")
+                or canonical_post_url(item.get("url"))
+                or item.get("post_id", "")
+            }
+            derived_independent = min(
+                len(unique_accounts), len(unique_lineages), len(unique_posts)
+            )
+            if row.get("independent_account_count") != derived_independent:
+                self.error(
+                    "trend_independence_mismatch",
+                    location,
+                    "independent_account_count must be recomputed from unique support accounts, lineage clusters, and post identities",
+                )
+            if replication == "query_candidate":
+                if any(role_sets.values()) or decision not in {"observe", "skip"} or lifecycle != "unknown":
+                    self.error(
+                        "trend_replication_evidence",
+                        location,
+                        "query_candidate cannot claim samples, lifecycle, or a production decision",
+                    )
+            elif replication == "observed":
+                if not role_sets["source_sample_ids"] or role_sets["support_sample_ids"]:
+                    self.error(
+                        "trend_replication_evidence",
+                        location,
+                        "observed requires a seed and cannot claim independent support",
+                    )
+            elif replication == "replicated":
+                if derived_independent < 2 or len(role_sets["support_sample_ids"]) < 2:
+                    self.error(
+                        "trend_replication_evidence",
+                        location,
+                        "replicated requires at least two independent support accounts and lineages",
+                    )
+
+            sample_window = row.get("sample_window")
+            sample_window_start = None
+            sample_window_end = None
+            if isinstance(sample_window, dict):
+                sample_window_start = parse_iso(str(sample_window.get("start", "")))
+                sample_window_end = parse_iso(str(sample_window.get("end", "")))
+                if (
+                    not sample_window_start
+                    or not sample_window_end
+                    or sample_window_start > sample_window_end
+                    or not sample_window.get("timezone")
+                    or sample_window.get("end_inclusive") is not True
+                ):
+                    self.error(
+                        "trend_window_mismatch",
+                        location,
+                        "sample_window requires valid start/end, timezone, and end_inclusive=true",
+                    )
+            else:
+                self.error("trend_window_mismatch", location, "sample_window must be an object")
+
+            for sample_row in referenced_samples:
+                published = parse_iso(sample_row.get("published_at", ""))
+                if not published:
+                    self.error(
+                        "trend_window_mismatch",
+                        location,
+                        f"referenced sample {sample_row.get('template_sample_id', '')} needs a precise published_at",
+                    )
+                elif sample_window_start and sample_window_end and not (
+                    sample_window_start <= published <= sample_window_end
+                ):
+                    self.error(
+                        "trend_window_mismatch",
+                        location,
+                        f"referenced sample {sample_row.get('template_sample_id', '')} falls outside sample_window",
+                    )
+
+            comparisons = row.get("window_comparisons", [])
+            valid_comparisons: list[tuple[date, date, set[str], int]] = []
+            comparison_sample_ids: list[str] = []
+            if isinstance(comparisons, list):
+                for comparison_index, comparison in enumerate(comparisons, start=1):
+                    if not isinstance(comparison, dict) or not {
+                        "start",
+                        "end",
+                        "support_sample_ids",
+                        "independent_derivatives",
+                    }.issubset(comparison):
+                        self.error(
+                            "trend_lifecycle_evidence",
+                            location,
+                            f"window_comparisons[{comparison_index}] requires start, end, support_sample_ids, and independent_derivatives",
+                        )
+                        continue
+                    comparison_start = parse_iso(str(comparison.get("start", "")))
+                    comparison_end = parse_iso(str(comparison.get("end", "")))
+                    comparison_ids = comparison.get("support_sample_ids")
+                    declared_count = comparison.get("independent_derivatives")
+                    if (
+                        not comparison_start
+                        or not comparison_end
+                        or comparison_start > comparison_end
+                        or not isinstance(comparison_ids, list)
+                        or not comparison_ids
+                        or not isinstance(declared_count, int)
+                        or isinstance(declared_count, bool)
+                        or declared_count < 1
+                    ):
+                        self.error(
+                            "trend_lifecycle_evidence",
+                            location,
+                            f"window_comparisons[{comparison_index}] contains an invalid window, sample list, or count",
+                        )
+                        continue
+                    if sample_window_start and sample_window_end and not (
+                        sample_window_start <= comparison_start <= comparison_end <= sample_window_end
+                    ):
+                        self.error(
+                            "trend_lifecycle_evidence",
+                            location,
+                            f"window_comparisons[{comparison_index}] falls outside sample_window",
+                        )
+                    comparison_id_set = {str(value) for value in comparison_ids}
+                    comparison_sample_ids.extend(comparison_id_set)
+                    unknown_or_wrong_role = sorted(
+                        comparison_id_set - role_sets["support_sample_ids"]
+                    )
+                    if unknown_or_wrong_role:
+                        self.error(
+                            "trend_lifecycle_evidence",
+                            location,
+                            f"window_comparisons[{comparison_index}] has non-support sample IDs: {unknown_or_wrong_role}",
+                        )
+                        continue
+                    comparison_rows = [sample_by_id[value] for value in comparison_id_set]
+                    dates_match = True
+                    for comparison_row in comparison_rows:
+                        published = parse_iso(comparison_row.get("published_at", ""))
+                        if not published or not comparison_start <= published <= comparison_end:
+                            dates_match = False
+                            self.error(
+                                "trend_lifecycle_evidence",
+                                location,
+                                f"{comparison_row.get('template_sample_id', '')} is not dated inside window_comparisons[{comparison_index}]",
+                            )
+                    comparison_accounts = {
+                        item.get("account_id", "")
+                        for item in comparison_rows
+                        if item.get("account_id", "")
+                    }
+                    comparison_lineages = {
+                        item.get("lineage_cluster_id", "")
+                        for item in comparison_rows
+                        if item.get("lineage_cluster_id", "")
+                    }
+                    comparison_posts = {
+                        item.get("note_id", "")
+                        or canonical_post_url(item.get("url"))
+                        or item.get("post_id", "")
+                        for item in comparison_rows
+                    }
+                    derived_count = min(
+                        len(comparison_accounts),
+                        len(comparison_lineages),
+                        len(comparison_posts),
+                    )
+                    if declared_count != derived_count:
+                        self.error(
+                            "trend_lifecycle_evidence",
+                            location,
+                            f"window_comparisons[{comparison_index}] independent_derivatives must equal {derived_count}",
+                        )
+                    if dates_match and declared_count == derived_count:
+                        valid_comparisons.append(
+                            (
+                                comparison_start,
+                                comparison_end,
+                                comparison_id_set,
+                                derived_count,
+                            )
+                        )
+            if lifecycle != "unknown":
+                if len(valid_comparisons) < 2:
+                    self.error(
+                        "trend_lifecycle_evidence",
+                        location,
+                        f"{lifecycle} requires at least two valid comparable window observations",
+                    )
+                duplicate_window_samples = sorted(
+                    value
+                    for value, count in Counter(comparison_sample_ids).items()
+                    if count > 1
+                )
+                if duplicate_window_samples:
+                    self.error(
+                        "trend_lifecycle_evidence",
+                        location,
+                        "support samples cannot be reused across lifecycle windows: "
+                        + ", ".join(duplicate_window_samples),
+                    )
+                if set(comparison_sample_ids) != role_sets["support_sample_ids"]:
+                    self.error(
+                        "trend_lifecycle_evidence",
+                        location,
+                        "lifecycle windows must partition every candidate support sample exactly once",
+                    )
+                ordered = sorted(valid_comparisons, key=lambda item: (item[0], item[1]))
+                if any(left[1] >= right[0] for left, right in zip(ordered, ordered[1:])):
+                    self.error(
+                        "trend_lifecycle_evidence",
+                        location,
+                        "lifecycle comparison windows must be ordered and non-overlapping",
+                    )
+                if len(ordered) >= 2:
+                    previous_count = ordered[-2][3]
+                    latest_count = ordered[-1][3]
+                    if lifecycle == "rising" and latest_count < previous_count:
+                        self.error(
+                            "trend_lifecycle_evidence",
+                            location,
+                            "rising cannot have fewer independent derivatives in the latest window",
+                        )
+                    if lifecycle == "fatigued" and latest_count >= previous_count:
+                        self.error(
+                            "trend_lifecycle_evidence",
+                            location,
+                            "fatigued requires fewer independent derivatives in the latest window",
+                        )
+            if replication != "replicated" and lifecycle != "unknown":
+                self.error(
+                    "trend_lifecycle_evidence",
+                    location,
+                    "non-replicated candidates must keep lifecycle_phase=unknown",
+                )
+
+            slot_map = row.get("slot_map")
+            if not isinstance(slot_map, dict) or not {"fixed", "replaceable", "new_semantic_contribution"}.issubset(slot_map):
+                self.error(
+                    "trend_slot_map",
+                    location,
+                    "slot_map requires fixed, replaceable, and new_semantic_contribution",
+                )
+            production_decision = decision in {"shoot", "adapt"}
+            if production_decision:
+                if replication != "replicated" or lifecycle not in {
+                    "rising",
+                    "mature",
+                    "evergreen_carrier",
+                }:
+                    self.error(
+                        "trend_decision_not_eligible",
+                        location,
+                        "shoot/adapt requires replicated evidence and a live or evergreen lifecycle",
+                    )
+                if not role_sets["counterexample_sample_ids"]:
+                    self.error(
+                        "trend_decision_not_eligible",
+                        location,
+                        "shoot/adapt requires at least one independent counterexample",
+                    )
+                if rights not in {"grammar_only", "authorized_assets"}:
+                    self.error("trend_rights_gate", location, "shoot/adapt requires a cleared rights status")
+                if safety != "passed":
+                    self.error("trend_safety_gate", location, "shoot/adapt requires safety_status=passed")
+                for sample_row in referenced_samples:
+                    if (
+                        sample_row.get("capture_status") != "complete"
+                        or sample_row.get("access_status") != "full"
+                        or not valid_sha256(sample_row.get("source_snapshot_sha256"))
+                    ):
+                        self.error(
+                            "trend_replay_evidence",
+                            location,
+                            "shoot/adapt requires complete referenced samples with a replayable snapshot hash",
+                        )
+                for field in (
+                    "category_scopes",
+                    "carrier_scopes",
+                    "primary_job_scopes",
+                    "traffic_stage_scopes",
+                ):
+                    if not isinstance(row.get(field), list) or not row.get(field):
+                        self.error("trend_retrieval_scope", location, f"shoot/adapt requires {field}")
+                if isinstance(slot_map, dict):
+                    if not slot_map.get("fixed") or not slot_map.get("replaceable"):
+                        self.error("trend_slot_map", location, "shoot/adapt requires fixed and replaceable slots")
+                    contribution = slot_map.get("new_semantic_contribution")
+                    if not isinstance(contribution, str) or contribution in {"", "none", "unknown"}:
+                        self.error("trend_slot_map", location, "shoot/adapt requires a new semantic contribution")
+                run_start = parse_iso(self.run.get("window_start", ""))
+                run_end = parse_iso(self.run.get("window_end", ""))
+                if (
+                    not sample_window_start
+                    or not sample_window_end
+                    or (run_start and sample_window_start > run_start)
+                    or (run_end and sample_window_end < run_end)
+                ):
+                    self.error(
+                        "trend_window_mismatch",
+                        location,
+                        "production candidate sample_window must cover the run window",
+                    )
+                latest_comparison_end = max(
+                    (item[1] for item in valid_comparisons), default=None
+                )
+                if run_end and (
+                    latest_comparison_end is None or latest_comparison_end < run_end
+                ):
+                    self.error(
+                        "trend_window_mismatch",
+                        location,
+                        "production lifecycle evidence must include a comparison window ending on or after run window_end",
+                    )
+                if row.get("last_refreshed_at") != self.run.get("created_at"):
+                    self.error(
+                        "trend_refresh_mismatch",
+                        location,
+                        "shoot/adapt candidate must be refreshed on the current run date",
+                    )
+            if rights == "authorized_assets":
+                assets = row.get("authorized_asset_ids", [])
+                hashes = row.get("source_asset_hashes", [])
+                if not isinstance(assets, list) or not assets or not isinstance(hashes, list) or not hashes:
+                    self.error(
+                        "trend_rights_gate",
+                        location,
+                        "authorized_assets requires asset IDs and source asset hashes",
+                    )
+                elif any(not isinstance(value, str) or not valid_sha256(value) for value in hashes):
+                    self.error("trend_rights_gate", location, "source_asset_hashes must be SHA-256 values")
+                else:
+                    current_authorizations = {
+                        item.get("material_id", ""): item
+                        for item in self.rows.get("authorization-log.csv", [])
+                        if item.get("material_id", "")
+                        and self._authorization_is_current(item)
+                        and item.get("commercial_use") == "approved"
+                        and set(split_ids(item.get("permission_scope"))).intersection(
+                            {"adaptation", "verbatim"}
+                        )
+                    }
+                    missing_assets = sorted(set(assets) - set(current_authorizations))
+                    expected_hashes = {
+                        current_authorizations[asset_id].get("material_sha256", "").lower()
+                        for asset_id in assets
+                        if asset_id in current_authorizations
+                    }
+                    if missing_assets or set(value.lower() for value in hashes) != expected_hashes:
+                        self.error(
+                            "trend_rights_gate",
+                            location,
+                            "authorized_asset_ids/source_asset_hashes must exactly resolve to current approved authorization-log material records",
+                        )
+
+        for template_id, records in by_template.items():
+            if len(records) != 1:
+                self.error(
+                    "trend_version_invalid",
+                    "trend-template-candidates.jsonl",
+                    f"run-local candidate snapshot must contain exactly one current record for {template_id}",
+                )
+            for item in records:
+                version = item.get("candidate_version")
+                supersedes = item.get("supersedes_candidate_record_id")
+                if version == 1 and supersedes is not None:
+                    self.error(
+                        "trend_version_invalid",
+                        str(item.get("candidate_record_id")),
+                        "version 1 must not supersede another record",
+                    )
+                if isinstance(version, int) and version > 1:
+                    if not isinstance(supersedes, str) or not supersedes:
+                        self.error(
+                            "trend_version_invalid",
+                            str(item.get("candidate_record_id")),
+                            "each later version must reference its prior immutable candidate_record_id",
+                        )
 
     def _check_rows(self) -> None:
         for name, rows in self.rows.items():
@@ -1745,6 +2731,17 @@ class RunValidator:
 
         for index, row in enumerate(self.rows.get("posts.csv", []), start=2):
             location = f"posts.csv:{index}"
+            collected = parse_iso(row.get("collected_at", ""))
+            published = parse_iso(row.get("published_at", "")) if row.get("published_at") else None
+            if collected is None:
+                self.error("invalid_date", location, "collected_at must be YYYY-MM-DD")
+            elif run_date and collected > run_date:
+                self.error("future_date", location, "collected_at cannot be after the run date")
+            if published and collected and published > collected:
+                self.error("invalid_date_order", location, "published_at cannot be after collected_at")
+
+        for index, row in enumerate(self.rows.get("trend-template-samples.csv", []), start=2):
+            location = f"trend-template-samples.csv:{index}"
             collected = parse_iso(row.get("collected_at", ""))
             published = parse_iso(row.get("published_at", "")) if row.get("published_at") else None
             if collected is None:
@@ -6290,6 +7287,229 @@ class RunValidator:
                 + ", ".join(sorted(set(mismatches))),
             )
 
+    def _check_trend_template_contract(
+        self,
+        path: Path,
+        rendered_text: str,
+        meta: dict[str, str],
+        headings: set[str],
+    ) -> None:
+        requirement = self.run.get("trend_template_requirement", "none")
+        has_section = "趋势模板绑定" in headings
+        if (self._is_v2() or requirement == "draft") and not has_section:
+            self.error(
+                "trend_template_contract_missing",
+                path.name,
+                "v2 drafts require an explicit 趋势模板绑定 section; use template_contract_status=not_used when no trend template is used",
+            )
+            return
+        if not has_section:
+            return
+        contract = parse_contract_block(markdown_section(rendered_text, "趋势模板绑定"))
+        missing = sorted(TREND_TEMPLATE_CONTRACT_FIELDS - contract.keys())
+        if missing:
+            self.error(
+                "trend_template_contract_mismatch",
+                path.name,
+                "趋势模板绑定 missing keys: " + ", ".join(missing),
+            )
+            return
+        status = contract.get("template_contract_status", "")
+        if status == "not_used":
+            if requirement == "draft":
+                self.error(
+                    "trend_template_contract_mismatch",
+                    path.name,
+                    "trend_template_requirement=draft cannot use template_contract_status=not_used",
+                )
+            return
+        if status != "bound_candidate":
+            self.error(
+                "trend_template_contract_mismatch",
+                path.name,
+                "template_contract_status must be not_used or bound_candidate",
+            )
+            return
+        if requirement != "draft":
+            self.error(
+                "trend_template_contract_mismatch",
+                path.name,
+                "bound_candidate requires run.yaml trend_template_requirement=draft",
+            )
+
+        record_id = contract.get("candidate_record_id", "")
+        candidate = next(
+            (
+                item
+                for item in self.trend_candidates
+                if item.get("candidate_record_id") == record_id
+            ),
+            None,
+        )
+        if candidate is None:
+            self.error(
+                "trend_template_contract_mismatch",
+                path.name,
+                f"unknown candidate_record_id: {record_id}",
+            )
+            return
+        same_template = [
+            item
+            for item in self.trend_candidates
+            if item.get("template_id") == candidate.get("template_id")
+            and isinstance(item.get("candidate_version"), int)
+        ]
+        latest = max(same_template, key=lambda item: int(item["candidate_version"]))
+        if latest.get("candidate_record_id") != record_id:
+            self.error(
+                "trend_template_stale_binding",
+                path.name,
+                "draft must bind the highest candidate_version for this template",
+            )
+        if candidate.get("record_sha256") != canonical_json_sha256(candidate, "record_sha256"):
+            self.error(
+                "trend_record_hash_mismatch",
+                path.name,
+                "bound trend candidate hash is invalid",
+            )
+
+        exact_pairs = {
+            "template_id": candidate.get("template_id"),
+            "family_id": candidate.get("family_id"),
+            "candidate_version": str(candidate.get("candidate_version")),
+            "replication_status": candidate.get("replication_status"),
+            "lifecycle_phase": candidate.get("lifecycle_phase"),
+            "last_refreshed_at": candidate.get("last_refreshed_at"),
+            "decision": candidate.get("decision"),
+        }
+        mismatches = [
+            key for key, expected in exact_pairs.items() if contract.get(key) != str(expected)
+        ]
+        if mismatches:
+            self.error(
+                "trend_template_contract_mismatch",
+                path.name,
+                "draft disagrees with candidate on: " + ", ".join(sorted(mismatches)),
+            )
+        if candidate.get("replication_status") != "replicated" or candidate.get(
+            "lifecycle_phase"
+        ) not in {"rising", "mature", "evergreen_carrier"} or candidate.get(
+            "decision"
+        ) not in {"shoot", "adapt"}:
+            self.error(
+                "trend_decision_not_eligible",
+                path.name,
+                "bound candidate is not eligible for production",
+            )
+        if candidate.get("rights_status") not in {"grammar_only", "authorized_assets"}:
+            self.error("trend_rights_gate", path.name, "bound candidate rights are not cleared")
+        if candidate.get("safety_status") != "passed":
+            self.error("trend_safety_gate", path.name, "bound candidate safety is not passed")
+
+        sample_fields = {
+            "source_sample_ids": "source_sample_ids",
+            "support_sample_ids": "support_sample_ids",
+            "counterexample_sample_ids": "counterexample_sample_ids",
+        }
+        for contract_field, candidate_field in sample_fields.items():
+            actual = set(split_ids(contract.get(contract_field, "")))
+            expected = set(candidate.get(candidate_field, []))
+            if actual != expected:
+                self.error(
+                    "trend_template_contract_mismatch",
+                    path.name,
+                    f"{contract_field} must exactly match the candidate",
+                )
+
+        scopes = {
+            "style_query_category": "category_scopes",
+            "style_query_carrier": "carrier_scopes",
+            "primary_job": "primary_job_scopes",
+            "traffic_stage": "traffic_stage_scopes",
+        }
+        for meta_field, candidate_field in scopes.items():
+            allowed = candidate.get(candidate_field, [])
+            if not isinstance(allowed, list) or meta.get(meta_field) not in allowed:
+                self.error(
+                    "trend_template_scope_mismatch",
+                    path.name,
+                    f"{meta_field} is outside the candidate's exact scope",
+                )
+
+        slot_map = candidate.get("slot_map", {})
+        if isinstance(slot_map, dict):
+            fixed = set(split_ids(contract.get("fixed_slots", "")))
+            expected_fixed = set(str(value) for value in slot_map.get("fixed", []))
+            replaced = set(split_ids(contract.get("replaced_slots", "")))
+            replaceable = set(str(value) for value in slot_map.get("replaceable", []))
+            if fixed != expected_fixed or not replaced or not replaced.issubset(replaceable):
+                self.error(
+                    "trend_slot_map",
+                    path.name,
+                    "fixed_slots must match and replaced_slots must be a non-empty subset of candidate slots",
+                )
+        contribution = contract.get("new_semantic_contribution", "")
+        if contribution in {"", "none", "unknown", "待填写"}:
+            self.error(
+                "trend_slot_map",
+                path.name,
+                "bound template requires a substantive new_semantic_contribution",
+            )
+        try:
+            material_map = json.loads(contract.get("material_evidence_map", ""))
+        except json.JSONDecodeError:
+            material_map = None
+        required_materials = set(candidate.get("required_material_codes", []))
+        if not isinstance(material_map, dict) or not required_materials.issubset(material_map):
+            self.error(
+                "trend_material_gate",
+                path.name,
+                "material_evidence_map must cover every required template material",
+            )
+        else:
+            known_ids, _ = self._known_evidence_ids()
+            evidence_types = self._evidence_id_types()
+            allowed_types = {
+                "source",
+                "claim",
+                "post",
+                "authorized_material",
+                "authorization",
+            }
+            bound_refs: set[str] = set()
+            for code in sorted(required_materials):
+                refs = material_map.get(code)
+                if not isinstance(refs, list) or not refs or not all(
+                    isinstance(value, str) and value.strip() for value in refs
+                ):
+                    self.error(
+                        "trend_material_gate",
+                        path.name,
+                        f"{code} must map to a non-empty JSON string array",
+                    )
+                    continue
+                unknown = sorted(set(refs) - known_ids)
+                incompatible = sorted(
+                    value
+                    for value in refs
+                    if not evidence_types.get(value, set()).intersection(allowed_types)
+                )
+                if unknown or incompatible:
+                    self.error(
+                        "trend_material_gate",
+                        path.name,
+                        f"{code} has unknown or incompatible evidence IDs: {sorted(set(unknown + incompatible))}",
+                    )
+                bound_refs.update(value for value in refs if value in known_ids)
+            if candidate.get("rights_status") == "authorized_assets":
+                required_assets = set(candidate.get("authorized_asset_ids", []))
+                if not required_assets.issubset(bound_refs):
+                    self.error(
+                        "trend_material_gate",
+                        path.name,
+                        "bound draft must reference every authorized material ID declared by the candidate",
+                    )
+
     def _check_drafts(self) -> None:
         drafts = self.run_dir / "drafts"
         if not drafts.is_dir():
@@ -6408,6 +7628,7 @@ class RunValidator:
                         )
             if self._is_v2():
                 self._check_v2_mechanism_contract(path, rendered_text, meta, headings)
+                self._check_trend_template_contract(path, rendered_text, meta, headings)
                 self._check_v2_visual_contract(path, rendered_text, meta, headings)
             cta_contract: dict[str, str] = {}
             if "CTA 与披露" in headings:

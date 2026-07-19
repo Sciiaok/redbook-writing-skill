@@ -113,6 +113,30 @@ research_gap: 待填写当前 primary_job × carrier 缺少的真实素材、反
 
 绑定时从 `traffic-mechanisms-v1.json` 精确选择三张卡。`material_evidence_map` 与 `mechanism_application_map` 必须是各占一行的 JSON object；前者把每个 required material code 指向本次运行中的 Source / Claim / Post / Authorization / material ID，后者逐机制写 `input_refs / title_action / cover_action / body_action / comments_action / job_metric / failure_condition / intentional_deviation`。不得用不存在的 ID、空泛动作或临时自创“流量公式”通过合同。
 
+## 趋势模板绑定
+
+```text
+template_contract_status: not_used
+candidate_record_id: none
+template_id: none
+family_id: none
+candidate_version: none
+replication_status: none
+lifecycle_phase: none
+last_refreshed_at: none
+decision: none
+source_sample_ids: none
+support_sample_ids: none
+counterexample_sample_ids: none
+fixed_slots: none
+replaced_slots: none
+new_semantic_contribution: none
+material_evidence_map: none
+failure_condition: none
+```
+
+所有 v2 draft 都保留本节。不使用趋势模板时保持 `not_used`；使用时，`run.yaml` 必须写 `trend_template_requirement: draft`，并绑定同一运行目录 `trend-template-candidates.jsonl` 中该 `template_id` 哈希有效的最高版本。候选必须在本次窗口刷新并通过 `replicated × rising/mature/evergreen_carrier × shoot/adapt × rights/safety`，生命周期由至少两个真实、不重叠窗口支撑。`material_evidence_map` 必须是一行 JSON object，每个 required material code 对应非空 ID 数组，ID 可回到本 run 的 Source / Claim / Post / Authorization / authorized material；只复用结构语法，不复制第三方原句、人物、画面、BGM 或独特资产。
+
 ## 视觉方向绑定
 
 ```text
