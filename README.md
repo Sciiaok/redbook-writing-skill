@@ -190,7 +190,9 @@ python3 redbook-writing/scripts/render_text_card_cover.py \
   --input redbook-writing/assets/cover-render-examples/text-card-input.json
 ```
 
-![确定性字卡示例](redbook-writing/assets/cover-render-examples/text-card-demo.png)
+<p align="center">
+  <img src="redbook-writing/assets/cover-render-examples/text-card-demo.png" alt="确定性字卡示例" width="420">
+</p>
 
 这个 PNG 证明排版链可复现，不证明文案会爆。选择器的十三种模式、素材门和反例见 [`cover-pattern-library.md`](redbook-writing/references/cover-pattern-library.md)。
 
